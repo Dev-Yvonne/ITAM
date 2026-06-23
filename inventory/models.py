@@ -33,7 +33,7 @@ class Asset(models.Model):
 class Employee(models.Model):
     name = models.CharField(max_length=255)
     department = models.CharField(max_length=255)
-    email = models.EmailField()
+    email = models.EmailField() 
 
     class Meta:
         ordering = ["name"]
@@ -79,3 +79,10 @@ class MaintenanceLog(models.Model):
 
     def __str__(self) -> str:
         return f"{self.asset} maintenance on {self.date}"
+    
+    #add validation to prevent multiple active assignment
+    #employee email should be unique
+    #add a purchase date
+    #add asset value if possible
+    #do database indexing to improve performance
+

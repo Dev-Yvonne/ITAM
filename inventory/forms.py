@@ -42,7 +42,7 @@ class AssignmentForm(forms.ModelForm):
             date_returned__isnull=True,
         ).exists()
         if asset.status != Asset.AssetStatus.AVAILABLE or has_active_assignment:
-            raise forms.ValidationError("This asset is not available for assignment.")
+            raise forms.ValidationError("This asset is not available for assignment.") #add user friendly error tareting to point out to the specific err
 
         return asset
 
@@ -51,3 +51,6 @@ class MaintenanceLogForm(forms.ModelForm):
     class Meta:
         model = MaintenanceLog
         fields = ["asset", "issue_description", "technician", "date", "resolved"]
+
+        #add user friendly error tareting to point out to the specific err
+

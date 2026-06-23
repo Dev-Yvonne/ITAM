@@ -4,7 +4,7 @@ from .models import Asset, Assignment, Employee, MaintenanceLog
 
 
 @admin.register(Asset)
-class AssetAdmin(admin.ModelAdmin):
+class AssetAdmin(admin.ModelAdmin): #add odering to control how records show up
     list_display = ("name", "type", "serial_number", "status")
     list_filter = ("type", "status")
     search_fields = ("name", "serial_number")
@@ -48,3 +48,5 @@ class MaintenanceLogAdmin(admin.ModelAdmin):
         "issue_description",
         "technician",
     )
+    #add autocomplete fields("incase many assets and employs exists though not important")
+    # anyway the code is clean and readable, am seein search functionallity includes related models which is good.. no error identified

@@ -3,7 +3,7 @@ from django import forms
 from .models import Asset
 
 
-class AssetFilterForm(forms.Form):
+class AssetFilterForm(forms.Form): #add labels
     type = forms.ChoiceField(required=False)
     status = forms.ChoiceField(required=False)
 
@@ -16,7 +16,7 @@ class AssetFilterForm(forms.Form):
         ]
 
     def filter_queryset(self, queryset):
-        if not self.is_valid():
+        if not self.is_valid(): #is_valid is normally called in the view, not inside helper methods
             return queryset
 
         asset_type = self.cleaned_data.get("type")
@@ -28,3 +28,4 @@ class AssetFilterForm(forms.Form):
             queryset = queryset.filter(status=status)
 
         return queryset
+# the other code is ok.. just check on the areas that have comented on
