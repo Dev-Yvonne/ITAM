@@ -109,6 +109,10 @@ async function returnAsset(assetId) {
     return request(`${ASSET_API_URL}/${assetId}/return/`, 'POST');
 }
 
+async function getAssignableEmployees() {
+    return request('/api/employees/');
+}
+
 // ============================================================
 // 3. BUSINESS LOGIC
 // ============================================================
@@ -258,7 +262,7 @@ function attachTableEventListeners(container) {
                     break;
             }
         } catch (error) {
-            alert(`Action failed: ${error.message}`);
+            showActionMessage(`Action failed: ${error.message}`, 'error');
         }
     });
 }
@@ -268,25 +272,61 @@ function attachTableEventListeners(container) {
 // ============================================================
 
 async function handleAssignAction(assetId, assetName) {
-    const employeeId = prompt(`Assign "${assetName}" to which Employee ID?`);
-    if (!employeeId) return;
+    const employees = await getAssignableEmployees();
+    const employeeOptions = employees
+        .map((employee) => (
+            `<option value="${employee.id}">${employee.name} (${employee.department || 'No department'})</option>`
+        ))
+        .join('');
 
-    if (!confirm(`Confirm assigning Asset ID ${assetId} to Employee ID ${employeeId}?`)) {
+    const result = await showAssetConfirmationCard({
+        title: 'Confirm Asset Assignment',
+        message: `Assign "${assetName}" to an employee?`,
+        details: `
+            <div class="detail-field">
+                <span class="field-label">Asset ID</span>
+                <span class="field-value">${assetId}</span>
+            </div>
+        `,
+        bodyHtml: `
+            <label for="confirmation-employee" class="form-label">Employee</label>
+            <select id="confirmation-employee" name="employee_id" class="filter-select" required>
+                <option value="">Select employee</option>
+                ${employeeOptions}
+            </select>
+        `,
+        confirmLabel: 'Assign Asset',
+    });
+
+    if (!result.confirmed || !result.values.employee_id) {
         return;
     }
 
-    await assignAsset(assetId, employeeId);
-    alert(`"${assetName}" successfully assigned to Employee #${employeeId}!`);
+    await assignAsset(assetId, result.values.employee_id);
+    showActionMessage(`"${assetName}" was assigned successfully.`, 'success');
     refreshAssetList();
 }
 
 async function handleReturnAction(assetId, assetName) {
-    if (!confirm(`Return "${assetName}" back to inventory?`)) {
+    const result = await showAssetConfirmationCard({
+        title: 'Confirm Asset Return',
+        message: `Return "${assetName}" back to inventory storage?`,
+        details: `
+            <div class="detail-field">
+                <span class="field-label">Asset ID</span>
+                <span class="field-value">${assetId}</span>
+            </div>
+        `,
+        confirmLabel: 'Return Asset',
+        variant: 'warning',
+    });
+
+    if (!result.confirmed) {
         return;
     }
 
     await returnAsset(assetId);
-    alert(`"${assetName}" successfully returned to inventory!`);
+    showActionMessage(`"${assetName}" was returned to inventory.`, 'success');
     refreshAssetList();
 }
 
@@ -298,6 +338,22 @@ async function handleDeleteAction(assetId, assetName) {
     await deleteAsset(assetId);
     alert(`"${assetName}" has been deleted.`);
     refreshAssetList();
+}
+
+function showAssetConfirmationCard(options) {
+    if (window.showConfirmationCard) {
+        return window.showConfirmationCard(options);
+    }
+    showActionMessage('Confirmation cards are not available. Please reload the page and try again.', 'error');
+    return Promise.resolve({ confirmed: false, values: {} });
+}
+
+function showActionMessage(message, type = 'info') {
+    if (window.showToast) {
+        window.showToast(message, type);
+        return;
+    }
+    console.log(`[${type}] ${message}`);
 }
 
 // ============================================================

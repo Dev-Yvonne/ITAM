@@ -3,7 +3,10 @@ import datetime
 import json
 
 from django.contrib import messages
+from django.contrib.auth import login, logout
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.views import LoginView
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Count, Exists, Max, OuterRef, Q
@@ -190,6 +193,50 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 "overdue_cutoff": overdue_cutoff,
             }
         )
+        return context
+
+
+class AuthLoginView(LoginView):
+    template_name = "inventory/auth.html"
+    redirect_authenticated_user = True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page"] = "login"
+        return context
+
+
+class SignUpView(CreateView):
+    form_class = UserCreationForm
+    template_name = "inventory/auth.html"
+    success_url = reverse_lazy("dashboard")
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect("dashboard")
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        login(self.request, self.object)
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page"] = "signup"
+        return context
+
+
+class AuthLogoutView(TemplateView):
+    template_name = "inventory/auth.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        logout(request)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page"] = "logout"
         return context
 
 

@@ -51,7 +51,17 @@
                                 <td><a href="{% url 'asset_detail' assignment.asset.pk %}">{{ assignment.asset.name }}</a></td>
                                 <td>{{ assignment.date_assigned }}</td>
                                 <td>
-                                    <form method="post" action="{% url 'return_asset' assignment.asset.pk %}" style="display:inline;">
+                                    <form
+                                        method="post"
+                                        action="{% url 'return_asset' assignment.asset.pk %}"
+                                        style="display:inline;"
+                                        data-confirm-card
+                                        data-confirm-title="Confirm Asset Return"
+                                        data-confirm-message="Return {{ assignment.asset.name }} back to inventory storage?"
+                                        data-confirm-details="<p><strong>Employee:</strong> {{ employee.name }}</p><p><strong>Assigned on:</strong> {{ assignment.date_assigned }}</p>"
+                                        data-confirm-label="Return Asset"
+                                        data-confirm-variant="warning"
+                                    >
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-sm btn-success">Return</button>
                                     </form>

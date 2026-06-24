@@ -133,16 +133,29 @@ function attachAssignmentEventListeners(container) {
 
         e.preventDefault();
 
-        if (!confirm(`Return "${assetName}" to inventory?`)) {
+        const confirmation = await showAssignmentConfirmationCard({
+            title: 'Confirm Asset Return',
+            message: `Return "${assetName}" to inventory?`,
+            details: `
+                <div class="detail-field">
+                    <span class="field-label">Assignment ID</span>
+                    <span class="field-value">${assignmentId}</span>
+                </div>
+            `,
+            confirmLabel: 'Return Asset',
+            variant: 'warning',
+        });
+
+        if (!confirmation.confirmed) {
             return;
         }
 
         try {
             await returnAssignment(assignmentId);
-            alert(`"${assetName}" successfully returned!`);
+            showAssignmentMessage(`"${assetName}" was returned successfully.`, 'success');
             refreshAssignmentList();
         } catch (error) {
-            alert(`Failed to return asset: ${error.message}`);
+            showAssignmentMessage(`Failed to return asset: ${error.message}`, 'error');
         }
     });
 }
@@ -259,17 +272,33 @@ function openAssignmentModal(assetId, assetName, onSuccess) {
         try {
             if (window.assetManager) {
                 await window.assetManager.assignAsset(assetId, employeeId);
-                alert(`Asset successfully assigned!`);
+                showAssignmentMessage('Asset was assigned successfully.', 'success');
                 closeModal();
                 if (onSuccess) onSuccess();
             } else {
-                alert('Asset manager not available.');
+                showAssignmentMessage('Asset manager not available.', 'error');
             }
         } catch (error) {
             errorDiv.textContent = error.message || 'Assignment failed. Please try again.';
             errorDiv.style.display = 'block';
         }
     });
+}
+
+function showAssignmentConfirmationCard(options) {
+    if (window.showConfirmationCard) {
+        return window.showConfirmationCard(options);
+    }
+    showAssignmentMessage('Confirmation cards are not available. Please reload the page and try again.', 'error');
+    return Promise.resolve({ confirmed: false, values: {} });
+}
+
+function showAssignmentMessage(message, type = 'info') {
+    if (window.showToast) {
+        window.showToast(message, type);
+        return;
+    }
+    console.log(`[${type}] ${message}`);
 }
 
 // ============================================================

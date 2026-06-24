@@ -56,7 +56,17 @@
                     <p><strong>Department:</strong> {{ active_assignment.employee.department }}</p>
                     <p><strong>Email:</strong> {{ active_assignment.employee.email }}</p>
                     <p><strong>Assigned on:</strong> {{ active_assignment.date_assigned }}</p>
-                    <form method="post" action="{% url 'return_asset' asset.pk %}" style="margin-top: 1rem;">
+                    <form
+                        method="post"
+                        action="{% url 'return_asset' asset.pk %}"
+                        style="margin-top: 1rem;"
+                        data-confirm-card
+                        data-confirm-title="Confirm Asset Return"
+                        data-confirm-message="Return {{ asset.name }} back to inventory storage?"
+                        data-confirm-details="<p><strong>Serial:</strong> {{ asset.serial_number }}</p><p><strong>Assigned to:</strong> {{ active_assignment.employee.name }}</p>"
+                        data-confirm-label="Return Asset"
+                        data-confirm-variant="warning"
+                    >
                         {% csrf_token %}
                         <button type="submit" class="btn btn-success">Return Asset</button>
                     </form>

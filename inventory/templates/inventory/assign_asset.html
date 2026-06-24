@@ -39,7 +39,15 @@
             </div>
         </div>
         
-        <form method="post" novalidate>
+        <form
+            method="post"
+            novalidate
+            data-confirm-card
+            data-confirm-title="Confirm Asset Assignment"
+            data-confirm-message="Assign {{ asset.name }} to the selected employee?"
+            data-confirm-details="<p><strong>Serial:</strong> {{ asset.serial_number }}</p><p><strong>Current status:</strong> {{ asset.status }}</p>"
+            data-confirm-label="Assign Asset"
+        >
             {% csrf_token %}
             
             {% if form.non_field_errors %}

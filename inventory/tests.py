@@ -280,7 +280,7 @@ class ManagementViewSecurityTests(TestCase):
         response = self.client.get(reverse("asset_add"))
 
         self.assertEqual(response.status_code, 302)
-        self.assertIn("/admin/login/", response["Location"])
+        self.assertIn("/login/", response["Location"])
         self.assertIn("next=", response["Location"])
 
     def test_non_admin_employee_user_forbidden(self):
@@ -325,6 +325,36 @@ class ManagementViewSecurityTests(TestCase):
         self.assertTrue(
             Asset.objects.filter(serial_number="STAFF-ROUTER-001").exists()
         )
+
+
+class AuthRoutingTests(TestCase):
+    def test_login_route_renders_auth_template(self):
+        response = self.client.get(reverse("login"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "inventory/auth.html")
+        self.assertEqual(response.context["page"], "login")
+
+    def test_protected_page_redirects_to_auth_template_login(self):
+        response = self.client.get(reverse("dashboard"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response["Location"].startswith("/login/"))
+        self.assertIn("next=", response["Location"])
+
+    def test_logout_route_renders_auth_template(self):
+        user = get_user_model().objects.create_user(
+            username="logout-user",
+            email="logout-user@example.com",
+            password="test-pass-12345",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("logout"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "inventory/auth.html")
+        self.assertEqual(response.context["page"], "logout")
 
 
 class AssetCSVExportTests(TestCase):

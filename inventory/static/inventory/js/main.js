@@ -244,7 +244,126 @@ function showToast(message, type, duration) {
 }
 
 // ============================================================
-// 8. GLOBAL ERROR HANDLING
+// 8. CONFIRMATION CARD SYSTEM
+// ============================================================
+
+function showConfirmationCard(options) {
+    options = options || {};
+
+    const existingCard = document.getElementById('confirmation-card-overlay');
+    if (existingCard) existingCard.remove();
+
+    return new Promise(function(resolve) {
+        const overlay = document.createElement('div');
+        overlay.id = 'confirmation-card-overlay';
+        overlay.className = 'confirmation-card-overlay';
+        overlay.style.cssText = [
+            'position: fixed',
+            'inset: 0',
+            'z-index: 2000',
+            'display: flex',
+            'align-items: center',
+            'justify-content: center',
+            'padding: 1rem',
+            'background: rgba(15, 23, 42, 0.45)',
+            'backdrop-filter: blur(3px)'
+        ].join(';');
+
+        const confirmLabel = options.confirmLabel || 'Confirm';
+        const cancelLabel = options.cancelLabel || 'Cancel';
+        const variantClass = options.variant === 'warning' ? 'btn-warning' : 'btn-primary';
+
+        overlay.innerHTML = `
+            <div class="card confirmation-card" role="dialog" aria-modal="true" aria-labelledby="confirmation-card-title" style="max-width: 520px; width: 100%; padding: 1.5rem; box-shadow: var(--shadow-lg, 0 20px 40px rgba(15, 23, 42, 0.18));">
+                <div class="confirmation-card-header" style="margin-bottom: 1rem;">
+                    <h3 id="confirmation-card-title" style="margin-bottom: 0.5rem;">${options.title || 'Confirm Action'}</h3>
+                    <p style="margin: 0; color: var(--text-secondary, #475569);">${options.message || 'Please confirm this action before continuing.'}</p>
+                </div>
+                ${options.details ? `<div class="confirmation-card-details" style="margin-bottom: 1rem;">${options.details}</div>` : ''}
+                ${options.bodyHtml ? `<form id="confirmation-card-form" class="confirmation-card-form" style="margin-bottom: 1rem;">${options.bodyHtml}</form>` : ''}
+                <div class="confirmation-card-actions" style="display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary" data-confirmation-cancel>${cancelLabel}</button>
+                    <button type="button" class="btn ${variantClass}" data-confirmation-confirm>${confirmLabel}</button>
+                </div>
+            </div>
+        `;
+
+        const close = function(result) {
+            overlay.remove();
+            document.removeEventListener('keydown', handleKeydown);
+            resolve(result);
+        };
+
+        const handleKeydown = function(event) {
+            if (event.key === 'Escape') {
+                close({ confirmed: false, values: {} });
+            }
+        };
+
+        overlay.querySelector('[data-confirmation-cancel]').addEventListener('click', function() {
+            close({ confirmed: false, values: {} });
+        });
+
+        overlay.querySelector('[data-confirmation-confirm]').addEventListener('click', function() {
+            const form = overlay.querySelector('#confirmation-card-form');
+            const values = {};
+            if (form) {
+                const formData = new FormData(form);
+                for (const [key, value] of formData.entries()) {
+                    values[key] = value;
+                }
+            }
+            close({ confirmed: true, values: values });
+        });
+
+        overlay.addEventListener('click', function(event) {
+            if (event.target === overlay) {
+                close({ confirmed: false, values: {} });
+            }
+        });
+
+        document.addEventListener('keydown', handleKeydown);
+        document.body.appendChild(overlay);
+
+        const firstField = overlay.querySelector('select, input, textarea, button');
+        if (firstField) firstField.focus();
+    });
+}
+
+function initConfirmationForms() {
+    document.querySelectorAll('form[data-confirm-card]').forEach(function(form) {
+        form.addEventListener('submit', async function(event) {
+            if (form.dataset.confirmed === 'true') {
+                return;
+            }
+
+            event.preventDefault();
+            if (form.checkValidity && !form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const result = await showConfirmationCard({
+                title: form.dataset.confirmTitle || 'Confirm Action',
+                message: form.dataset.confirmMessage || 'Please confirm this action.',
+                details: form.dataset.confirmDetails || '',
+                confirmLabel: form.dataset.confirmLabel || 'Confirm',
+                cancelLabel: form.dataset.cancelLabel || 'Cancel',
+                variant: form.dataset.confirmVariant || 'primary',
+            });
+
+            if (!result.confirmed) {
+                return;
+            }
+
+            form.dataset.confirmed = 'true';
+            form.submit();
+        });
+    });
+}
+
+// ============================================================
+// 9. GLOBAL ERROR HANDLING
 // ============================================================
 
 function setupGlobalErrorHandling() {
@@ -272,7 +391,7 @@ function setupGlobalErrorHandling() {
 }
 
 // ============================================================
-// 9. AUTO-DISMISS ALERTS
+// 10. AUTO-DISMISS ALERTS
 // ============================================================
 
 function initAutoDismissAlerts() {
@@ -289,7 +408,7 @@ function initAutoDismissAlerts() {
 }
 
 // ============================================================
-// 10. MAIN INIT
+// 11. MAIN INIT
 // ============================================================
 
 function initApp() {
@@ -301,10 +420,12 @@ function initApp() {
     initThemeToggle();
     initMobileNav();
     initAutoDismissAlerts();
+    initConfirmationForms();
     setupGlobalEvents();
     setupGlobalErrorHandling();
 
     window.showToast = showToast;
+    window.showConfirmationCard = showConfirmationCard;
 
     initializePage(page);
 
@@ -313,13 +434,13 @@ function initApp() {
 }
 
 // ============================================================
-// 11. START
+// 12. START
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', initApp);
 
 // ============================================================
-// 12. EXPOSE
+// 13. EXPOSE
 // ============================================================
 
 window.MainApp = {
@@ -329,6 +450,7 @@ window.MainApp = {
         initializePage(getCurrentPage()); 
     },
     showToast: showToast,
+    showConfirmationCard: showConfirmationCard,
 };
 
 console.log('main.js loaded.');
