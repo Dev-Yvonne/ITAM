@@ -20,8 +20,7 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .filters import AssetFilterForm
-from .forms import AssetForm, AssignmentForm, EmployeeForm
+from .forms import AssetForm, AssignmentForm
 from .models import Asset, Assignment, Employee
 
 
@@ -84,15 +83,21 @@ class AssetListView(LoginRequiredMixin, ListView):
             .all()
             .order_by("name", "serial_number")
         )
-        self.filter_form = AssetFilterForm(self.request.GET)
-        return self.filter_form.filter_queryset(queryset)
+        asset_type = self.request.GET.get("type")
+        status = self.request.GET.get("status")
+
+        if asset_type:
+            queryset = queryset.filter(type=asset_type)
+        if status:
+            queryset = queryset.filter(status=status)
+
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         overdue_cutoff = timezone.localdate() - timedelta(days=183)
         context.update(
             {
-                "filter_form": self.filter_form,
                 "selected_type": self.request.GET.get("type", ""),
                 "selected_status": self.request.GET.get("status", ""),
                 "overdue_cutoff": overdue_cutoff,
@@ -135,20 +140,20 @@ class AssetCreateView(AdminRequiredMixin, CreateView):
     model = Asset
     form_class = AssetForm
     template_name = "inventory/asset_form.html"
-    success_url = reverse_lazy("inventory:asset-list")
+    success_url = reverse_lazy("asset_list")
 
 
 class AssetUpdateView(AdminRequiredMixin, UpdateView):
     model = Asset
     form_class = AssetForm
     template_name = "inventory/asset_form.html"
-    success_url = reverse_lazy("inventory:asset-list")
+    success_url = reverse_lazy("asset_list")
 
 
 class AssetDeleteView(AdminRequiredMixin, DeleteView):
     model = Asset
     template_name = "inventory/asset_confirm_delete.html"
-    success_url = reverse_lazy("inventory:asset-list")
+    success_url = reverse_lazy("asset_list")
 
 
 class EmployeeListView(LoginRequiredMixin, ListView):
@@ -178,28 +183,28 @@ class EmployeeDetailView(LoginRequiredMixin, DetailView):
 
 class EmployeeCreateView(AdminRequiredMixin, CreateView):
     model = Employee
-    form_class = EmployeeForm
+    fields = ["name", "department", "email"]
     template_name = "inventory/employee_form.html"
-    success_url = reverse_lazy("inventory:employee-list")
+    success_url = reverse_lazy("employee_list")
 
 
 class EmployeeUpdateView(AdminRequiredMixin, UpdateView):
     model = Employee
-    form_class = EmployeeForm
+    fields = ["name", "department", "email"]
     template_name = "inventory/employee_form.html"
-    success_url = reverse_lazy("inventory:employee-list")
+    success_url = reverse_lazy("employee_list")
 
 
 class EmployeeDeleteView(AdminRequiredMixin, DeleteView):
     model = Employee
     template_name = "inventory/employee_confirm_delete.html"
-    success_url = reverse_lazy("inventory:employee-list")
+    success_url = reverse_lazy("employee_list")
 
 
 class AssignAssetView(AdminRequiredMixin, FormView):
     template_name = "inventory/assign_asset.html"
     form_class = AssignmentForm
-    success_url = reverse_lazy("inventory:asset-list")
+    success_url = reverse_lazy("asset_list")
 
     def form_valid(self, form):
         with transaction.atomic():
@@ -240,7 +245,7 @@ class ReturnAssetView(AdminRequiredMixin, View):
             asset.save(update_fields=["status"])
 
         messages.success(request, "Asset returned successfully.")
-        return redirect("inventory:asset-detail", pk=assignment.asset_id)
+        return redirect("asset_detail", pk=assignment.asset_id)
 
 
 class AssetCSVExportView(AdminRequiredMixin, View):
