@@ -3,12 +3,17 @@
 {% block title %}Assign Asset | ITAM{% endblock %}
 
 {% block content %}
-<h2>Assign Asset</h2>
+<h2>Assign {{ asset.name }}</h2>
+
+<p>
+    Serial Number: {{ asset.serial_number }}<br>
+    Current Status: {{ asset.status }}
+</p>
 
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Assign</button>
-    <a href="{% url 'asset_list' %}">Cancel</a>
+    <a href="{% url 'asset_detail' asset.pk %}">Cancel</a>
 </form>
 {% endblock %}

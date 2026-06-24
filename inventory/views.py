@@ -206,22 +206,41 @@ class AssignAssetView(AdminRequiredMixin, FormView):
     form_class = AssignmentForm
     success_url = reverse_lazy("asset_list")
 
+    def dispatch(self, request, *args, **kwargs):
+        self.asset = get_object_or_404(Asset, pk=kwargs["pk"])
+        has_active_assignment = Assignment.objects.filter(
+            asset=self.asset,
+            date_returned__isnull=True,
+        ).exists()
+        if self.asset.status != Asset.AssetStatus.AVAILABLE or has_active_assignment:
+            messages.error(
+                request,
+                "This asset is not available for assignment.",
+            )
+            return redirect("asset_detail", pk=self.asset.pk)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["asset"] = self.asset
+        return context
+
     def form_valid(self, form):
         with transaction.atomic():
-            asset = Asset.objects.select_for_update().get(
-                pk=form.cleaned_data["asset"].pk
-            )
-            employee = form.cleaned_data["employee"]
+            asset = Asset.objects.select_for_update().get(pk=self.asset.pk)
 
             has_active_assignment = Assignment.objects.select_for_update().filter(
                 asset=asset,
                 date_returned__isnull=True,
             ).exists()
             if asset.status != Asset.AssetStatus.AVAILABLE or has_active_assignment:
-                form.add_error("asset", "This asset is not available for assignment.")
+                form.add_error(None, "This asset is not available for assignment.")
                 return self.form_invalid(form)
 
-            Assignment.objects.create(asset=asset, employee=employee)
+            assignment = form.save(commit=False)
+            assignment.asset = asset
+            assignment.save()
+
             asset.status = Asset.AssetStatus.ASSIGNED
             asset.save(update_fields=["status"])
 
@@ -232,20 +251,28 @@ class AssignAssetView(AdminRequiredMixin, FormView):
 class ReturnAssetView(AdminRequiredMixin, View):
     def post(self, request, pk):
         with transaction.atomic():
-            assignment = get_object_or_404(
-                Assignment.objects.select_for_update().select_related("asset"),
-                pk=pk,
-                date_returned__isnull=True,
+            asset = get_object_or_404(Asset.objects.select_for_update(), pk=pk)
+            assignment = (
+                Assignment.objects.select_for_update()
+                .filter(asset=asset, date_returned__isnull=True)
+                .first()
             )
-            assignment.date_returned = timezone.localdate()
+
+            if assignment is None:
+                messages.error(request, "This asset does not have an active assignment.")
+                return redirect("asset_detail", pk=asset.pk)
+
+            assignment.date_returned = timezone.now().date()
             assignment.save(update_fields=["date_returned"])
 
-            asset = Asset.objects.select_for_update().get(pk=assignment.asset_id)
             asset.status = Asset.AssetStatus.AVAILABLE
             asset.save(update_fields=["status"])
 
-        messages.success(request, "Asset returned successfully.")
-        return redirect("asset_detail", pk=assignment.asset_id)
+        messages.success(
+            request,
+            "Asset returned successfully to inventory storage.",
+        )
+        return redirect("asset_detail", pk=asset.pk)
 
 
 class AssetCSVExportView(AdminRequiredMixin, View):

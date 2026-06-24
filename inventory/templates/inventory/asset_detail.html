@@ -29,12 +29,15 @@
             Assigned to {{ active_assignment.employee.name }}
             on {{ active_assignment.date_assigned }}.
         </p>
-        <form method="post" action="{% url 'return_asset' active_assignment.pk %}">
+        <form method="post" action="{% url 'return_asset' asset.pk %}">
             {% csrf_token %}
             <button type="submit">Return Asset</button>
         </form>
     {% else %}
         <p>This asset is not currently assigned.</p>
+        {% if asset.status == "Available" %}
+            <p><a href="{% url 'assign_asset' asset.pk %}">Assign Asset</a></p>
+        {% endif %}
     {% endif %}
 </section>
 

@@ -32,19 +32,11 @@ class EmployeeForm(forms.ModelForm):
 class AssignmentForm(forms.ModelForm):
     class Meta:
         model = Assignment
-        fields = ["asset", "employee"]
+        fields = ["employee"]
 
-    def clean_asset(self) -> Asset:
-        asset = self.cleaned_data["asset"]
-
-        has_active_assignment = Assignment.objects.filter(
-            asset=asset,
-            date_returned__isnull=True,
-        ).exists()
-        if asset.status != Asset.AssetStatus.AVAILABLE or has_active_assignment:
-            raise forms.ValidationError("This asset is not available for assignment.") #add user friendly error tareting to point out to the specific err
-
-        return asset
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["employee"].queryset = Employee.objects.all().order_by("name")
 
 
 class MaintenanceLogForm(forms.ModelForm):

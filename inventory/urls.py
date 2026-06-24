@@ -23,10 +23,6 @@ urlpatterns = [
         views.EmployeeDeleteView.as_view(),
         name="employee_delete",
     ),
-    path("assignments/new/", views.AssignAssetView.as_view(), name="assign_asset"),
-    path(
-        "assignments/<int:pk>/return/",
-        views.ReturnAssetView.as_view(),
-        name="return_asset",
-    ),
+    path("assets/<int:pk>/assign/", views.AssignAssetView.as_view(), name="assign_asset"),
+    path("assets/<int:pk>/return/", views.ReturnAssetView.as_view(), name="return_asset"),
 ]
