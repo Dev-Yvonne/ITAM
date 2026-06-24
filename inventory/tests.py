@@ -222,3 +222,68 @@ class InventoryAdminConfigurationTests(TestCase):
         )
         self.assertEqual(model_admin.list_filter, ("resolved", "date"))
         self.assertIn("issue_description", model_admin.search_fields)
+
+
+class ManagementViewSecurityTests(TestCase):
+    def setUp(self):
+        self.asset = Asset.objects.create(
+            name="Security Laptop",
+            type=Asset.AssetType.LAPTOP,
+            serial_number="SEC-12345",
+            status=Asset.AssetStatus.AVAILABLE,
+        )
+        self.employee = Employee.objects.create(
+            name="Security Tester",
+            department="IT Operations",
+            email="security@example.com",
+        )
+
+    def test_anonymous_user_blocked_from_crud(self):
+        response = self.client.get(reverse("asset_add"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/admin/login/", response["Location"])
+        self.assertIn("next=", response["Location"])
+
+    def test_non_admin_employee_user_forbidden(self):
+        user = get_user_model().objects.create_user(
+            username="employee-user",
+            email="employee-user@example.com",
+            password="test-pass-12345",
+            is_staff=False,
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("assign_asset", kwargs={"pk": self.asset.pk}),
+            data={"employee": self.employee.pk},
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.asset.refresh_from_db()
+        self.assertEqual(self.asset.status, Asset.AssetStatus.AVAILABLE)
+        self.assertFalse(Assignment.objects.filter(asset=self.asset).exists())
+
+    def test_authorized_admin_allowed_crud(self):
+        user = get_user_model().objects.create_user(
+            username="staff-user",
+            email="staff-user@example.com",
+            password="test-pass-12345",
+            is_staff=True,
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("asset_add"),
+            data={
+                "name": "Staff Created Router",
+                "type": Asset.AssetType.ROUTER,
+                "serial_number": "STAFF-ROUTER-001",
+                "status": Asset.AssetStatus.AVAILABLE,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            Asset.objects.filter(serial_number="STAFF-ROUTER-001").exists()
+        )

@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Count, Max, Q
 from django.http import HttpResponse
@@ -24,9 +25,8 @@ from .forms import AssetForm, AssignmentForm
 from .models import Asset, Assignment, Employee
 
 
-class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    def test_func(self) -> bool:
-        return self.request.user.is_staff
+def user_has_admin_access(user) -> bool:
+    return user.is_authenticated and (user.is_staff or user.is_superuser)
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -140,24 +140,48 @@ class AssetDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class AssetCreateView(AdminRequiredMixin, CreateView):
+class AssetCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Asset
     form_class = AssetForm
     template_name = "inventory/asset_form.html"
     success_url = reverse_lazy("asset_list")
 
+    def test_func(self) -> bool:
+        return user_has_admin_access(self.request.user)
 
-class AssetUpdateView(AdminRequiredMixin, UpdateView):
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied
+        return super().handle_no_permission()
+
+
+class AssetUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Asset
     form_class = AssetForm
     template_name = "inventory/asset_form.html"
     success_url = reverse_lazy("asset_list")
 
+    def test_func(self) -> bool:
+        return user_has_admin_access(self.request.user)
 
-class AssetDeleteView(AdminRequiredMixin, DeleteView):
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied
+        return super().handle_no_permission()
+
+
+class AssetDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Asset
     template_name = "inventory/asset_confirm_delete.html"
     success_url = reverse_lazy("asset_list")
+
+    def test_func(self) -> bool:
+        return user_has_admin_access(self.request.user)
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied
+        return super().handle_no_permission()
 
 
 class EmployeeListView(LoginRequiredMixin, ListView):
@@ -185,30 +209,62 @@ class EmployeeDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class EmployeeCreateView(AdminRequiredMixin, CreateView):
+class EmployeeCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Employee
     fields = ["name", "department", "email"]
     template_name = "inventory/employee_form.html"
     success_url = reverse_lazy("employee_list")
 
+    def test_func(self) -> bool:
+        return user_has_admin_access(self.request.user)
 
-class EmployeeUpdateView(AdminRequiredMixin, UpdateView):
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied
+        return super().handle_no_permission()
+
+
+class EmployeeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Employee
     fields = ["name", "department", "email"]
     template_name = "inventory/employee_form.html"
     success_url = reverse_lazy("employee_list")
 
+    def test_func(self) -> bool:
+        return user_has_admin_access(self.request.user)
 
-class EmployeeDeleteView(AdminRequiredMixin, DeleteView):
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied
+        return super().handle_no_permission()
+
+
+class EmployeeDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Employee
     template_name = "inventory/employee_confirm_delete.html"
     success_url = reverse_lazy("employee_list")
 
+    def test_func(self) -> bool:
+        return user_has_admin_access(self.request.user)
 
-class AssignAssetView(AdminRequiredMixin, FormView):
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied
+        return super().handle_no_permission()
+
+
+class AssignAssetView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     template_name = "inventory/assign_asset.html"
     form_class = AssignmentForm
     success_url = reverse_lazy("asset_list")
+
+    def test_func(self) -> bool:
+        return user_has_admin_access(self.request.user)
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied
+        return super().handle_no_permission()
 
     def dispatch(self, request, *args, **kwargs):
         self.asset = get_object_or_404(Asset, pk=kwargs["pk"])
@@ -252,7 +308,15 @@ class AssignAssetView(AdminRequiredMixin, FormView):
         return super().form_valid(form)
 
 
-class ReturnAssetView(AdminRequiredMixin, View):
+class ReturnAssetView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self) -> bool:
+        return user_has_admin_access(self.request.user)
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied
+        return super().handle_no_permission()
+
     def post(self, request, pk):
         with transaction.atomic():
             asset = get_object_or_404(Asset.objects.select_for_update(), pk=pk)
@@ -279,7 +343,15 @@ class ReturnAssetView(AdminRequiredMixin, View):
         return redirect("asset_detail", pk=asset.pk)
 
 
-class AssetCSVExportView(AdminRequiredMixin, View):
+class AssetCSVExportView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self) -> bool:
+        return user_has_admin_access(self.request.user)
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied
+        return super().handle_no_permission()
+
     def get(self, request):
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = 'attachment; filename="assets.csv"'
