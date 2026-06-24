@@ -4,7 +4,6 @@
 {% block title %}Delete Asset{% endblock %}
 
 {% block extra_css %}
-    <!-- Form CSS for delete confirmation -->
     <link rel="stylesheet" href="{% static 'inventory/css/forms.css' %}">
 {% endblock %}
 
@@ -24,14 +23,14 @@
             
             {% if object.assignments.exists %}
                 <div class="delete-warning-box">
-                    ⚠️ This asset has <strong>{{ object.assignments.count }}</strong> assignment record(s).
+                    This asset has <strong>{{ object.assignments.count }}</strong> assignment record(s).
                     Deleting it will also remove all assignment history.
                 </div>
             {% endif %}
             
             {% if object.maintenance_logs.exists %}
                 <div class="delete-warning-box">
-                    ⚠️ This asset has <strong>{{ object.maintenance_logs.count }}</strong> maintenance record(s).
+                    This asset has <strong>{{ object.maintenance_logs.count }}</strong> maintenance record(s).
                     Deleting it will also remove all maintenance history.
                 </div>
             {% endif %}
@@ -39,7 +38,7 @@
             <form method="post" class="delete-form">
                 {% csrf_token %}
                 <div class="delete-actions">
-                    <button type="submit" class="btn btn-danger">🗑️ Confirm Delete</button>
+                    <button type="submit" class="btn btn-danger">Confirm Delete</button>
                     <a href="{% url 'asset_detail' object.pk %}" class="btn btn-secondary">Cancel</a>
                 </div>
             </form>
@@ -48,6 +47,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <!-- Form validation JavaScript -->
     <script src="{% static 'inventory/js/forms.js' %}"></script>
 {% endblock %}

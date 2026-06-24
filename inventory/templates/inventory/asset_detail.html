@@ -4,7 +4,6 @@
 {% block title %}{{ asset.name }} - Asset Details{% endblock %}
 
 {% block extra_css %}
-    <!-- Table CSS for history tables -->
     <link rel="stylesheet" href="{% static 'inventory/css/tables.css' %}">
 {% endblock %}
 
@@ -17,20 +16,20 @@
                     {{ asset.status }}
                 </span>
                 {% if asset.last_maintenance_date and asset.last_maintenance_date < overdue_cutoff %}
-                    <span class="badge badge-overdue">⚠️ Overdue for Service</span>
+                    <span class="badge badge-overdue">Overdue for Service</span>
                 {% endif %}
             </p>
         </div>
         <div class="detail-header-actions">
-            <a href="{% url 'asset_edit' asset.pk %}" class="btn btn-secondary">✏️ Edit</a>
-            <a href="{% url 'asset_delete' asset.pk %}" class="btn btn-danger">🗑️ Delete</a>
-            <a href="{% url 'asset_list' %}" class="btn btn-secondary">← Back</a>
+            <a href="{% url 'asset_edit' asset.pk %}" class="btn btn-secondary">Edit</a>
+            <a href="{% url 'asset_delete' asset.pk %}" class="btn btn-danger">Delete</a>
+            <a href="{% url 'asset_list' %}" class="btn btn-secondary">Back</a>
         </div>
     </div>
 
     <div class="detail-grid">
         <div class="detail-card">
-            <h3>📋 Asset Information</h3>
+            <h3>Asset Information</h3>
             <div class="detail-field">
                 <span class="field-label">Type</span>
                 <span class="field-value">{{ asset.type }}</span>
@@ -50,7 +49,7 @@
         </div>
 
         <div class="detail-card">
-            <h3>👤 Current Assignment</h3>
+            <h3>Current Assignment</h3>
             {% if active_assignment %}
                 <div class="assignment-active">
                     <p><strong>Assigned to:</strong> {{ active_assignment.employee.name }}</p>
@@ -59,17 +58,17 @@
                     <p><strong>Assigned on:</strong> {{ active_assignment.date_assigned }}</p>
                     <form method="post" action="{% url 'return_asset' asset.pk %}" style="margin-top: 1rem;">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-success">↩️ Return Asset</button>
+                        <button type="submit" class="btn btn-success">Return Asset</button>
                     </form>
                 </div>
             {% elif asset.status == "Available" %}
                 <div class="assignment-available">
-                    <p>✅ This asset is <strong>available</strong> for assignment.</p>
-                    <a href="{% url 'assign_asset' asset.pk %}" class="btn btn-primary" style="margin-top: 0.5rem;">📤 Assign Asset</a>
+                    <p>This asset is <strong>available</strong> for assignment.</p>
+                    <a href="{% url 'assign_asset' asset.pk %}" class="btn btn-primary" style="margin-top: 0.5rem;">Assign Asset</a>
                 </div>
             {% else %}
                 <div class="assignment-unavailable">
-                    <p>🔧 This asset is currently <strong>{{ asset.status }}</strong>.</p>
+                    <p>This asset is currently <strong>{{ asset.status }}</strong>.</p>
                     <p>It cannot be assigned until it is available.</p>
                 </div>
             {% endif %}
@@ -77,7 +76,7 @@
     </div>
 
     <section>
-        <h3>📜 Assignment History</h3>
+        <h3>Assignment History</h3>
         {% if assignment_history %}
             <div class="table-wrapper">
                 <table>
@@ -95,7 +94,7 @@
                                 <td>{{ assignment.employee.name }}</td>
                                 <td>{{ assignment.employee.department }}</td>
                                 <td>{{ assignment.date_assigned }}</td>
-                                <td>{{ assignment.date_returned|default:"<em>Currently assigned</em>" }}</td>
+                                <td>{{ assignment.date_returned|default:"Currently assigned" }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -107,7 +106,7 @@
     </section>
 
     <section>
-        <h3>🔧 Maintenance Logs</h3>
+        <h3>Maintenance Logs</h3>
         {% if maintenance_logs %}
             <div class="maintenance-timeline">
                 {% for log in maintenance_logs %}
@@ -115,11 +114,11 @@
                         <div class="meta">
                             <span class="date">{{ log.date }}</span>
                             <span class="status-badge">
-                                {% if log.resolved %}✅ Resolved{% else %}🔄 Pending{% endif %}
+                                {% if log.resolved %}Resolved{% else %}Pending{% endif %}
                             </span>
                         </div>
                         <div class="issue">{{ log.issue_description }}</div>
-                        <div class="technician">👨‍🔧 Technician: {{ log.technician }}</div>
+                        <div class="technician">Technician: {{ log.technician }}</div>
                     </div>
                 {% endfor %}
             </div>
@@ -130,6 +129,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <!-- Asset management JavaScript -->
     <script src="{% static 'inventory/js/assets.js' %}"></script>
 {% endblock %}

@@ -1,50 +1,73 @@
 {% load static %}
-<nav class="navbar">
+<nav class="navbar" role="navigation" aria-label="Main navigation">
     <div class="navbar-brand">
         <a href="{% url 'dashboard' %}">
-            <span class="brand-icon">📊</span>
-            ITAM System
+            <svg class="brand-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M16 21V5C16 3.89543 15.1046 3 14 3H10C8.89543 3 8 3.89543 8 5V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 7H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M12 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="brand-text">ITAM System</span>
         </a>
     </div>
     
-    <button class="navbar-toggler" id="navbarToggle" aria-label="Toggle navigation">
+    <button class="navbar-toggler" id="navbarToggle" aria-label="Toggle navigation menu">
         <span></span>
         <span></span>
         <span></span>
     </button>
     
-    <ul class="navbar-nav" id="navbarNav">
-        <li class="nav-item">
+    <ul class="navbar-nav" id="navbarNav" role="menubar">
+        <li class="nav-item" role="none">
             <a class="nav-link {% if request.path == '/' %}active{% endif %}" 
-               href="{% url 'dashboard' %}">
-                📈 Dashboard
+               href="{% url 'dashboard' %}" role="menuitem">
+                Dashboard
             </a>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" role="none">
             <a class="nav-link {% if 'assets' in request.path %}active{% endif %}" 
-               href="{% url 'asset_list' %}">
-                💻 Assets
+               href="{% url 'asset_list' %}" role="menuitem">
+                Assets
             </a>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" role="none">
             <a class="nav-link {% if 'employees' in request.path %}active{% endif %}" 
-               href="{% url 'employee_list' %}">
-                👥 Employees
+               href="{% url 'employee_list' %}" role="menuitem">
+                Employees
             </a>
         </li>
-        {% if user.is_authenticated %}
-            <li class="nav-item nav-item-right">
-                <span class="nav-user">👤 {{ user.username }}</span>
-                <a class="nav-link nav-logout" href="{% url 'admin:logout' %}">
-                    🚪 Logout
-                </a>
-            </li>
-        {% else %}
-            <li class="nav-item nav-item-right">
-                <a class="nav-link nav-login" href="{% url 'admin:login' %}">
-                    🔐 Admin Login
-                </a>
-            </li>
-        {% endif %}
+        <li class="nav-item nav-item-right" role="none">
+            <!-- Profile Dropdown -->
+            <div class="profile-dropdown">
+                <button class="profile-btn" id="profileToggle" aria-label="Profile menu">
+                    <span class="user-avatar">{{ user.username|first|upper }}</span>
+                    <span class="profile-name">{{ user.username }}</span>
+                    <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="dropdown-menu" id="profileDropdown">
+                    <div class="dropdown-header">
+                        <span class="dropdown-user">{{ user.username }}</span>
+                        <span class="dropdown-email">{{ user.email|default:"No email" }}</span>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item theme-toggle" id="themeToggle">
+                        <span class="theme-icon">🌙</span>
+                        <span class="theme-text">Dark Mode</span>
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item dropdown-logout" href="{% url 'admin:logout' %}">
+                        <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </li>
     </ul>
-</nav>v
+</nav>

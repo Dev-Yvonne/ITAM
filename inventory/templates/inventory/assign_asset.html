@@ -1,23 +1,21 @@
 {% extends 'inventory/base.html' %}
 {% load static %}
 
-{% block title %}Assign Asset - ITAM System{% endblock %}
+{% block title %}Assign Asset{% endblock %}
 
 {% block extra_css %}
-    <!-- Form specific CSS -->
     <link rel="stylesheet" href="{% static 'inventory/css/forms.css' %}">
 {% endblock %}
 
 {% block content %}
     <div class="form-header">
-        <h1>📤 Assign Asset</h1>
+        <h1>Assign Asset</h1>
         <p class="form-subtitle">
             Assign <strong>{{ asset.name }}</strong> ({{ asset.serial_number }}) to an employee.
         </p>
     </div>
 
     <div class="form-container">
-        <!-- Asset Summary -->
         <div class="asset-summary">
             <div class="asset-summary-item">
                 <span class="summary-label">Asset Name</span>
@@ -41,7 +39,6 @@
             </div>
         </div>
         
-        <!-- Assignment Form -->
         <form method="post" novalidate>
             {% csrf_token %}
             
@@ -78,7 +75,7 @@
             </div>
             
             <div class="form-actions">
-                <button type="submit" class="btn btn-success">📤 Assign</button>
+                <button type="submit" class="btn btn-success">Assign</button>
                 <a href="{% url 'asset_detail' asset.pk %}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
@@ -86,6 +83,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <!-- Assignment management JavaScript -->
     <script src="{% static 'inventory/js/assignments.js' %}"></script>
 {% endblock %}

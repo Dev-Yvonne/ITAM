@@ -1,0 +1,90 @@
+/* ========================================
+   FOOTER.CSS - Footer Styles
+   ======================================== */
+
+.footer {
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    padding: 1rem 1.5rem;
+    margin-top: auto;
+    flex-shrink: 0;
+    transition: all 250ms ease;
+}
+
+.footer-content {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.footer-copyright {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.footer-version {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    background: #f8fafc;
+    padding: 0.1rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.footer-powered {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+/* ========================================
+   DARK MODE - FOOTER
+   ======================================== */
+[data-theme="dark"] .footer {
+    background: #0f172a;
+    border-top-color: #334155;
+}
+
+[data-theme="dark"] .footer-copyright {
+    color: #64748b;
+}
+
+[data-theme="dark"] .footer-version {
+    background: #1e293b;
+    color: #64748b;
+}
+
+[data-theme="dark"] .footer-powered {
+    color: #64748b;
+}
+
+/* ========================================
+   RESPONSIVE FOOTER
+   ======================================== */
+@media (max-width: 768px) {
+    .footer {
+        padding: 1rem;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+@media print {
+    .footer {
+        display: none !important;
+        position: static !important;
+    }
+}

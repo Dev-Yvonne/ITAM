@@ -10,27 +10,26 @@
     
     <!-- ===== CORE CSS (Loaded on ALL pages) ===== -->
     <link rel="stylesheet" href="{% static 'inventory/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'inventory/css/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'inventory/css/footer.css' %}">
     
     <!-- ===== PAGE-SPECIFIC CSS (Defined in child templates) ===== -->
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     
-    <!-- NAVIGATION -->
+    <!-- ============================================ -->
+    <!-- NAVIGATION                                   -->
+    <!-- ============================================ -->
     {% include 'inventory/includes/navbar.html' %}
     
-    <!-- MESSAGES -->
+    <!-- ============================================ -->
+    <!-- MESSAGES / ALERTS                           -->
+    <!-- ============================================ -->
     {% if messages %}
         <div class="messages-container">
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }}">
-                    <span class="alert-icon">
-                        {% if message.tags == 'success' %}✅
-                        {% elif message.tags == 'error' %}❌
-                        {% elif message.tags == 'warning' %}⚠️
-                        {% else %}ℹ️
-                        {% endif %}
-                    </span>
                     {{ message }}
                     <button class="alert-close" onclick="this.parentElement.remove();">&times;</button>
                 </div>
@@ -38,18 +37,26 @@
         </div>
     {% endif %}
     
-    <!-- MAIN CONTENT -->
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT                                 -->
+    <!-- ============================================ -->
     <main>
         {% block content %}{% endblock %}
     </main>
     
-    <!-- FOOTER -->
+    <!-- ============================================ -->
+    <!-- FOOTER                                       -->
+    <!-- ============================================ -->
     {% include 'inventory/includes/footer.html' %}
     
-    <!-- ===== CORE JAVASCRIPT (Loaded on ALL pages) ===== -->
+    <!-- ============================================ -->
+    <!-- CORE JAVASCRIPT                             -->
+    <!-- ============================================ -->
     <script src="{% static 'inventory/js/main.js' %}"></script>
     
-    <!-- ===== PAGE-SPECIFIC JAVASCRIPT (Defined in child templates) ===== -->
+    <!-- ============================================ -->
+    <!-- PAGE-SPECIFIC JAVASCRIPT                    -->
+    <!-- ============================================ -->
     {% block extra_js %}{% endblock %}
 </body>
 </html>

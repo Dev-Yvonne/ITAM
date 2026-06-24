@@ -4,7 +4,6 @@
 {% block title %}{{ employee.name }} - Employee Details{% endblock %}
 
 {% block extra_css %}
-    <!-- Table CSS for history -->
     <link rel="stylesheet" href="{% static 'inventory/css/tables.css' %}">
 {% endblock %}
 
@@ -14,15 +13,15 @@
             <h1>{{ employee.name }}</h1>
         </div>
         <div class="detail-header-actions">
-            <a href="{% url 'employee_edit' employee.pk %}" class="btn btn-secondary">✏️ Edit</a>
-            <a href="{% url 'employee_delete' employee.pk %}" class="btn btn-danger">🗑️ Delete</a>
-            <a href="{% url 'employee_list' %}" class="btn btn-secondary">← Back</a>
+            <a href="{% url 'employee_edit' employee.pk %}" class="btn btn-secondary">Edit</a>
+            <a href="{% url 'employee_delete' employee.pk %}" class="btn btn-danger">Delete</a>
+            <a href="{% url 'employee_list' %}" class="btn btn-secondary">Back</a>
         </div>
     </div>
 
     <div class="detail-grid">
         <div class="detail-card">
-            <h3>📋 Employee Information</h3>
+            <h3>Employee Information</h3>
             <div class="detail-field">
                 <span class="field-label">Department</span>
                 <span class="field-value">{{ employee.department }}</span>
@@ -35,7 +34,7 @@
     </div>
 
     <section>
-        <h3>📦 Active Assignments</h3>
+        <h3>Active Assignments</h3>
         {% if active_assignments %}
             <div class="table-wrapper">
                 <table>
@@ -54,7 +53,7 @@
                                 <td>
                                     <form method="post" action="{% url 'return_asset' assignment.asset.pk %}" style="display:inline;">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-success">↩️ Return</button>
+                                        <button type="submit" class="btn btn-sm btn-success">Return</button>
                                     </form>
                                 </td>
                             </tr>
@@ -68,7 +67,7 @@
     </section>
 
     <section>
-        <h3>📜 Assignment History</h3>
+        <h3>Assignment History</h3>
         {% if assignment_history %}
             <div class="table-wrapper">
                 <table>
@@ -84,7 +83,7 @@
                             <tr>
                                 <td><a href="{% url 'asset_detail' assignment.asset.pk %}">{{ assignment.asset.name }}</a></td>
                                 <td>{{ assignment.date_assigned }}</td>
-                                <td>{{ assignment.date_returned|default:"<em>Currently assigned</em>" }}</td>
+                                <td>{{ assignment.date_returned|default:"Currently assigned" }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -97,6 +96,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <!-- Employee management JavaScript -->
     <script src="{% static 'inventory/js/employees.js' %}"></script>
 {% endblock %}

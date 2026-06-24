@@ -1,17 +1,15 @@
 {% extends 'inventory/base.html' %}
 {% load static %}
 
-{% block title %}Dashboard - ITAM System{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block extra_css %}
-    <!-- Dashboard specific CSS -->
     <link rel="stylesheet" href="{% static 'inventory/css/dashboard.css' %}">
 {% endblock %}
 
 {% block content %}
-    <!-- Dashboard content -->
     <div class="dashboard-header">
-        <h1>📈 Dashboard</h1>
+        <h1>Dashboard</h1>
         <p class="dashboard-subtitle">Real-time overview of your IT asset inventory</p>
     </div>
 
@@ -62,15 +60,15 @@
     </div>
 
     <div class="dashboard-actions">
-        <a href="{% url 'asset_add' %}" class="btn btn-primary">➕ Add New Asset</a>
-        <a href="{% url 'employee_add' %}" class="btn btn-secondary">👤 Add New Employee</a>
-        <a href="{% url 'asset_export' %}" class="btn btn-success">📥 Export CSV</a>
+        <a href="{% url 'asset_add' %}" class="btn btn-primary">Add New Asset</a>
+        <a href="{% url 'employee_add' %}" class="btn btn-secondary">Add New Employee</a>
+        <a href="{% url 'asset_export' %}" class="btn btn-success">Export CSV</a>
     </div>
 
     {% if overdue_assets %}
         <div class="overdue-section">
             <div class="overdue-header">
-                <h2>⚠️ Assets Overdue for Service</h2>
+                <h2>Assets Overdue for Service</h2>
                 <span class="overdue-badge">{{ overdue_assets|length }}</span>
             </div>
             <p class="overdue-subtitle">
@@ -95,7 +93,7 @@
                             {% if asset.last_maintenance_date %}
                                 <p><strong>Last Service:</strong> {{ asset.last_maintenance_date }}</p>
                             {% else %}
-                                <p><strong>Last Service:</strong> <em>Never serviced</em></p>
+                                <p><strong>Last Service:</strong> Never serviced</p>
                             {% endif %}
                         </div>
                         <div class="overdue-card-footer">
@@ -115,7 +113,7 @@
     {% else %}
         <div class="overdue-section overdue-clear">
             <div class="overdue-header">
-                <h2>✅ All Assets Up to Date</h2>
+                <h2>All Assets Up to Date</h2>
             </div>
             <p class="overdue-clear-message">All assets have been serviced within the last 6 months.</p>
         </div>
@@ -123,15 +121,15 @@
 
     <div class="dashboard-footer">
         <div class="footer-stat">
-            <span class="footer-stat-label">📊 Last Updated</span>
+            <span class="footer-stat-label">Last Updated</span>
             <span class="footer-stat-value">{% now "Y-m-d H:i:s" %}</span>
         </div>
         <div class="footer-stat">
-            <span class="footer-stat-label">📈 Total Assets</span>
+            <span class="footer-stat-label">Total Assets</span>
             <span class="footer-stat-value">{{ total_assets|default:"0" }}</span>
         </div>
         <div class="footer-stat">
-            <span class="footer-stat-label">🔄 Utilization Rate</span>
+            <span class="footer-stat-label">Utilization Rate</span>
             <span class="footer-stat-value">
                 {% if total_assets > 0 %}
                     {% widthratio assigned_assets total_assets 100 %}%
@@ -144,6 +142,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <!-- Dashboard specific JavaScript -->
     <script src="{% static 'inventory/js/dashboard.js' %}"></script>
 {% endblock %}

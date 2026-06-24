@@ -4,13 +4,12 @@
 {% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Asset{% endblock %}
 
 {% block extra_css %}
-    <!-- Form specific CSS -->
     <link rel="stylesheet" href="{% static 'inventory/css/forms.css' %}">
 {% endblock %}
 
 {% block content %}
     <div class="form-header">
-        <h1>{% if form.instance.pk %}✏️ Edit{% else %}➕ Add{% endif %} Asset</h1>
+        <h1>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Asset</h1>
         <p class="form-subtitle">
             {% if form.instance.pk %}
                 Update the asset details below.
@@ -57,7 +56,7 @@
             </div>
             
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">💾 Save Asset</button>
+                <button type="submit" class="btn btn-primary">Save Asset</button>
                 <a href="{% url 'asset_list' %}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
@@ -65,6 +64,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <!-- Form validation JavaScript -->
     <script src="{% static 'inventory/js/forms.js' %}"></script>
 {% endblock %}
