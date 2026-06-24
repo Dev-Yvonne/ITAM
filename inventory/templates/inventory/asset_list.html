@@ -21,9 +21,8 @@
     </div>
 
     {% if request.user.is_staff or request.user.is_superuser %}
-        <form id="asset-form" class="card form-card">
+        <form id="asset-form" class="card form-card" hidden aria-hidden="true">
             {% csrf_token %}
-            <input id="asset-id" name="id" type="hidden">
 
             <label for="asset-name">Name</label>
             <input id="asset-name" name="name" type="text" required>
@@ -39,14 +38,7 @@
                 <option value="monitor">Monitor</option>
             </select>
 
-            <label for="asset-status">Status</label>
-            <select id="asset-status" name="status" required>
-                <option value="available">Available</option>
-                <option value="assigned">Assigned</option>
-                <option value="maintenance">Under Maintenance</option>
-            </select>
-
-            <button type="submit" class="btn btn-primary" data-create-label="Create Asset" data-update-label="Update Asset">Create Asset</button>
+            <button type="submit" class="btn btn-primary">Create Asset</button>
             <button type="reset" class="btn btn-secondary">Cancel</button>
         </form>
     {% endif %}

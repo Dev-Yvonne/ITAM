@@ -462,6 +462,25 @@ class FrontendAPIBridgeTests(TestCase):
         self.assertEqual(response.json()["assignment_calendar"]["date_assigned"], today)
         self.assertTrue(response.json()["assignment_calendar"]["currently_assigned"])
 
+    def test_asset_api_create_defaults_status_to_available(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            reverse("api_asset_list"),
+            data={
+                "name": "Created Without Status",
+                "type": "laptop",
+                "serial_number": "API-NO-STATUS",
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        asset = Asset.objects.get(serial_number="API-NO-STATUS")
+        self.assertEqual(asset.status, Asset.AssetStatus.AVAILABLE)
+        self.assertEqual(response.json()["status"], "available")
+        self.assertEqual(response.json()["status_label"], "Available")
+
     def test_asset_api_return_updates_calendar_dates(self):
         self.client.force_login(self.admin)
         assignment = Assignment.objects.create(asset=self.asset, employee=self.employee)

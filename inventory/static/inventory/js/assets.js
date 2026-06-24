@@ -256,7 +256,7 @@ function attachTableEventListeners(container) {
                     break;
 
                 case 'action-edit':
-                    await loadAssetIntoForm(assetId);
+                    window.location.href = `/assets/${assetId}/edit/`;
                     break;
 
                 case 'action-assign':
@@ -353,6 +353,22 @@ async function handleDeleteAction(assetId, assetName) {
     refreshAssetList();
 }
 
+function showAssetForm() {
+    const form = document.getElementById('asset-form');
+    if (!form) return;
+    form.hidden = false;
+    form.setAttribute('aria-hidden', 'false');
+    document.getElementById('asset-name')?.focus();
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function hideAssetForm() {
+    const form = document.getElementById('asset-form');
+    if (!form) return;
+    form.hidden = true;
+    form.setAttribute('aria-hidden', 'true');
+}
+
 function showAssetConfirmationCard(options) {
     if (window.showConfirmationCard) {
         return window.showConfirmationCard(options);
@@ -373,60 +389,21 @@ function showActionMessage(message, type = 'info') {
 // 7. FORM HANDLING
 // ============================================================
 
-async function loadAssetIntoForm(assetId) {
-    const asset = await getAssetById(assetId);
-    if (!asset) {
-        alert('Asset not found!');
-        return;
-    }
-
-    const form = document.getElementById('asset-form');
-    if (!form) {
-        console.warn('Form #asset-form not found.');
-        return;
-    }
-
-    document.getElementById('asset-id').value = asset.id || '';
-    document.getElementById('asset-name').value = asset.name || '';
-    document.getElementById('asset-serial').value = asset.serial_number || '';
-    document.getElementById('asset-type').value = asset.type || '';
-    document.getElementById('asset-status').value = asset.status || STATUS.AVAILABLE;
-
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) {
-        submitBtn.textContent = 'Update Asset';
-        submitBtn.dataset.mode = 'edit';
-    }
-
-    form.scrollIntoView({ behavior: 'smooth' });
-}
-
-function resetAssetForm() {
+function resetAssetForm({ hide = false } = {}) {
     const form = document.getElementById('asset-form');
     if (!form) return;
 
     form.reset();
-    document.getElementById('asset-id').value = '';
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) {
-        submitBtn.textContent = 'Create Asset';
-        submitBtn.dataset.mode = 'create';
-    }
+    if (hide) hideAssetForm();
 }
 
 async function handleFormSubmit(e) {
     e.preventDefault();
 
-    const form = document.getElementById('asset-form');
-    const assetId = document.getElementById('asset-id').value;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const mode = submitBtn?.dataset?.mode || 'create';
-
     const formData = {
         name: document.getElementById('asset-name').value.trim(),
         serial_number: document.getElementById('asset-serial').value.trim(),
         type: document.getElementById('asset-type').value.trim(),
-        status: document.getElementById('asset-status').value,
     };
 
     if (!formData.name) {
@@ -435,20 +412,14 @@ async function handleFormSubmit(e) {
     }
 
     try {
-        let result;
-        if (mode === 'edit' && assetId) {
-            result = await updateAsset(assetId, formData);
-            alert(`Asset "${result.name}" updated successfully!`);
-        } else {
-            result = await createAsset(formData);
-            alert(`Asset "${result.name}" created successfully!`);
-        }
+        const result = await createAsset(formData);
+        showActionMessage(`Asset "${result.name}" created successfully.`, 'success');
 
-        resetAssetForm();
+        resetAssetForm({ hide: true });
         refreshAssetList();
 
     } catch (error) {
-        alert(`Failed to save asset: ${error.message}`);
+        showActionMessage(`Failed to create asset: ${error.message}`, 'error');
     }
 }
 
@@ -524,7 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const cancelBtn = assetForm.querySelector('[type="reset"]');
         if (cancelBtn) {
-            cancelBtn.addEventListener('click', resetAssetForm);
+            cancelBtn.addEventListener('click', () => resetAssetForm({ hide: true }));
         }
     }
 
@@ -532,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (addBtn) {
         addBtn.addEventListener('click', () => {
             resetAssetForm();
-            document.getElementById('asset-form')?.scrollIntoView({ behavior: 'smooth' });
+            showAssetForm();
         });
     }
 
