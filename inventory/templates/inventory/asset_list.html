@@ -44,6 +44,9 @@
                     <th>Type</th>
                     <th>Serial Number</th>
                     <th>Status</th>
+                    <th>Created</th>
+                    <th>Assigned</th>
+                    <th>Returned</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -58,6 +61,9 @@
                                 {{ asset.status }}
                             </span>
                         </td>
+                        <td>{{ asset.date_created|date:"M d, Y H:i" }}</td>
+                        <td>{{ asset.last_assigned_date|date:"M d, Y H:i"|default:"-" }}</td>
+                        <td>{{ asset.last_returned_date|date:"M d, Y H:i"|default:"-" }}</td>
                         <td class="actions-cell">
                             <a href="{% url 'asset_detail' asset.pk %}" class="btn btn-sm btn-primary">View</a>
                             <a href="{% url 'asset_edit' asset.pk %}" class="btn btn-sm btn-secondary">Edit</a>
@@ -66,7 +72,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="5" class="empty-state">
+                        <td colspan="8" class="empty-state">
                             <div class="empty-state-content">
                                 <h3>No assets found</h3>
                                 <p>Start by adding your first asset.</p>

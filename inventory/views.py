@@ -9,8 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import Count, Exists, F, Max, OuterRef, Q
-from django.db.models.functions import Coalesce
+from django.db.models import Count, Exists, Max, OuterRef, Q
 from django.db.models.deletion import ProtectedError
 from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -108,8 +107,12 @@ def serialize_employee(employee: Employee) -> dict:
     }
 
 
-def serialize_date(value):
-    return value.isoformat() if value else None
+def serialize_temporal(value):
+    if not value:
+        return None
+    if hasattr(value, "hour"):
+        return timezone.localtime(value).isoformat()
+    return value.isoformat()
 
 
 def serialize_asset(asset: Asset) -> dict:
@@ -141,12 +144,13 @@ def serialize_asset(asset: Asset) -> dict:
             serialize_employee(active_assignment.employee) if active_assignment else None
         ),
         "assignment_calendar": {
-            "date_assigned": serialize_date(date_assigned),
-            "date_returned": serialize_date(date_returned),
+            "date_assigned": serialize_temporal(date_assigned),
+            "date_returned": serialize_temporal(date_returned),
             "currently_assigned": active_assignment is not None,
         },
-        "date_assigned": serialize_date(date_assigned),
-        "date_returned": serialize_date(date_returned),
+        "date_created": serialize_temporal(asset.date_created),
+        "date_assigned": serialize_temporal(date_assigned),
+        "date_returned": serialize_temporal(date_returned),
     }
 
 
@@ -168,6 +172,7 @@ def get_service_overdue_cutoff():
 
 def get_overdue_assets_queryset():
     overdue_cutoff = get_service_overdue_cutoff().date()
+    created_cutoff = get_service_overdue_cutoff()
     recent_maintenance = MaintenanceLog.objects.filter(
         asset=OuterRef("pk"),
         date__gte=overdue_cutoff,
@@ -176,12 +181,12 @@ def get_overdue_assets_queryset():
         Asset.objects.annotate(
             has_recent_maintenance=Exists(recent_maintenance),
             last_maintenance_date=Max("maintenance_logs__date"),
-            service_reference_date=Coalesce(
-                Max("maintenance_logs__date"),
-                F("date_created"),
-            ),
         )
-        .filter(has_recent_maintenance=False, service_reference_date__lt=overdue_cutoff)
+        .filter(has_recent_maintenance=False)
+        .filter(
+            Q(last_maintenance_date__lt=overdue_cutoff)
+            | Q(last_maintenance_date__isnull=True, date_created__lt=created_cutoff)
+        )
         .order_by("name", "serial_number")
     )
 
@@ -537,7 +542,7 @@ class ReturnAssetView(LoginRequiredMixin, UserPassesTestMixin, View):
                 messages.error(request, "This asset does not have an active assignment.")
                 return redirect("asset_detail", pk=asset.pk)
 
-            assignment.date_returned = timezone.now().date()
+            assignment.date_returned = timezone.now()
             assignment.save(update_fields=["date_returned"])
 
             asset.status = Asset.AssetStatus.AVAILABLE
@@ -714,7 +719,7 @@ class AssetReturnAPIView(LoginRequiredMixin, View):
                     status=400,
                 )
 
-            assignment.date_returned = timezone.now().date()
+            assignment.date_returned = timezone.now()
             assignment.save(update_fields=["date_returned"])
             asset.status = Asset.AssetStatus.AVAILABLE
             asset.save(update_fields=["status"])

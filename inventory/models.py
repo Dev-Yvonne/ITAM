@@ -24,7 +24,7 @@ class Asset(models.Model):
         choices=AssetStatus.choices,
         default=AssetStatus.AVAILABLE,
     )
-    date_created = models.DateField(default=timezone.now)
+    date_created = models.DateTimeField(default=timezone.now)
 
     class Meta:
         ordering = ["name", "serial_number"]
@@ -68,8 +68,8 @@ class Assignment(models.Model):
         on_delete=models.PROTECT,
         related_name="assignments",
     )
-    date_assigned = models.DateField(auto_now_add=True)
-    date_returned = models.DateField(null=True, blank=True)
+    date_assigned = models.DateTimeField(auto_now_add=True)
+    date_returned = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-date_assigned", "-id"]
