@@ -1,23 +1,35 @@
 import sys
 from pathlib import Path
+import os
 
 import environ
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Initialize environ
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
 )
-environ.Env.read_env(BASE_DIR / ".env")
 
+# Try to read .env file safely
+env_file = BASE_DIR / ".env"
+if env_file.exists():
+    try:
+        environ.Env.read_env(env_file)
+        print("✅ .env file loaded successfully")
+    except Exception as e:
+        print(f"⚠️ Warning: Could not read .env file: {e}")
+        print("Using environment variables or defaults instead.")
+else:
+    print("ℹ️ No .env file found. Using environment variables or defaults.")
 
-SECRET_KEY = env("SECRET_KEY")
-DEBUG = env("DEBUG")
-ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+# Get settings from environment or use defaults
+SECRET_KEY = os.environ.get("SECRET_KEY") or env("SECRET_KEY", default="django-insecure-dev-key-change-in-production")
+DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes") or env("DEBUG", default=True)
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") or env("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
-
+# Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -57,21 +69,32 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "tracker.wsgi.application"
 
+# Database Configuration
+# Choose one of the following configurations:
 
+# Option 1: PostgreSQL (for production with Supabase)
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("DB_NAME"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASSWORD"),
-        "HOST": env("DB_HOST"),
-        "PORT": env("DB_PORT", default="5432"),
+        "NAME": os.environ.get("DB_NAME") or env("DB_NAME", default="postgres"),
+        "USER": os.environ.get("DB_USER") or env("DB_USER", default="postgres"),
+        "PASSWORD": os.environ.get("DB_PASSWORD") or env("DB_PASSWORD", default=""),
+        "HOST": os.environ.get("DB_HOST") or env("DB_HOST", default="localhost"),
+        "PORT": os.environ.get("DB_PORT") or env("DB_PORT", default="5432"),
         "OPTIONS": {
-            "sslmode": env("DB_SSLMODE", default="require"),
-            "gssencmode": env("DB_GSSENCMODE", default="disable"),
+            "sslmode": os.environ.get("DB_SSLMODE") or env("DB_SSLMODE", default="require"),
+            "gssencmode": os.environ.get("DB_GSSENCMODE") or env("DB_GSSENCMODE", default="disable"),
         },
     }
 }
+
+# Uncomment below to use SQLite for local development instead
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 if "test" in sys.argv:
     DATABASES["default"] = {
@@ -79,7 +102,7 @@ if "test" in sys.argv:
         "NAME": BASE_DIR / "test.sqlite3",
     }
 
-
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -95,17 +118,33 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+# Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = env("TIME_ZONE", default="Africa/Nairobi")
 USE_I18N = True
 USE_TZ = True
 
-
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Media files (user uploaded files)
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_URL = "login"
+# Login/Logout URLs
+LOGIN_URL = "admin:login"
 LOGIN_REDIRECT_URL = "dashboard"
+LOGOUT_REDIRECT_URL = "dashboard"
+
+# Print configuration status
+print("\n📋 Configuration Summary:")
+print(f"   DEBUG: {DEBUG}")
+print(f"   ALLOWED_HOSTS: {ALLOWED_HOSTS}")
+print(f"   Database: {DATABASES['default']['ENGINE']}")
+print(f"   Database Host: {DATABASES['default']['HOST']}")
+print(f"   Database Port: {DATABASES['default']['PORT']}")
+print("✅ Configuration loaded successfully!\n")
