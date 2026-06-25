@@ -87,6 +87,14 @@ form {
     margin-left: var(--spacing-1);
 }
 
+.deferred-required-asterisk {
+    display: none;
+}
+
+form.validation-attempted .form-group.has-error .deferred-required-asterisk {
+    display: inline;
+}
+
 /* ==========================================
    FORM INPUTS
    ========================================== */

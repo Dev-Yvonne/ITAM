@@ -50,6 +50,10 @@
                         </span>
                     </span>
                 </div>
+                <div class="detail-field">
+                    <span class="field-label">Created</span>
+                    <span class="field-value">{{ asset.date_created|date:"M d, Y H:i" }}</span>
+                </div>
             </div>
         </div>
 
@@ -63,7 +67,7 @@
                         <p><strong>Assigned to:</strong> {{ active_assignment.employee.name }}</p>
                         <p><strong>Department:</strong> {{ active_assignment.employee.department }}</p>
                         <p><strong>Email:</strong> {{ active_assignment.employee.email }}</p>
-                        <p><strong>Assigned on:</strong> {{ active_assignment.date_assigned }}</p>
+                        <p><strong>Assigned on:</strong> {{ active_assignment.date_assigned|date:"M d, Y H:i" }}</p>
                         <form method="post" action="{% url 'return_asset' asset.pk %}" class="mt-2">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-success">Return Asset</button>
@@ -102,8 +106,14 @@
                             <tr>
                                 <td>{{ assignment.employee.name }}</td>
                                 <td>{{ assignment.employee.department }}</td>
-                                <td>{{ assignment.date_assigned }}</td>
-                                <td>{{ assignment.date_returned|default:"Currently assigned" }}</td>
+                                <td>{{ assignment.date_assigned|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    {% if assignment.date_returned %}
+                                        {{ assignment.date_returned|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        Currently assigned
+                                    {% endif %}
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>

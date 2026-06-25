@@ -5,8 +5,8 @@ from .models import Asset, Assignment, Employee, MaintenanceLog
 
 @admin.register(Asset)
 class AssetAdmin(admin.ModelAdmin):
-    list_display = ("name", "type", "serial_number", "status")
-    list_filter = ("type", "status")
+    list_display = ("name", "type", "serial_number", "status", "date_created")
+    list_filter = ("type", "status", "date_created")
     search_fields = ("name", "serial_number")
 
 

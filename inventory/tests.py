@@ -2,7 +2,7 @@ import datetime
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -192,28 +192,28 @@ class DashboardContextTests(TestCase):
             type=Asset.AssetType.MONITOR,
             serial_number="DASH-RECENT",
             status=Asset.AssetStatus.AVAILABLE,
-            date_created=timezone.now().date() - datetime.timedelta(days=300),
+            date_created=timezone.now() - datetime.timedelta(days=300),
         )
         old_asset = Asset.objects.create(
             name="Oldly Serviced Router",
             type=Asset.AssetType.ROUTER,
             serial_number="DASH-OLD",
             status=Asset.AssetStatus.AVAILABLE,
-            date_created=timezone.now().date() - datetime.timedelta(days=300),
+            date_created=timezone.now() - datetime.timedelta(days=300),
         )
         old_unserviced_asset = Asset.objects.create(
             name="Old Unserviced Laptop",
             type=Asset.AssetType.LAPTOP,
             serial_number="DASH-OLD-UNSERVICED",
             status=Asset.AssetStatus.AVAILABLE,
-            date_created=timezone.now().date() - datetime.timedelta(days=181),
+            date_created=timezone.now() - datetime.timedelta(days=181),
         )
         new_unserviced_asset = Asset.objects.create(
             name="New Unserviced Laptop",
             type=Asset.AssetType.LAPTOP,
             serial_number="DASH-NEW-UNSERVICED",
             status=Asset.AssetStatus.AVAILABLE,
-            date_created=timezone.now().date(),
+            date_created=timezone.now(),
         )
         self.assertIsNotNone(old_unserviced_asset.pk)
         self.assertIsNotNone(new_unserviced_asset.pk)
@@ -251,9 +251,9 @@ class InventoryAdminConfigurationTests(TestCase):
 
         self.assertEqual(
             model_admin.list_display,
-            ("name", "type", "serial_number", "status"),
+            ("name", "type", "serial_number", "status", "date_created"),
         )
-        self.assertEqual(model_admin.list_filter, ("type", "status"))
+        self.assertEqual(model_admin.list_filter, ("type", "status", "date_created"))
         self.assertEqual(model_admin.search_fields, ("name", "serial_number"))
 
     def test_employee_admin_configuration(self):
@@ -469,7 +469,7 @@ class FrontendAPIBridgeTests(TestCase):
 
     def test_asset_api_assignment_updates_state(self):
         self.client.force_login(self.admin)
-        today = timezone.now().date().isoformat()
+        today = timezone.localdate().isoformat()
 
         response = self.client.post(
             reverse("api_asset_assign", kwargs={"pk": self.asset.pk}),
@@ -481,9 +481,11 @@ class FrontendAPIBridgeTests(TestCase):
         self.asset.refresh_from_db()
         self.assertEqual(self.asset.status, Asset.AssetStatus.ASSIGNED)
         self.assertEqual(response.json()["status"], "assigned")
-        self.assertEqual(response.json()["date_assigned"], today)
+        self.assertTrue(response.json()["date_assigned"].startswith(today))
         self.assertIsNone(response.json()["date_returned"])
-        self.assertEqual(response.json()["assignment_calendar"]["date_assigned"], today)
+        self.assertTrue(
+            response.json()["assignment_calendar"]["date_assigned"].startswith(today)
+        )
         self.assertTrue(response.json()["assignment_calendar"]["currently_assigned"])
 
     def test_asset_api_create_defaults_status_to_available(self):
@@ -504,13 +506,33 @@ class FrontendAPIBridgeTests(TestCase):
         self.assertEqual(asset.status, Asset.AssetStatus.AVAILABLE)
         self.assertEqual(response.json()["status"], "available")
         self.assertEqual(response.json()["status_label"], "Available")
+        self.assertTrue(response.json()["date_created"].startswith(timezone.localdate().isoformat()))
+
+    @override_settings(TIME_ZONE="Africa/Nairobi")
+    def test_asset_api_serializes_created_timestamp_in_local_timezone(self):
+        self.client.force_login(self.user)
+        created_at = datetime.datetime(
+            2026,
+            6,
+            25,
+            8,
+            0,
+            tzinfo=datetime.timezone.utc,
+        )
+        self.asset.date_created = created_at
+        self.asset.save(update_fields=["date_created"])
+
+        response = self.client.get(reverse("api_asset_detail", kwargs={"pk": self.asset.pk}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["date_created"], "2026-06-25T11:00:00+03:00")
 
     def test_asset_api_return_updates_calendar_dates(self):
         self.client.force_login(self.admin)
         assignment = Assignment.objects.create(asset=self.asset, employee=self.employee)
         self.asset.status = Asset.AssetStatus.ASSIGNED
         self.asset.save(update_fields=["status"])
-        today = timezone.now().date().isoformat()
+        today = timezone.localdate().isoformat()
 
         response = self.client.post(reverse("api_asset_return", kwargs={"pk": self.asset.pk}))
 
@@ -518,9 +540,12 @@ class FrontendAPIBridgeTests(TestCase):
         self.asset.refresh_from_db()
         assignment.refresh_from_db()
         self.assertEqual(self.asset.status, Asset.AssetStatus.AVAILABLE)
-        self.assertEqual(assignment.date_returned.isoformat(), today)
-        self.assertEqual(response.json()["date_assigned"], assignment.date_assigned.isoformat())
-        self.assertEqual(response.json()["date_returned"], today)
+        self.assertEqual(timezone.localtime(assignment.date_returned).date().isoformat(), today)
+        self.assertEqual(
+            response.json()["date_assigned"],
+            timezone.localtime(assignment.date_assigned).isoformat(),
+        )
+        self.assertTrue(response.json()["date_returned"].startswith(today))
         self.assertFalse(response.json()["assignment_calendar"]["currently_assigned"])
 
     def test_employee_api_list_returns_assigned_asset_counts(self):

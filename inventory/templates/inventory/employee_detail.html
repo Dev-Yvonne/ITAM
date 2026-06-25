@@ -52,7 +52,7 @@
                         {% for assignment in active_assignments %}
                             <tr>
                                 <td><a href="{% url 'asset_detail' assignment.asset.pk %}">{{ assignment.asset.name }}</a></td>
-                                <td>{{ assignment.date_assigned }}</td>
+                                <td>{{ assignment.date_assigned|date:"M d, Y H:i" }}</td>
                                 <td>
                                     <form method="post" action="{% url 'return_asset' assignment.asset.pk %}" style="display:inline;">
                                         {% csrf_token %}
@@ -85,8 +85,14 @@
                         {% for assignment in assignment_history %}
                             <tr>
                                 <td><a href="{% url 'asset_detail' assignment.asset.pk %}">{{ assignment.asset.name }}</a></td>
-                                <td>{{ assignment.date_assigned }}</td>
-                                <td>{{ assignment.date_returned|default:"Currently assigned" }}</td>
+                                <td>{{ assignment.date_assigned|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    {% if assignment.date_returned %}
+                                        {{ assignment.date_returned|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        Currently assigned
+                                    {% endif %}
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
