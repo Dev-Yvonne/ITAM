@@ -28,7 +28,7 @@ from django.views.generic import (
 )
 from django.utils.decorators import method_decorator
 
-from .forms import AssetForm, AssignmentForm
+from .forms import AssetForm, AssignmentForm, EmployeeForm
 from .models import Asset, Assignment, Employee, MaintenanceLog
 
 
@@ -431,7 +431,7 @@ class EmployeeDetailView(LoginRequiredMixin, DetailView):
 
 class EmployeeCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Employee
-    fields = ["name", "department", "email"]
+    form_class = EmployeeForm
     template_name = "inventory/employee_form.html"
     success_url = reverse_lazy("employee_list")
 
@@ -446,7 +446,7 @@ class EmployeeCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
 class EmployeeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Employee
-    fields = ["name", "department", "email"]
+    form_class = EmployeeForm
     template_name = "inventory/employee_form.html"
     success_url = reverse_lazy("employee_list")
 
@@ -754,7 +754,11 @@ class EmployeeAPIListView(LoginRequiredMixin, View):
         if not user_has_admin_access(request.user):
             return json_permission_denied()
 
-        employee = Employee.objects.create(**parse_request_data(request))
+        form = EmployeeForm(data=parse_request_data(request))
+        if not form.is_valid():
+            return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
+
+        employee = form.save()
         return JsonResponse(serialize_employee(employee), status=201)
 
 
@@ -767,12 +771,20 @@ class EmployeeAPIDetailView(LoginRequiredMixin, View):
         if not user_has_admin_access(request.user):
             return json_permission_denied()
 
-        employee = get_object_or_404(Employee, pk=pk)
         payload = parse_request_data(request)
-        employee.name = payload.get("name", employee.name)
-        employee.department = payload.get("department", employee.department)
-        employee.email = payload.get("email", employee.email)
-        employee.save(update_fields=["name", "department", "email"])
+        employee = get_object_or_404(Employee, pk=pk)
+        form = EmployeeForm(
+            data={
+                "name": payload.get("name", employee.name),
+                "department": payload.get("department", employee.department),
+                "email": payload.get("email", employee.email),
+            },
+            instance=employee,
+        )
+        if not form.is_valid():
+            return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
+
+        employee = form.save()
         return JsonResponse(serialize_employee(employee))
 
     def delete(self, request, pk):

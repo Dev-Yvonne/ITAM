@@ -41,8 +41,22 @@ class Asset(models.Model):
 
 
 class Employee(models.Model):
+    class Department(models.TextChoices):
+        TECHNICAL_CORE_PROGRAMME = (
+            "Technical & Core Programme Directorates",
+            "Technical & Core Programme Directorates",
+        )
+        CAPACITY_BUILDING_INNOVATION = (
+            "Capacity Building & Innovation Directorates",
+            "Capacity Building & Innovation Directorates",
+        )
+        INSTITUTIONAL_SUPPORT_ADVISORY = (
+            "Institutional Support & Advisory Operations",
+            "Institutional Support & Advisory Operations",
+        )
+
     name = models.CharField(max_length=255)
-    department = models.CharField(max_length=255)
+    department = models.CharField(max_length=255, choices=Department.choices)
     email = models.EmailField() 
 
     class Meta:

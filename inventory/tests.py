@@ -6,7 +6,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from .forms import AssetForm, AssignmentForm
+from .forms import AssetForm, AssignmentForm, EmployeeForm
 from .models import Asset, Assignment, Employee, MaintenanceLog
 
 
@@ -85,7 +85,7 @@ class AssignmentStateMachineViewTests(TestCase):
         )
         self.employee = Employee.objects.create(
             name="Eugene Tester",
-            department="IT Operations",
+            department=Employee.Department.TECHNICAL_CORE_PROGRAMME,
             email="eugene@example.com",
         )
 
@@ -96,6 +96,28 @@ class AssignmentStateMachineViewTests(TestCase):
         self.assertEqual(
             list(form.fields["employee"].queryset),
             list(Employee.objects.order_by("name")),
+        )
+
+    def test_employee_form_limits_department_to_approved_choices(self):
+        form = EmployeeForm()
+
+        self.assertEqual(
+            list(form.fields["department"].choices),
+            [
+                ("", "Select a department"),
+                (
+                    Employee.Department.TECHNICAL_CORE_PROGRAMME.value,
+                    "Technical & Core Programme Directorates",
+                ),
+                (
+                    Employee.Department.CAPACITY_BUILDING_INNOVATION.value,
+                    "Capacity Building & Innovation Directorates",
+                ),
+                (
+                    Employee.Department.INSTITUTIONAL_SUPPORT_ADVISORY.value,
+                    "Institutional Support & Advisory Operations",
+                ),
+            ],
         )
 
     def test_assign_asset_creates_assignment_and_marks_asset_assigned(self):
@@ -177,12 +199,12 @@ class DashboardContextTests(TestCase):
         )
         Employee.objects.create(
             name="Dashboard Employee One",
-            department="IT Operations",
+            department=Employee.Department.TECHNICAL_CORE_PROGRAMME,
             email="dashboard.one@example.com",
         )
         Employee.objects.create(
             name="Dashboard Employee Two",
-            department="Procurement",
+            department=Employee.Department.INSTITUTIONAL_SUPPORT_ADVISORY,
             email="dashboard.two@example.com",
         )
 
@@ -310,7 +332,7 @@ class ManagementViewSecurityTests(TestCase):
         )
         self.employee = Employee.objects.create(
             name="Security Tester",
-            department="IT Operations",
+            department=Employee.Department.TECHNICAL_CORE_PROGRAMME,
             email="security@example.com",
         )
 
@@ -462,7 +484,7 @@ class FrontendAPIBridgeTests(TestCase):
         )
         self.employee = Employee.objects.create(
             name="API Employee",
-            department="IT Operations",
+            department=Employee.Department.TECHNICAL_CORE_PROGRAMME,
             email="api.employee@example.com",
         )
         self.asset = Asset.objects.create(
@@ -601,7 +623,7 @@ class FrontendAPIBridgeTests(TestCase):
             reverse("api_employee_list"),
             data={
                 "name": "Created Employee",
-                "department": "Support",
+                "department": Employee.Department.CAPACITY_BUILDING_INNOVATION,
                 "email": "created.employee@example.com",
             },
             content_type="application/json",
@@ -612,3 +634,22 @@ class FrontendAPIBridgeTests(TestCase):
             Employee.objects.filter(email="created.employee@example.com").exists()
         )
         self.assertEqual(response.json()["name"], "Created Employee")
+
+    def test_employee_api_rejects_unknown_department(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            reverse("api_employee_list"),
+            data={
+                "name": "Invalid Department Employee",
+                "department": "Support",
+                "email": "invalid.department@example.com",
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("department", response.json()["errors"])
+        self.assertFalse(
+            Employee.objects.filter(email="invalid.department@example.com").exists()
+        )

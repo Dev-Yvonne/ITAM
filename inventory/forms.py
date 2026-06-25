@@ -28,6 +28,13 @@ class EmployeeForm(forms.ModelForm):
         model = Employee
         fields = ["name", "department", "email"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["department"].choices = [
+            ("", "Select a department"),
+            *Employee.Department.choices,
+        ]
+
 
 class AssignmentForm(forms.ModelForm):
     class Meta:
