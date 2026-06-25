@@ -51,6 +51,17 @@
 
 .card-body {
     padding: var(--spacing-5);
+    color: var(--text-primary);
+}
+
+.card-body .detail-field,
+.card-body .field-label,
+.card-body .field-value {
+    color: var(--text-primary);
+}
+
+.card-body strong {
+    color: inherit;
 }
 
 .card-footer {
