@@ -3,7 +3,7 @@
    ======================================== */
 
 .topbar {
-    background: var(--bg-topbar, #ffffff) !important;
+    background: var(--bg-topbar, #ffffff);
     border-bottom: 1px solid var(--border-color, #e2e8f0);
     padding: 0 1.5rem;
     height: 64px;
@@ -13,11 +13,11 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    transition: background 0.3s ease, border-color 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 [data-theme="dark"] .topbar {
-    background: var(--bg-topbar, #1e293b) !important;
+    background: var(--bg-topbar, #1e293b);
     border-bottom-color: var(--border-color, #334155);
 }
 
@@ -77,9 +77,6 @@
     gap: 0.75rem;
 }
 
-/* ==========================================
-   THEME TOGGLE
-   ========================================== */
 .theme-toggle-btn {
     background: none;
     border: 1px solid var(--border-color, #e2e8f0);
@@ -92,6 +89,7 @@
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
+    color: var(--text-secondary, #475569);
 }
 
 [data-theme="dark"] .theme-toggle-btn {
@@ -107,205 +105,19 @@
     background: var(--bg-hover, #334155);
 }
 
-.theme-icon-svg {
-    width: 16px;
-    height: 16px;
-    color: var(--text-secondary, #475569);
-    transition: color 0.2s ease;
+.theme-icon {
+    font-size: 1rem;
 }
 
-[data-theme="dark"] .theme-icon-svg {
-    color: #94a3b8;
-}
-
-.theme-toggle-btn:hover .theme-icon-svg {
-    color: var(--text-primary, #0f172a);
-}
-
-[data-theme="dark"] .theme-toggle-btn:hover .theme-icon-svg {
-    color: #f1f5f9;
-}
-
-/* ==========================================
-   PROFILE DROPDOWN - Online Avatar
-   ========================================== */
-.profile-dropdown {
-    position: relative;
-}
-
-.profile-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: 1px solid var(--border-color, #e2e8f0);
-    border-radius: 9999px;
-    cursor: pointer;
-    padding: 0.1rem;
-    width: 36px;
-    height: 36px;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    overflow: hidden;
-}
-
-.profile-btn:hover {
-    background: var(--bg-hover, #f1f5f9);
-    border-color: var(--border-dark, #cbd5e1);
-    transform: scale(1.05);
-}
-
-[data-theme="dark"] .profile-btn {
-    border-color: var(--border-color, #334155);
-}
-
-[data-theme="dark"] .profile-btn:hover {
-    background: var(--bg-hover, #334155);
-    border-color: var(--border-dark, #475569);
-}
-
-.profile-avatar {
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    object-fit: cover;
-    flex-shrink: 0;
-    display: block;
-}
-
-/* ==========================================
-   DROPDOWN MENU
-   ========================================== */
-.dropdown-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    min-width: 180px;
-    background: var(--bg-dropdown, #ffffff);
-    border: 1px solid var(--border-color, #e2e8f0);
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    padding: 0.4rem 0;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-8px) scale(0.96);
-    transition: all 0.2s ease;
-    z-index: 1001;
-}
-
-[data-theme="dark"] .dropdown-menu {
-    background: var(--bg-dropdown, #1e293b);
-    border-color: var(--border-color, #334155);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.profile-dropdown.open .dropdown-menu {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0) scale(1);
-}
-
-.dropdown-header {
-    padding: 0.5rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-}
-
-.dropdown-user {
-    font-weight: 600;
-    color: var(--text-primary, #0f172a);
-    font-size: 0.85rem;
-}
-
-[data-theme="dark"] .dropdown-user {
-    color: var(--text-primary, #f1f5f9);
-}
-
-.dropdown-email {
-    font-size: 0.7rem;
-    color: var(--text-muted, #94a3b8);
-}
-
-.dropdown-divider {
-    height: 1px;
-    background: var(--border-color, #e2e8f0);
-    margin: 0.2rem 0.75rem;
-}
-
-[data-theme="dark"] .dropdown-divider {
-    background: var(--border-color, #334155);
-}
-
-.dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.4rem 1rem;
-    color: var(--text-primary, #0f172a);
-    text-decoration: none;
-    background: none;
-    border: none;
-    width: 100%;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-family: var(--font-sans, sans-serif);
-    transition: all 0.15s ease;
-    text-align: left;
-    border-radius: 0;
-}
-
-[data-theme="dark"] .dropdown-item {
-    color: var(--text-primary, #f1f5f9);
-}
-
-.dropdown-item:hover {
-    background: var(--bg-hover, #f1f5f9);
-    text-decoration: none;
-}
-
-[data-theme="dark"] .dropdown-item:hover {
-    background: var(--bg-hover, #334155);
-}
-
-.dropdown-logout {
-    color: #dc2626 !important;
-}
-
-.dropdown-logout:hover {
-    background: #fef2f2 !important;
-    color: #b91c1c !important;
-}
-
-[data-theme="dark"] .dropdown-logout {
-    color: #f87171 !important;
-}
-
-[data-theme="dark"] .dropdown-logout:hover {
-    background: rgba(239, 68, 68, 0.1) !important;
-    color: #fca5a5 !important;
-}
-
-.dropdown-icon {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-}
-
-/* ==========================================
-   RESPONSIVE
-   ========================================== */
 @media (max-width: 768px) {
     .topbar {
         padding: 0 1rem;
         justify-content: flex-start;
         gap: 0.5rem;
     }
-
     .sidebar-toggle {
         display: flex;
     }
-
     .topbar-actions {
         margin-left: auto;
     }
@@ -317,25 +129,7 @@
         height: 28px;
         padding: 0.25rem;
     }
-
-    .theme-icon-svg {
-        width: 14px;
-        height: 14px;
-    }
-
-    .profile-btn {
-        width: 32px;
-        height: 32px;
-        padding: 0.05rem;
-    }
-
-    .profile-avatar {
-        width: 28px;
-        height: 28px;
-    }
-
-    .dropdown-menu {
-        min-width: 160px;
-        right: -10px;
+    .theme-icon {
+        font-size: 0.85rem;
     }
 }

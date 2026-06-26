@@ -1,0 +1,139 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}Notifications - ITAM System{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventory/css/layouts/notifications.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="notifications-page">
+    <div class="notifications-header">
+        <div>
+            <h1>Notifications</h1>
+            <p class="notifications-subtitle">View all your notifications</p>
+        </div>
+        {% if notifications %}
+        <button class="btn btn-primary" id="markAllReadBtn">
+            <i class="fas fa-check-double"></i> Mark all as read
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="notifications-list">
+        {% if notifications %}
+            {% for notification in notifications %}
+            <div class="notification-item-page {% if not notification.read %}unread{% endif %}" 
+                 data-id="{{ notification.id }}"
+                 data-link="{{ notification.link }}">
+                <div class="notification-icon-page {{ notification.type }}">
+                    <i class="fas {% if notification.type == 'success' %}fa-check-circle{% elif notification.type == 'warning' %}fa-exclamation-triangle{% elif notification.type == 'error' %}fa-times-circle{% else %}fa-info-circle{% endif %}"></i>
+                </div>
+                <div class="notification-content-page">
+                    <div class="notification-title-page">{{ notification.title }}</div>
+                    <div class="notification-message-page">{{ notification.message }}</div>
+                    <div class="notification-time-page">{{ notification.time|timesince }} ago</div>
+                </div>
+                {% if not notification.read %}
+                <button class="notification-mark-read" data-id="{{ notification.id }}">
+                    <i class="fas fa-check"></i>
+                </button>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="notification-empty-state">
+                <i class="fas fa-bell-slash"></i>
+                <h3>No notifications</h3>
+                <p>You're all caught up!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function() {
+        'use strict';
+
+        // Mark single notification as read
+        document.querySelectorAll('.notification-mark-read').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var id = this.getAttribute('data-id');
+                var item = this.closest('.notification-item-page');
+                
+                fetch('/api/notifications/' + id + '/read/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        item.classList.remove('unread');
+                        item.querySelector('.notification-mark-read')?.remove();
+                        // Update badge count
+                        if (window.Notifications) {
+                            window.Notifications.updateBadge(
+                                parseInt(document.querySelectorAll('.notification-item-page.unread').length)
+                            );
+                        }
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                });
+            });
+        });
+
+        // Mark all as read
+        var markAllBtn = document.getElementById('markAllReadBtn');
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', function() {
+                fetch('/api/notifications/mark-all-read/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        document.querySelectorAll('.notification-item-page').forEach(function(item) {
+                            item.classList.remove('unread');
+                            item.querySelector('.notification-mark-read')?.remove();
+                        });
+                        markAllBtn.style.display = 'none';
+                        if (window.Notifications) {
+                            window.Notifications.updateBadge(0);
+                        }
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                });
+            });
+        }
+
+        // Click on notification to go to link
+        document.querySelectorAll('.notification-item-page').forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                if (e.target.closest('.notification-mark-read')) {
+                    return;
+                }
+                var link = this.getAttribute('data-link');
+                if (link) {
+                    window.location.href = link;
+                }
+            });
+        });
+
+    })();
+</script>
+{% endblock %}

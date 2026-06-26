@@ -1,0 +1,10 @@
+{% load static %}
+<div class="notification-container" id="notificationContainer">
+    <!-- Notification Bell -->
+    <a href="{% url 'notifications' %}" class="notification-bell" id="notificationBell" aria-label="Notifications">
+        <i class="fas fa-bell"></i>
+        <span class="notification-badge {% if unread_count == 0 %}hidden{% endif %}" id="notificationBadge">
+            {% if unread_count > 0 %}{{ unread_count }}{% endif %}
+        </span>
+    </a>
+</div>

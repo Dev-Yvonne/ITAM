@@ -3,45 +3,8 @@
    ======================================== */
 
 /* ==========================================
-   RESET FOR AUTH PAGES
+   AUTH CONTAINER
    ========================================== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* Fix: Remove overflow: hidden to allow scrolling */
-html, body {
-    height: 100%;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-}
-
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: #0f172a;
-    color: #f1f5f9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    margin: 0;
-    padding: 1rem;
-}
-
-/* ==========================================
-   AUTH PAGE CONTAINER
-   ========================================== */
-.auth-page {
-    width: 100%;
-    max-width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-}
-
 .auth-container {
     display: flex;
     justify-content: center;
@@ -50,20 +13,24 @@ body {
     padding: 1rem;
 }
 
+/* ==========================================
+   AUTH CARD
+   ========================================== */
 .auth-card {
     background: #1e293b;
-    border-radius: 16px;
-    padding: 2.5rem;
-    max-width: 420px;
+    border-radius: 12px;
+    padding: 1.75rem 2rem 1.5rem;
+    max-width: 360px;
     width: 100%;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    margin: 0 auto;
 }
 
 .auth-card.logout-card {
-    max-width: 480px;
+    max-width: 360px;
     text-align: center;
-    padding: 3rem;
+    padding: 2rem 1.75rem 1.75rem;
 }
 
 /* ==========================================
@@ -73,18 +40,19 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.6rem;
-    margin-bottom: 1.5rem;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 .auth-logo svg {
-    width: 32px;
-    height: 32px;
+    width: 26px;
+    height: 26px;
     color: #60a5fa;
+    flex-shrink: 0;
 }
 
 .auth-logo span {
-    font-size: 1.25rem;
+    font-size: 1.05rem;
     font-weight: 700;
     color: #ffffff;
     letter-spacing: -0.025em;
@@ -95,54 +63,43 @@ body {
    ========================================== */
 .auth-header {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 
 .auth-header h1 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #f1f5f9;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.15rem;
 }
 
 .auth-header p {
     color: #94a3b8;
-    font-size: 0.95rem;
-}
-
-.auth-header .auth-message {
-    color: #94a3b8;
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-}
-
-.auth-header .auth-submessage {
-    color: #64748b;
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
+    font-size: 0.8rem;
 }
 
 /* ==========================================
    AUTH FORM
    ========================================== */
 .auth-form .form-group {
-    margin-bottom: 1.25rem;
+    margin-bottom: 0.85rem;
 }
 
 .auth-form .form-label {
     display: block;
     font-weight: 500;
     color: #94a3b8;
-    margin-bottom: 0.25rem;
-    font-size: 0.85rem;
+    margin-bottom: 0.15rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.3px;
 }
 
 .auth-form input {
     width: 100%;
-    padding: 0.7rem 1rem;
+    padding: 0.5rem 0.75rem;
     border: 1px solid #334155;
-    border-radius: 8px;
-    font-size: 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
     background: #0f172a;
     color: #f1f5f9;
     transition: all 0.15s ease;
@@ -151,24 +108,58 @@ body {
 
 .auth-form input:focus {
     border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
 .auth-form input::placeholder {
-    color: #64748b;
+    color: #475569;
+    font-size: 0.8rem;
 }
 
+/* Password wrapper */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    padding-right: 2.5rem !important;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle:hover {
+    color: #94a3b8;
+}
+
+/* Buttons */
 .auth-form .btn {
     width: 100%;
     justify-content: center;
-    padding: 0.75rem;
-    font-size: 1rem;
-    margin-top: 0.25rem;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    margin-top: 0.15rem;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
     transition: all 0.15s ease;
+    letter-spacing: 0.3px;
 }
 
 .btn-primary {
@@ -178,6 +169,8 @@ body {
 
 .btn-primary:hover {
     background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-success {
@@ -187,25 +180,8 @@ body {
 
 .btn-success:hover {
     background: #16a34a;
-}
-
-.btn-secondary {
-    background: #334155;
-    color: #f1f5f9;
-}
-
-.btn-secondary:hover {
-    background: #475569;
-}
-
-/* ==========================================
-   HELP TEXT
-   ========================================== */
-.help-text {
-    display: block;
-    font-size: 0.7rem;
-    color: #64748b;
-    margin-top: 0.25rem;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
 }
 
 /* ==========================================
@@ -214,9 +190,10 @@ body {
 .auth-divider {
     display: flex;
     align-items: center;
-    margin: 1.5rem 0;
+    margin: 1rem 0 0.85rem;
     color: #64748b;
-    font-size: 0.85rem;
+    font-size: 0.7rem;
+    gap: 0.85rem;
 }
 
 .auth-divider::before,
@@ -227,22 +204,14 @@ body {
     background: #334155;
 }
 
-.auth-divider::before {
-    margin-right: 1rem;
-}
-
-.auth-divider::after {
-    margin-left: 1rem;
-}
-
 /* ==========================================
    AUTH FOOTER
    ========================================== */
 .auth-footer {
     text-align: center;
-    margin-top: 1.5rem;
+    margin-top: 1rem;
     color: #64748b;
-    font-size: 0.9rem;
+    font-size: 0.75rem;
 }
 
 .auth-footer a {
@@ -253,16 +222,7 @@ body {
 
 .auth-footer a:hover {
     text-decoration: underline;
-}
-
-.demo-credentials {
-    margin-top: 0.75rem;
-    font-size: 0.8rem;
-    color: #64748b;
-}
-
-.demo-credentials strong {
-    color: #94a3b8;
+    color: #93bbfc;
 }
 
 /* ==========================================
@@ -270,29 +230,28 @@ body {
    ========================================== */
 .auth-actions {
     display: flex;
-    gap: 1rem;
     justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 1.5rem;
+    margin-top: 1.25rem;
 }
 
 .auth-actions .btn {
     min-width: 140px;
     justify-content: center;
-    padding: 0.7rem 1.5rem;
+    padding: 0.55rem 1.5rem;
+    font-size: 0.85rem;
 }
 
 /* ==========================================
    ERROR MESSAGE
    ========================================== */
 .auth-error {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 0.08);
     color: #f87171;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
     border-left: 3px solid #ef4444;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
+    margin-bottom: 0.85rem;
+    font-size: 0.75rem;
 }
 
 .auth-error ul {
@@ -302,7 +261,7 @@ body {
 }
 
 .auth-error li {
-    padding: 0.15rem 0;
+    padding: 0.1rem 0;
 }
 
 /* ==========================================
@@ -310,53 +269,93 @@ body {
    ========================================== */
 @media (max-width: 480px) {
     .auth-card {
-        padding: 1.5rem;
-        margin: 0.5rem;
+        padding: 1.25rem 1rem 1rem;
+        max-width: 100%;
+        border-radius: 10px;
     }
 
     .auth-card.logout-card {
-        padding: 2rem;
+        padding: 1.5rem 1rem 1.25rem;
     }
 
     .auth-header h1 {
-        font-size: 1.25rem;
+        font-size: 1.05rem;
     }
 
     .auth-logo span {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 
     .auth-logo svg {
-        width: 28px;
-        height: 28px;
-    }
-
-    .auth-actions {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .auth-actions .btn {
-        width: 100%;
-        min-width: auto;
+        width: 22px;
+        height: 22px;
     }
 
     .auth-form input {
-        font-size: 0.9rem;
-        padding: 0.6rem 0.8rem;
+        font-size: 0.8rem;
+        padding: 0.45rem 0.65rem;
+    }
+
+    .auth-form .btn {
+        font-size: 0.8rem;
+        padding: 0.45rem;
+    }
+
+    .auth-actions .btn {
+        min-width: 120px;
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
     }
 }
 
-@media (max-width: 380px) {
+@media (max-height: 650px) and (orientation: landscape) {
     .auth-card {
-        padding: 1rem;
+        padding: 0.85rem 1.25rem 0.75rem;
+        max-width: 300px;
+    }
+
+    .auth-header {
+        margin-bottom: 0.5rem;
     }
 
     .auth-header h1 {
-        font-size: 1.1rem;
+        font-size: 0.9rem;
+    }
+
+    .auth-logo {
+        margin-bottom: 0.4rem;
+    }
+
+    .auth-logo svg {
+        width: 18px;
+        height: 18px;
     }
 
     .auth-logo span {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+    }
+
+    .auth-form .form-group {
+        margin-bottom: 0.4rem;
+    }
+
+    .auth-form input {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .auth-form .btn {
+        padding: 0.35rem;
+        font-size: 0.75rem;
+    }
+
+    .auth-divider {
+        margin: 0.5rem 0 0.4rem;
+        font-size: 0.6rem;
+    }
+
+    .auth-footer {
+        margin-top: 0.5rem;
+        font-size: 0.65rem;
     }
 }

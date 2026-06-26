@@ -8,54 +8,43 @@
     
     <link rel="icon" type="image/x-icon" href="{% static 'inventory/images/favicon.ico' %}">
     
-    <link rel="stylesheet" href="{% static 'inventory/css/main.css' %}?v=12">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="{% static 'inventory/css/main.css' %}?v=15">
     
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    {% if request.path != '/login/' and request.path != '/signup/' and request.path != '/logout/' %}
+        {% include 'inventory/includes/sidebar.html' %}
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    {% endif %}
     
-    {% include 'inventory/includes/sidebar.html' %}
-    
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    
-    <div class="main-wrapper">
-        <header class="topbar">
-            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <div class="topbar-actions">
-                <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle theme">
-                    <svg class="theme-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                    </svg>
-                </button>
-                <a href="{% url 'logout' %}" class="profile-btn" data-loader="true" data-loader-message="Logging out..." aria-label="Logout">
-                    <svg class="profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
-                        <path d="M15 11l-3-3-3 3"/>
-                        <path d="M12 8v6"/>
-                    </svg>
-                </a>
-            </div>
-        </header>
-        
-        {% include 'inventory/includes/messages.html' %}
+    <div class="main-wrapper {% if request.path == '/login/' or request.path == '/signup/' or request.path == '/logout/' %}auth-page{% endif %}">
+        {% if request.path != '/login/' and request.path != '/signup/' and request.path != '/logout/' %}
+            {% include 'inventory/includes/topbar.html' %}
+            {% include 'inventory/includes/messages.html' %}
+        {% endif %}
         
         <main>
             {% block content %}{% endblock %}
         </main>
     </div>
     
-    <script src="{% static 'inventory/js/core/utils.js' %}?v=12"></script>
-    <script src="{% static 'inventory/js/core/loader.js' %}?v=12"></script>
-    <script src="{% static 'inventory/js/core/theme.js' %}?v=12"></script>
-    <script src="{% static 'inventory/js/core/sidebar.js' %}?v=12"></script>
-    <script src="{% static 'inventory/js/core/navigation.js' %}?v=12"></script>
-    <script src="{% static 'inventory/js/core/alerts.js' %}?v=12"></script>
-    <script src="{% static 'inventory/js/main.js' %}?v=12"></script>
+    <!-- ===== CORE JAVASCRIPT ===== -->
+    <script src="{% static 'inventory/js/core/utils.js' %}?v=13"></script>
+    <script src="{% static 'inventory/js/core/loader.js' %}?v=13"></script>
+    <script src="{% static 'inventory/js/core/theme.js' %}?v=13"></script>
+    <script src="{% static 'inventory/js/core/sidebar.js' %}?v=13"></script>
+    <script src="{% static 'inventory/js/core/navigation.js' %}?v=13"></script>
+    <script src="{% static 'inventory/js/core/alerts.js' %}?v=13"></script>
+    
+    <!-- ===== MODULES ===== -->
+    <script src="{% static 'inventory/js/modules/topbar.js' %}?v=13"></script>
+    <script src="{% static 'inventory/js/modules/profile.js' %}?v=13"></script>
+    <script src="{% static 'inventory/js/modules/notifications.js' %}?v=13"></script>
+    <script src="{% static 'inventory/js/main.js' %}?v=13"></script>
     
     {% block extra_js %}{% endblock %}
 </body>

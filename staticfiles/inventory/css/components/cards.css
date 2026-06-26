@@ -51,6 +51,35 @@
 
 .card-body {
     padding: var(--spacing-5);
+    color: var(--text-primary);
+}
+
+.card-body .detail-field,
+.card-body .field-label,
+.card-body .field-value {
+    color: var(--text-primary);
+}
+
+.card-body strong {
+    color: inherit;
+}
+
+.maintenance-timeline,
+.maintenance-item,
+.maintenance-item .meta,
+.maintenance-item .issue,
+.maintenance-item .technician {
+    color: var(--text-primary);
+}
+
+.maintenance-item .date,
+.maintenance-item .technician {
+    color: var(--text-secondary);
+}
+
+.maintenance-item .status-badge {
+    color: var(--text-primary);
+    font-weight: var(--font-weight-semibold);
 }
 
 .card-footer {

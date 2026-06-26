@@ -12,8 +12,17 @@ urlpatterns = [
     path("", views.DashboardView.as_view(), name="dashboard"),
     path("dashboard/", views.DashboardView.as_view(), name="dashboard_redirect"),
     
+    # Profile
+    path("profile/", views.ProfileView.as_view(), name="profile"),
+    
     # Settings
     path("settings/", views.SettingsView.as_view(), name="settings"),
+    
+    # Notifications
+    path("notifications/", views.NotificationListView.as_view(), name="notifications"),
+    path("api/notifications/", views.NotificationAPIView.as_view(), name="api_notifications"),
+    path("api/notifications/<int:pk>/read/", views.NotificationMarkReadView.as_view(), name="api_notification_read"),
+    path("api/notifications/mark-all-read/", views.NotificationMarkAllReadView.as_view(), name="api_notification_mark_all_read"),
     
     # API URLs
     path("api/assets", views.AssetAPIListView.as_view(), name="api_asset_list"),

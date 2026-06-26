@@ -1,0 +1,204 @@
+/* ==========================================
+   NOTIFICATION COMPONENT
+   ========================================== */
+
+/* ==========================================
+   NOTIFICATION CONTAINER
+   ========================================== */
+.notification-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* ==========================================
+   NOTIFICATION BELL
+   ========================================== */
+.notification-bell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: var(--bg-secondary, #f1f5f9);
+    color: var(--text-primary, #1e293b);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    font-size: 1rem;
+    text-decoration: none !important;
+}
+
+.notification-bell:hover {
+    background: var(--bg-hover, #e2e8f0);
+    transform: scale(1.05);
+    text-decoration: none !important;
+}
+
+.notification-bell:focus {
+    outline: 2px solid var(--primary-color, #3b82f6);
+    outline-offset: 2px;
+}
+
+[data-theme="dark"] .notification-bell {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .notification-bell:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.notification-bell .fa-bell {
+    font-size: 1.1rem;
+    transition: transform 0.3s ease;
+}
+
+.notification-bell:hover .fa-bell {
+    transform: rotate(15deg);
+}
+
+/* ==========================================
+   NOTIFICATION BADGE - WITH ANIMATION
+   ========================================== */
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--danger-color, #ef4444);
+    color: white;
+    border-radius: 50px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-card, #ffffff);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    animation: none;
+}
+
+[data-theme="dark"] .notification-badge {
+    border-color: var(--bg-card, #1e293b);
+}
+
+/* Badge with notifications - Pulsing Animation */
+.notification-badge:not(.hidden) {
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+/* Badge with many notifications - Bounce Animation */
+.notification-badge.many:not(.hidden) {
+    animation: badgeBounce 1.5s ease-in-out infinite;
+}
+
+@keyframes badgeBounce {
+    0%, 100% {
+        transform: scale(1);
+    }
+    30% {
+        transform: scale(1.3);
+    }
+    60% {
+        transform: scale(0.9);
+    }
+}
+
+/* Badge with no notifications - Hidden */
+.notification-badge.hidden {
+    opacity: 0;
+    transform: scale(0.5);
+    pointer-events: none;
+    animation: none !important;
+}
+
+/* ==========================================
+   NOTIFICATION DROPDOWN (Legacy - kept for reference)
+   ========================================== */
+.notification-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 380px;
+    max-height: 480px;
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px) scale(0.96);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.notification-dropdown.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+[data-theme="dark"] .notification-dropdown {
+    background: var(--bg-card, #1e293b);
+    border-color: var(--border-color, #334155);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 768px) {
+    .notification-bell {
+        width: 34px;
+        height: 34px;
+    }
+
+    .notification-bell .fa-bell {
+        font-size: 1rem;
+    }
+
+    .notification-badge {
+        min-width: 16px;
+        height: 16px;
+        font-size: 0.55rem;
+        top: -3px;
+        right: -3px;
+    }
+}
+
+@media (max-width: 480px) {
+    .notification-bell {
+        width: 32px;
+        height: 32px;
+    }
+
+    .notification-bell .fa-bell {
+        font-size: 0.9rem;
+    }
+
+    .notification-badge {
+        min-width: 14px;
+        height: 14px;
+        font-size: 0.5rem;
+        top: -2px;
+        right: -2px;
+    }
+}
