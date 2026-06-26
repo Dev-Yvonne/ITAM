@@ -1,6 +1,6 @@
 /**
  * LOADER MODULE
- * Handles loading spinner management
+ * Handles loading spinner management with animated dots
  */
 
 (function() {
@@ -9,7 +9,7 @@
     // ============================================
     // Configuration
     // ============================================
-    var DEFAULT_MESSAGE = 'Loading...';
+    var DEFAULT_MESSAGE = 'Loading';
     var DEFAULT_TIMEOUT = 30000; // 30 seconds
     
     // ============================================
@@ -18,11 +18,13 @@
     var overlay = null;
     var spinner = null;
     var textEl = null;
+    var dotContainer = null;
     var ajaxIntercepted = false;
     var navigationIntercepted = false;
+    var dotInterval = null;
     
     // ============================================
-    // Create Loading Overlay
+    // Create Loading Overlay with animated dots
     // ============================================
     function createOverlay() {
         // Remove existing overlay if present
@@ -36,17 +38,65 @@
         overlay.className = 'loading-overlay';
         overlay.innerHTML = `
             <div class="spinner-container">
-                <div class="spinner spinner-primary spinner-lg"></div>
-                <p class="spinner-text">${DEFAULT_MESSAGE}</p>
+                <div class="spinner-wrapper">
+                    <svg class="spinner-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="spinner-text-wrapper">
+                    <span class="spinner-text" id="loaderText">${DEFAULT_MESSAGE}</span>
+                    <span class="dots-container" id="dotsContainer">
+                        <span class="dot">.</span>
+                        <span class="dot">.</span>
+                        <span class="dot">.</span>
+                    </span>
+                </div>
             </div>
         `;
         
         document.body.appendChild(overlay);
         
-        spinner = overlay.querySelector('.spinner');
         textEl = overlay.querySelector('.spinner-text');
+        dotContainer = overlay.querySelector('.dots-container');
         
         return overlay;
+    }
+    
+    // ============================================
+    // Animate Dots - Only 3 dots
+    // ============================================
+    function animateDots() {
+        if (!dotContainer) return;
+        
+        var dots = dotContainer.querySelectorAll('.dot');
+        if (dots.length !== 3) return;
+        
+        var dotIndex = 0;
+        
+        dots.forEach(function(dot) {
+            dot.style.opacity = '0.3';
+            dot.style.transform = 'translateY(0)';
+        });
+        
+        if (dotInterval) {
+            clearInterval(dotInterval);
+        }
+        
+        dotInterval = setInterval(function() {
+            dots.forEach(function(dot) {
+                dot.style.opacity = '0.3';
+                dot.style.transform = 'translateY(0)';
+            });
+            
+            if (dots[dotIndex]) {
+                dots[dotIndex].style.opacity = '1';
+                dots[dotIndex].style.transform = 'translateY(-4px)';
+            }
+            
+            dotIndex = (dotIndex + 1) % dots.length;
+        }, 400);
     }
     
     // ============================================
@@ -63,12 +113,19 @@
             textEl.textContent = message;
         }
         
-        // Force reflow for animation
+        if (dotInterval) {
+            clearInterval(dotInterval);
+            dotInterval = null;
+        }
+        
         void overlay.offsetWidth;
         
         overlay.classList.add('active');
         
-        // Auto-hide after timeout (safety net)
+        setTimeout(function() {
+            animateDots();
+        }, 100);
+        
         clearTimeout(overlay._timeout);
         overlay._timeout = setTimeout(function() {
             hideLoader();
@@ -79,19 +136,23 @@
     // Hide Loader
     // ============================================
     function hideLoader() {
+        if (dotInterval) {
+            clearInterval(dotInterval);
+            dotInterval = null;
+        }
+        
         if (overlay) {
             overlay.classList.remove('active');
             clearTimeout(overlay._timeout);
             
-            // Remove from DOM after transition
             setTimeout(function() {
                 if (overlay && overlay.parentNode) {
                     overlay.remove();
                     overlay = null;
-                    spinner = null;
                     textEl = null;
+                    dotContainer = null;
                 }
-            }, 300);
+            }, 400);
         }
     }
     
@@ -128,17 +189,16 @@
         var forms = document.querySelectorAll(formSelector || 'form[data-loader="true"]');
         forms.forEach(function(form) {
             form.addEventListener('submit', function() {
-                var message = this.dataset.loaderMessage || 'Saving...';
+                var message = this.dataset.loaderMessage || 'Saving';
                 showLoader(message);
             });
         });
     }
     
     // ============================================
-    // Show Loader on Navigation - FIXED: Show loader immediately
+    // Show Loader on Navigation
     // ============================================
     function showLoaderOnNavigation(linksSelector) {
-        // Prevent duplicate interception
         if (navigationIntercepted) {
             return;
         }
@@ -148,23 +208,17 @@
         links.forEach(function(link) {
             link.addEventListener('click', function(e) {
                 var href = this.getAttribute('href');
-                // Skip if it's a javascript: link or empty href
                 if (!href || href === '#' || href.startsWith('javascript:')) {
                     return;
                 }
                 
-                var message = this.dataset.loaderMessage || 'Loading...';
+                var message = this.dataset.loaderMessage || 'Loading';
                 showLoader(message);
-                
-                // The page will naturally navigate, loader will be hidden on page load
-                // Keep loader visible until page loads
             });
         });
         
-        // Also intercept all sidebar links that don't have data-loader attribute
         var sidebarLinks = document.querySelectorAll('.sidebar-link');
         sidebarLinks.forEach(function(link) {
-            // Skip if already has data-loader
             if (link.hasAttribute('data-loader')) {
                 return;
             }
@@ -174,7 +228,7 @@
                 if (!href || href === '#' || href.startsWith('javascript:')) {
                     return;
                 }
-                showLoader('Loading...');
+                showLoader('Loading');
             });
         });
     }
@@ -183,13 +237,11 @@
     // Show Loader on AJAX Requests
     // ============================================
     function showLoaderOnAjax() {
-        // Prevent duplicate interception
         if (ajaxIntercepted) {
             return;
         }
         ajaxIntercepted = true;
         
-        // Intercept fetch requests - ONLY for API calls
         if (typeof window.fetch === 'function') {
             var originalFetch = window.fetch;
             window.fetch = function() {
@@ -197,7 +249,6 @@
                 var url = args[0];
                 var isApiCall = false;
                 
-                // Check if this is an API call
                 if (typeof url === 'string') {
                     isApiCall = url.includes('/api/') || 
                                (url.includes('?') && !url.includes('/static/') && 
@@ -206,7 +257,7 @@
                 }
                 
                 if (isApiCall) {
-                    showLoader('Loading data...');
+                    showLoader('Loading data');
                 }
                 
                 return originalFetch.apply(this, args).finally(function() {
@@ -217,7 +268,6 @@
             };
         }
         
-        // Intercept XMLHttpRequest - ONLY for API calls
         var originalXHROpen = XMLHttpRequest.prototype.open;
         XMLHttpRequest.prototype.open = function() {
             var args = arguments;
@@ -232,7 +282,7 @@
             }
             
             if (isApiCall) {
-                showLoader('Loading data...');
+                showLoader('Loading data');
             }
             
             var xhr = this;

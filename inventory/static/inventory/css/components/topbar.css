@@ -24,12 +24,13 @@
 }
 
 /* ==========================================
-   TOPBAR LEFT
+   TOPBAR LEFT - Contains sidebar toggle + notification
    ========================================== */
 .topbar-left {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-shrink: 0;
 }
 
 /* ==========================================
@@ -38,7 +39,7 @@
 .topbar-actions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
     margin-left: auto;
     flex-shrink: 0;
 }
@@ -195,11 +196,12 @@
 }
 
 /* ==========================================
-   NOTIFICATION BELL (Left Side)
+   NOTIFICATION BELL - Left side
    ========================================== */
 .notification-container {
     position: relative;
     display: inline-block;
+    flex-shrink: 0;
 }
 
 .notification-bell {
@@ -217,12 +219,14 @@
     transition: all 0.2s ease;
     padding: 0;
     font-size: 1rem;
+    text-decoration: none !important;
     flex-shrink: 0;
 }
 
 .notification-bell:hover {
     background: var(--bg-hover, #e2e8f0);
     transform: scale(1.05);
+    text-decoration: none !important;
 }
 
 .notification-bell:focus {
@@ -261,7 +265,7 @@
     background: var(--danger-color, #ef4444);
     color: white;
     border-radius: 50px;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -269,16 +273,37 @@
     border: 2px solid var(--bg-card, #ffffff);
     transition: all 0.3s ease;
     pointer-events: none;
+    animation: none;
 }
 
 [data-theme="dark"] .notification-badge {
     border-color: var(--bg-card, #1e293b);
 }
 
+.notification-badge:not(.hidden) {
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+.notification-badge.many:not(.hidden) {
+    animation: badgeBounce 1.5s ease-in-out infinite;
+}
+
+@keyframes badgeBounce {
+    0%, 100% { transform: scale(1); }
+    30% { transform: scale(1.3); }
+    60% { transform: scale(0.9); }
+}
+
 .notification-badge.hidden {
     opacity: 0;
     transform: scale(0.5);
     pointer-events: none;
+    animation: none !important;
 }
 
 /* ==========================================
@@ -317,264 +342,6 @@
 }
 
 /* ==========================================
-   NOTIFICATION HEADER
-   ========================================== */
-.notification-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border-color, #e2e8f0);
-    flex-shrink: 0;
-}
-
-[data-theme="dark"] .notification-header {
-    border-color: var(--border-color, #334155);
-}
-
-.notification-header h3 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-primary, #1e293b);
-    margin: 0;
-}
-
-[data-theme="dark"] .notification-header h3 {
-    color: #f1f5f9;
-}
-
-.notification-mark-all {
-    background: none;
-    border: none;
-    color: var(--primary-color, #3b82f6);
-    font-size: 0.75rem;
-    cursor: pointer;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    font-weight: 500;
-}
-
-.notification-mark-all:hover {
-    background: rgba(59, 130, 246, 0.08);
-    text-decoration: underline;
-}
-
-[data-theme="dark"] .notification-mark-all {
-    color: #60a5fa;
-}
-
-[data-theme="dark"] .notification-mark-all:hover {
-    background: rgba(59, 130, 246, 0.15);
-}
-
-/* ==========================================
-   NOTIFICATION LIST
-   ========================================== */
-.notification-list {
-    flex: 1;
-    overflow-y: auto;
-    max-height: 360px;
-    padding: 0.25rem 0;
-}
-
-.notification-list::-webkit-scrollbar {
-    width: 4px;
-}
-
-.notification-list::-webkit-scrollbar-track {
-    background: var(--bg-secondary, #f8fafc);
-    border-radius: 4px;
-}
-
-.notification-list::-webkit-scrollbar-thumb {
-    background: var(--gray-400, #94a3b8);
-    border-radius: 4px;
-}
-
-/* ==========================================
-   NOTIFICATION ITEM
-   ========================================== */
-.notification-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.6rem 1rem;
-    transition: all 0.15s ease;
-    cursor: pointer;
-    border-left: 3px solid transparent;
-}
-
-.notification-item:hover {
-    background: var(--bg-hover, #f8fafc);
-}
-
-[data-theme="dark"] .notification-item:hover {
-    background: rgba(255, 255, 255, 0.04);
-}
-
-.notification-item.unread {
-    border-left-color: var(--primary-color, #3b82f6);
-    background: rgba(59, 130, 246, 0.04);
-}
-
-[data-theme="dark"] .notification-item.unread {
-    background: rgba(59, 130, 246, 0.08);
-}
-
-.notification-item .notification-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 0.8rem;
-}
-
-.notification-icon.info {
-    background: #dbeafe;
-    color: #1d4ed8;
-}
-
-.notification-icon.success {
-    background: #d1fae5;
-    color: #059669;
-}
-
-.notification-icon.warning {
-    background: #fef3c7;
-    color: #d97706;
-}
-
-.notification-icon.error {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-[data-theme="dark"] .notification-icon.info {
-    background: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
-}
-
-[data-theme="dark"] .notification-icon.success {
-    background: rgba(16, 185, 129, 0.2);
-    color: #34d399;
-}
-
-[data-theme="dark"] .notification-icon.warning {
-    background: rgba(245, 158, 11, 0.2);
-    color: #fbbf24;
-}
-
-[data-theme="dark"] .notification-icon.error {
-    background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
-}
-
-.notification-item .notification-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.notification-item .notification-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-primary, #1e293b);
-    margin-bottom: 0.1rem;
-}
-
-[data-theme="dark"] .notification-item .notification-title {
-    color: #f1f5f9;
-}
-
-.notification-item .notification-message {
-    font-size: 0.8rem;
-    color: var(--text-secondary, #64748b);
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-[data-theme="dark"] .notification-item .notification-message {
-    color: #94a3b8;
-}
-
-.notification-item .notification-time {
-    font-size: 0.65rem;
-    color: var(--text-secondary, #64748b);
-    margin-top: 0.15rem;
-    display: block;
-    opacity: 0.7;
-}
-
-[data-theme="dark"] .notification-item .notification-time {
-    color: #94a3b8;
-}
-
-/* ==========================================
-   NOTIFICATION EMPTY STATE
-   ========================================== */
-.notification-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2.5rem 1.5rem;
-    color: var(--text-secondary, #64748b);
-}
-
-.notification-empty i {
-    font-size: 2.5rem;
-    color: var(--text-secondary, #64748b);
-    opacity: 0.3;
-    margin-bottom: 0.5rem;
-}
-
-.notification-empty p {
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-[data-theme="dark"] .notification-empty {
-    color: #94a3b8;
-}
-
-/* ==========================================
-   NOTIFICATION FOOTER
-   ========================================== */
-.notification-footer {
-    padding: 0.6rem 1rem;
-    border-top: 1px solid var(--border-color, #e2e8f0);
-    text-align: center;
-    flex-shrink: 0;
-}
-
-[data-theme="dark"] .notification-footer {
-    border-color: var(--border-color, #334155);
-}
-
-.notification-view-all {
-    color: var(--primary-color, #3b82f6);
-    font-size: 0.8rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.2s ease;
-}
-
-.notification-view-all:hover {
-    text-decoration: underline;
-    color: var(--primary-hover, #2563eb);
-}
-
-[data-theme="dark"] .notification-view-all {
-    color: #60a5fa;
-}
-
-/* ==========================================
    RESPONSIVE
    ========================================== */
 @media (max-width: 768px) {
@@ -589,10 +356,6 @@
 
     .profile-badge .profile-name {
         display: none;
-    }
-
-    .topbar-actions {
-        gap: 0.75rem;
     }
 
     .profile-badge {

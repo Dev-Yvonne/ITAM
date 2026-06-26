@@ -6,23 +6,25 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-2);
-    padding: var(--spacing-2) var(--spacing-5);
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: 6px;
     cursor: pointer;
-    font-family: var(--font-sans);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    text-decoration: none;
-    transition: all var(--transition-fast);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
     white-space: nowrap;
     line-height: 1.5;
-    min-height: 40px;
+    min-height: 32px;
+    width: auto;
+    min-width: auto;
 }
 
 .btn:focus-visible {
-    outline: 2px solid var(--primary-500);
+    outline: 2px solid var(--primary-500, #3b82f6);
     outline-offset: 2px;
 }
 
@@ -32,118 +34,218 @@
     transform: none !important;
 }
 
+.btn i {
+    font-size: 0.75rem;
+}
+
 /* ==========================================
    BUTTON VARIANTS
    ========================================== */
 .btn-primary {
-    background: var(--primary-600);
+    background: var(--primary-600, #2563eb);
     color: white;
 }
 
 .btn-primary:hover {
-    background: var(--primary-700);
+    background: var(--primary-700, #1d4ed8);
     color: white;
     transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
 }
 
 .btn-secondary {
-    background: var(--gray-200);
-    color: var(--gray-700);
+    background: var(--bg-secondary, #f1f5f9);
+    color: var(--text-primary, #1e293b);
 }
 
 .btn-secondary:hover {
-    background: var(--gray-300);
-    color: var(--gray-800);
+    background: var(--bg-hover, #e2e8f0);
+    color: var(--text-primary, #1e293b);
     transform: translateY(-1px);
 }
 
 [data-theme="dark"] .btn-secondary {
-    background: var(--gray-700);
-    color: var(--gray-200);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
 }
 
 [data-theme="dark"] .btn-secondary:hover {
-    background: var(--gray-600);
-    color: var(--gray-100);
+    background: rgba(255, 255, 255, 0.15);
+    color: #f1f5f9;
 }
 
 .btn-success {
-    background: var(--success-600);
+    background: var(--success-600, #16a34a);
     color: white;
 }
 
 .btn-success:hover {
-    background: var(--success-700);
+    background: var(--success-700, #15803d);
     color: white;
     transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.btn-success:active {
+    transform: translateY(0);
 }
 
 .btn-danger {
-    background: var(--danger-600);
+    background: var(--danger-600, #dc2626);
     color: white;
 }
 
 .btn-danger:hover {
-    background: var(--danger-700);
+    background: var(--danger-700, #b91c1c);
     color: white;
     transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:active {
+    transform: translateY(0);
 }
 
 .btn-warning {
-    background: var(--warning-500);
+    background: var(--warning-500, #f59e0b);
     color: white;
 }
 
 .btn-warning:hover {
-    background: var(--warning-600);
+    background: var(--warning-600, #d97706);
     color: white;
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.btn-warning:active {
+    transform: translateY(0);
 }
 
 .btn-outline {
     background: transparent;
-    color: var(--primary-600);
-    border: 1px solid var(--primary-600);
+    color: var(--primary-600, #2563eb);
+    border: 1.5px solid var(--primary-600, #2563eb);
 }
 
 .btn-outline:hover {
-    background: var(--primary-50);
-    color: var(--primary-700);
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--primary-700, #1d4ed8);
     transform: translateY(-1px);
 }
 
 [data-theme="dark"] .btn-outline {
-    color: var(--primary-400);
-    border-color: var(--primary-400);
+    color: var(--primary-400, #60a5fa);
+    border-color: var(--primary-400, #60a5fa);
 }
 
 [data-theme="dark"] .btn-outline:hover {
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--primary-300, #93bbfc);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-secondary, #64748b);
+}
+
+.btn-ghost:hover {
+    background: var(--bg-hover, #f1f5f9);
+    color: var(--text-primary, #1e293b);
+}
+
+[data-theme="dark"] .btn-ghost {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #f1f5f9;
 }
 
 /* ==========================================
    BUTTON SIZES
    ========================================== */
 .btn-sm {
-    padding: var(--spacing-1) var(--spacing-3);
-    font-size: var(--font-size-xs);
-    min-height: 32px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.7rem;
+    min-height: 26px;
+    border-radius: 4px;
+}
+
+.btn-sm i {
+    font-size: 0.65rem;
 }
 
 .btn-lg {
-    padding: var(--spacing-3) var(--spacing-8);
-    font-size: var(--font-size-base);
+    padding: 0.6rem 1.25rem;
+    font-size: 0.95rem;
+    min-height: 40px;
+    border-radius: 8px;
+}
+
+.btn-lg i {
+    font-size: 0.9rem;
+}
+
+.btn-xl {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.05rem;
     min-height: 48px;
+    border-radius: 8px;
+}
+
+.btn-xl i {
+    font-size: 1rem;
 }
 
 .btn-icon {
-    padding: var(--spacing-2);
+    padding: 0.4rem;
+    min-height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+}
+
+.btn-icon.btn-sm {
+    padding: 0.25rem;
+    min-height: 26px;
+    min-width: 26px;
+}
+
+.btn-icon.btn-lg {
+    padding: 0.6rem;
     min-height: 40px;
     min-width: 40px;
-    border-radius: var(--radius-full);
+}
+
+/* ==========================================
+   BUTTON WITH LOADING STATE
+   ========================================== */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.btn-loading .btn-text {
+    visibility: hidden;
+    opacity: 0;
+}
+
+.btn-loading .spinner-inline {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.btn .spinner-inline {
+    display: none;
 }
 
 /* ==========================================
@@ -151,7 +253,7 @@
    ========================================== */
 .btn-group {
     display: flex;
-    gap: var(--spacing-2);
+    gap: 0.5rem;
     flex-wrap: wrap;
 }
 
@@ -159,7 +261,96 @@
     flex: 0 1 auto;
 }
 
-@media (max-width: 640px) {
+.btn-group-stretch .btn {
+    flex: 1;
+}
+
+/* ==========================================
+   BUTTON WITH ICON ONLY
+   ========================================== */
+.btn-icon-only {
+    padding: 0.4rem;
+    min-height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+}
+
+.btn-icon-only i {
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.btn-icon-only.btn-sm {
+    padding: 0.25rem;
+    min-height: 26px;
+    min-width: 26px;
+}
+
+.btn-icon-only.btn-sm i {
+    font-size: 0.75rem;
+}
+
+.btn-icon-only.btn-lg {
+    padding: 0.6rem;
+    min-height: 40px;
+    min-width: 40px;
+}
+
+.btn-icon-only.btn-lg i {
+    font-size: 1.1rem;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 768px) {
+    .btn {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.75rem;
+        min-height: 28px;
+    }
+    
+    .btn-lg {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        min-height: 36px;
+    }
+    
+    .btn-xl {
+        padding: 0.6rem 1.25rem;
+        font-size: 0.95rem;
+        min-height: 42px;
+    }
+    
+    .btn-group {
+        gap: 0.4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+        min-height: 26px;
+        border-radius: 4px;
+    }
+    
+    .btn i {
+        font-size: 0.65rem;
+    }
+    
+    .btn-lg {
+        padding: 0.4rem 0.85rem;
+        font-size: 0.8rem;
+        min-height: 32px;
+    }
+    
+    .btn-xl {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        min-height: 36px;
+    }
+    
     .btn-group {
         flex-direction: column;
     }
@@ -167,5 +358,23 @@
     .btn-group .btn {
         width: 100%;
         justify-content: center;
+    }
+    
+    .btn-group-stretch .btn {
+        flex: 1;
+        width: 100%;
+    }
+}
+
+/* ==========================================
+   ACCESSIBILITY
+   ========================================== */
+@media (prefers-reduced-motion: reduce) {
+    .btn {
+        transition: none !important;
+    }
+    
+    .btn:hover {
+        transform: none !important;
     }
 }

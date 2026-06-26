@@ -143,7 +143,7 @@
 }
 
 .welcome-actions .btn {
-    padding: 0.4rem 1rem;
+    padding: 0.4rem 0.85rem;
     font-size: 0.8rem;
     border-radius: 6px;
     font-weight: 500;
@@ -154,6 +154,13 @@
     border: none;
     cursor: pointer;
     text-decoration: none !important;
+    min-height: 32px;
+    min-width: auto;
+    width: auto;
+}
+
+.welcome-actions .btn i {
+    font-size: 0.75rem;
 }
 
 .btn-primary {
@@ -584,6 +591,8 @@
     align-items: center;
     gap: 0.3rem;
     text-decoration: none !important;
+    min-height: 28px;
+    width: auto;
 }
 
 .overdue-card-footer .btn-sm:hover {
@@ -601,6 +610,13 @@
 
 [data-theme="dark"] .overdue-more {
     border-color: var(--border-color, #334155);
+}
+
+.overdue-more .btn-secondary {
+    padding: 0.4rem 1rem;
+    font-size: 0.8rem;
+    min-height: 32px;
+    width: auto;
 }
 
 /* ==========================================
