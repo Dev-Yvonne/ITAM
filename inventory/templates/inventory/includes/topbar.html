@@ -6,11 +6,11 @@
             <span></span>
             <span></span>
         </button>
+    </div>
+    <div class="topbar-actions">
         {% if user.is_authenticated %}
             {% include 'inventory/includes/notifications.html' %}
         {% endif %}
-    </div>
-    <div class="topbar-actions">
         <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle theme">
             <i class="fas fa-moon theme-icon"></i>
         </button>
