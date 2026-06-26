@@ -70,6 +70,15 @@ class Employee(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    @property
+    def department_abbreviation(self) -> str:
+        abbreviations = {
+            self.Department.TECHNICAL_CORE_PROGRAMME: "TCPD",
+            self.Department.CAPACITY_BUILDING_INNOVATION: "CBID",
+            self.Department.INSTITUTIONAL_SUPPORT_ADVISORY: "ISAO",
+        }
+        return abbreviations.get(self.department, self.department)
+
 
 class Assignment(models.Model):
     asset = models.ForeignKey(

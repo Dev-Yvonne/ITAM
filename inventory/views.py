@@ -91,6 +91,7 @@ def serialize_employee(employee: Employee) -> dict:
         "id": employee.id,
         "name": employee.name,
         "department": employee.department,
+        "department_abbreviation": employee.department_abbreviation,
         "email": employee.email,
         "assigned_assets_count": active_assets.count(),
         "assigned_assets": [
@@ -294,12 +295,17 @@ class AssetListView(LoginRequiredMixin, ListView):
             asset=OuterRef("pk"),
             date_returned__isnull=True,
         ).values("employee__name")[:1]
+        active_assignee_department = Assignment.objects.filter(
+            asset=OuterRef("pk"),
+            date_returned__isnull=True,
+        ).values("employee__department")[:1]
         queryset = (
             Asset.objects.annotate(
                 last_maintenance_date=Max("maintenance_logs__date"),
                 last_assigned_date=Max("assignments__date_assigned"),
                 last_returned_date=Max("assignments__date_returned"),
                 assigned_employee_name=Subquery(active_assignee),
+                assigned_employee_department=Subquery(active_assignee_department),
             )
             .all()
             .order_by("name", "serial_number")

@@ -559,6 +559,10 @@ class FrontendAPIBridgeTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()[0]["assigned_employee"]["name"], "API Employee")
+        self.assertEqual(
+            response.json()[0]["assigned_employee"]["department_abbreviation"],
+            "TCPD",
+        )
 
     def test_asset_list_table_displays_assigned_employee(self):
         Assignment.objects.create(asset=self.asset, employee=self.employee)
@@ -571,6 +575,7 @@ class FrontendAPIBridgeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Assignee")
         self.assertContains(response, "API Employee")
+        self.assertContains(response, "TCPD")
 
     def test_asset_api_assignment_updates_state(self):
         self.client.force_login(self.admin)

@@ -106,7 +106,7 @@
     function renderAssetRow(asset) {
         const statusLabel = asset.status_label || asset.status || '';
         const statusClass = String(statusLabel).toLowerCase().replace(/\s+/g, '');
-        const assignee = asset.assigned_employee ? asset.assigned_employee.name : '-';
+        const assignee = formatAssignee(asset.assigned_employee);
 
         return (
             '<tr>' +
@@ -114,7 +114,7 @@
                 '<td>' + escapeHtml(asset.type) + '</td>' +
                 '<td>' + escapeHtml(asset.serial_number) + '</td>' +
                 '<td><span class="badge badge-' + escapeHtml(statusClass) + '">' + escapeHtml(statusLabel) + '</span></td>' +
-                '<td>' + escapeHtml(assignee) + '</td>' +
+                '<td>' + assignee + '</td>' +
                 '<td>' + formatDateTime(asset.date_created) + '</td>' +
                 '<td>' + formatDateTime(asset.date_assigned) + '</td>' +
                 '<td>' + formatDateTime(asset.date_returned) + '</td>' +
@@ -125,6 +125,31 @@
                 '</td>' +
             '</tr>'
         );
+    }
+
+    function formatAssignee(employee) {
+        if (!employee) {
+            return '-';
+        }
+
+        const abbreviation = employee.department_abbreviation || abbreviateDepartment(employee.department);
+
+        return (
+            '<div class="assignee-cell">' +
+                '<span class="assignee-name">' + escapeHtml(employee.name) + '</span>' +
+                '<span class="department-abbreviation">' + escapeHtml(abbreviation) + '</span>' +
+            '</div>'
+        );
+    }
+
+    function abbreviateDepartment(department) {
+        const abbreviations = {
+            'Technical & Core Programme Directorates': 'TCPD',
+            'Capacity Building & Innovation Directorates': 'CBID',
+            'Institutional Support & Advisory Operations': 'ISAO'
+        };
+
+        return abbreviations[department] || department || '';
     }
 
     function renderTableMessage(message) {

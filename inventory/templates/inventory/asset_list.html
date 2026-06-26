@@ -62,7 +62,26 @@
                                 {{ asset.status }}
                             </span>
                         </td>
-                        <td>{{ asset.assigned_employee_name|default:"-" }}</td>
+                        <td>
+                            {% if asset.assigned_employee_name %}
+                                <div class="assignee-cell">
+                                    <span class="assignee-name">{{ asset.assigned_employee_name }}</span>
+                                    <span class="department-abbreviation">
+                                        {% if asset.assigned_employee_department == "Technical & Core Programme Directorates" %}
+                                            TCPD
+                                        {% elif asset.assigned_employee_department == "Capacity Building & Innovation Directorates" %}
+                                            CBID
+                                        {% elif asset.assigned_employee_department == "Institutional Support & Advisory Operations" %}
+                                            ISAO
+                                        {% else %}
+                                            {{ asset.assigned_employee_department }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
                         <td>{{ asset.date_created|date:"M d, Y H:i" }}</td>
                         <td>{{ asset.last_assigned_date|date:"M d, Y H:i"|default:"-" }}</td>
                         <td>{{ asset.last_returned_date|date:"M d, Y H:i"|default:"-" }}</td>
