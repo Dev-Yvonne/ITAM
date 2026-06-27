@@ -69,13 +69,6 @@ body {
     background: var(--bg-secondary, #1e293b);
 }
 
-.main-wrapper.auth-page {
-    margin-left: 0;
-    background: #0f172a;
-    align-items: center;
-    justify-content: center;
-}
-
 @media (max-width: 768px) {
     .main-wrapper {
         margin-left: 0;
@@ -95,15 +88,6 @@ main {
 
 [data-theme="dark"] main {
     background: var(--bg-secondary, #1e293b);
-}
-
-.main-wrapper.auth-page main {
-    background: transparent;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
 }
 
 @media (max-width: 768px) {

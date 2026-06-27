@@ -49,8 +49,15 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary" id="loginBtn">
-                    <span class="btn-text">Sign In</span>
-                    <span class="spinner-inline"></span>
+                    <span class="btn-text" id="loginBtnText">Sign In</span>
+                    <span class="btn-loading-text" id="loginLoadingText" style="display: none;">
+                        Please wait
+                        <span class="btn-dots" id="loginDots">
+                            <span class="dot">.</span>
+                            <span class="dot">.</span>
+                            <span class="dot">.</span>
+                        </span>
+                    </span>
                 </button>
             </form>
 
@@ -115,8 +122,15 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-success" id="signupBtn">
-                    <span class="btn-text">Create Account</span>
-                    <span class="spinner-inline"></span>
+                    <span class="btn-text" id="signupBtnText">Create Account</span>
+                    <span class="btn-loading-text" id="signupLoadingText" style="display: none;">
+                        Please wait
+                        <span class="btn-dots" id="signupDots">
+                            <span class="dot">.</span>
+                            <span class="dot">.</span>
+                            <span class="dot">.</span>
+                        </span>
+                    </span>
                 </button>
             </form>
 
@@ -160,7 +174,9 @@
     (function() {
         'use strict';
 
+        // ============================================
         // Password toggle functionality
+        // ============================================
         function togglePassword(inputId, toggleId) {
             var input = document.getElementById(inputId);
             var toggle = document.getElementById(toggleId);
@@ -183,52 +199,108 @@
         togglePassword('id_password1', 'togglePassword1');
         togglePassword('id_password2', 'togglePassword2');
 
-        // Improved loading state function
-        function setupLoadingButton(formId, buttonId) {
-            var form = document.getElementById(formId);
-            var button = document.getElementById(buttonId);
+        // ============================================
+        // Animate Dots in Button
+        // ============================================
+        function animateButtonDots(dotsContainer) {
+            if (!dotsContainer) return;
             
-            if (!form || !button) return;
-
-            form.addEventListener('submit', function(e) {
-                // Prevent double submission
-                if (button.classList.contains('btn-loading')) {
-                    e.preventDefault();
-                    return false;
+            var dots = dotsContainer.querySelectorAll('.dot');
+            if (dots.length !== 3) return;
+            
+            var index = 0;
+            
+            // Reset all dots
+            dots.forEach(function(dot) {
+                dot.style.opacity = '0.3';
+                dot.style.transform = 'translateY(0)';
+            });
+            
+            return setInterval(function() {
+                dots.forEach(function(dot) {
+                    dot.style.opacity = '0.3';
+                    dot.style.transform = 'translateY(0)';
+                });
+                
+                if (dots[index]) {
+                    dots[index].style.opacity = '1';
+                    dots[index].style.transform = 'translateY(-3px)';
                 }
                 
-                // Add loading state
-                button.classList.add('btn-loading');
-                button.disabled = true;
-                
-                // The spinner is already in the HTML, it will show automatically
-                // due to the CSS rules we have
+                index = (index + 1) % dots.length;
+            }, 400);
+        }
+
+        // ============================================
+        // Show loading state on button
+        // ============================================
+        function showLoading(btn, textEl, loadingEl, dotsEl) {
+            textEl.style.display = 'none';
+            loadingEl.style.display = 'inline-flex';
+            btn.disabled = true;
+            return animateButtonDots(dotsEl);
+        }
+
+        // ============================================
+        // Reset button state
+        // ============================================
+        function resetButton(btn, textEl, loadingEl, dotInterval) {
+            textEl.style.display = 'inline';
+            loadingEl.style.display = 'none';
+            if (btn) btn.disabled = false;
+            if (dotInterval) {
+                clearInterval(dotInterval);
+                dotInterval = null;
+            }
+        }
+
+        // ============================================
+        // Login Button
+        // ============================================
+        var loginForm = document.getElementById('loginForm');
+        var loginBtn = document.getElementById('loginBtn');
+        var loginBtnText = document.getElementById('loginBtnText');
+        var loginLoadingText = document.getElementById('loginLoadingText');
+        var loginDots = document.getElementById('loginDots');
+        var loginDotInterval = null;
+        
+        if (loginForm && loginBtn) {
+            loginForm.addEventListener('submit', function() {
+                loginDotInterval = showLoading(loginBtn, loginBtnText, loginLoadingText, loginDots);
             });
         }
 
-        // Setup both forms
-        setupLoadingButton('loginForm', 'loginBtn');
-        setupLoadingButton('signupForm', 'signupBtn');
+        // ============================================
+        // Signup Button
+        // ============================================
+        var signupForm = document.getElementById('signupForm');
+        var signupBtn = document.getElementById('signupBtn');
+        var signupBtnText = document.getElementById('signupBtnText');
+        var signupLoadingText = document.getElementById('signupLoadingText');
+        var signupDots = document.getElementById('signupDots');
+        var signupDotInterval = null;
+        
+        if (signupForm && signupBtn) {
+            signupForm.addEventListener('submit', function() {
+                signupDotInterval = showLoading(signupBtn, signupBtnText, signupLoadingText, signupDots);
+            });
+        }
 
-        // Handle form validation errors - remove loading state if form has errors
-        // This is useful if the server returns errors without page reload
+        // ============================================
+        // Reset button state if form has errors
+        // ============================================
         var errorElements = document.querySelectorAll('.auth-error');
         if (errorElements.length > 0) {
-            // If there are errors, remove loading state from buttons
-            var buttons = document.querySelectorAll('.btn-loading');
-            buttons.forEach(function(btn) {
-                btn.classList.remove('btn-loading');
-                btn.disabled = false;
-            });
+            resetButton(loginBtn, loginBtnText, loginLoadingText, loginDotInterval);
+            resetButton(signupBtn, signupBtnText, signupLoadingText, signupDotInterval);
         }
 
-        // Handle browser back/forward navigation
-        window.addEventListener('pageshow', function(event) {
-            var buttons = document.querySelectorAll('.btn-loading');
-            buttons.forEach(function(btn) {
-                btn.classList.remove('btn-loading');
-                btn.disabled = false;
-            });
+        // ============================================
+        // Reset button state on page show (back/forward)
+        // ============================================
+        window.addEventListener('pageshow', function() {
+            resetButton(loginBtn, loginBtnText, loginLoadingText, loginDotInterval);
+            resetButton(signupBtn, signupBtnText, signupLoadingText, signupDotInterval);
         });
 
     })();

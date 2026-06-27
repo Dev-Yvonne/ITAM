@@ -16,7 +16,7 @@
     
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="{% if request.path|slice:":6" == '/login' or request.path|slice:":6" == '/signup' or request.path|slice:":6" == '/logout' or '/auth/' in request.path %}auth-page{% endif %}">
     
     {% include 'inventory/includes/sidebar.html' %}
     

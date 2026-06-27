@@ -1,37 +1,50 @@
 /**
- * LOADER MODULE - Best Practice Implementation
- * Single, unified loader with immediate feedback
+ * LOADER MODULE - Logo + Text with Animated Dots
+ * Animated logo with pulsing effect + "Please wait..." with bouncing dots
  */
 
 (function() {
     'use strict';
     
     // ============================================
-    // State Management
+    // State
     // ============================================
     var state = {
         isActive: false,
-        message: 'Loading',
-        timeoutId: null,
-        pendingCalls: 0,
         overlay: null,
         textEl: null,
-        dotContainer: null,
-        dotInterval: null
+        dotsEl: null,
+        message: 'Please wait',
+        dotInterval: null,
+        timeoutId: null
     };
     
     // ============================================
     // Configuration
     // ============================================
     var CONFIG = {
-        DEFAULT_MESSAGE: 'Loading',
-        TIMEOUT: 30000,        // 30 seconds safety net
-        DOT_INTERVAL: 400,     // Dot animation speed
-        TRANSITION_DELAY: 300  // Hide transition delay
+        DEFAULT_MESSAGE: 'Please wait',
+        TIMEOUT: 30000,
+        DOT_INTERVAL: 400,
+        FADE_DURATION: 300,
+        SKIP_PAGES: ['/login', '/signup', '/logout', '/auth/']
     };
     
     // ============================================
-    // Create Loader Elements (Lazy Loading)
+    // Check if current page is auth page
+    // ============================================
+    function isAuthPage() {
+        var currentPath = window.location.pathname;
+        for (var i = 0; i < CONFIG.SKIP_PAGES.length; i++) {
+            if (currentPath.includes(CONFIG.SKIP_PAGES[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    // ============================================
+    // Create Loader Elements - Logo + Text with Dots
     // ============================================
     function createLoaderElements() {
         if (state.overlay) return;
@@ -40,17 +53,19 @@
         state.overlay.id = 'loading-overlay';
         state.overlay.className = 'loading-overlay';
         state.overlay.innerHTML = `
-            <div class="spinner-container">
-                <div class="spinner-wrapper">
-                    <svg class="spinner-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div class="loader-container">
+                <!-- Animated Logo -->
+                <div class="loader-logo-wrapper">
+                    <svg class="loader-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                         <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                         <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                <div class="spinner-text-wrapper">
-                    <span class="spinner-text" id="loaderText">${CONFIG.DEFAULT_MESSAGE}</span>
-                    <span class="dots-container" id="dotsContainer">
+                <!-- Text with Dots -->
+                <div class="loader-text-wrapper">
+                    <span class="loader-text" id="loaderText">${CONFIG.DEFAULT_MESSAGE}</span>
+                    <span class="loader-dots" id="loaderDots">
                         <span class="dot">.</span>
                         <span class="dot">.</span>
                         <span class="dot">.</span>
@@ -60,29 +75,29 @@
         `;
         
         document.body.appendChild(state.overlay);
-        state.textEl = state.overlay.querySelector('.spinner-text');
-        state.dotContainer = state.overlay.querySelector('.dots-container');
+        state.textEl = state.overlay.querySelector('#loaderText');
+        state.dotsEl = state.overlay.querySelector('#loaderDots');
     }
     
     // ============================================
-    // Animate Dots
+    // Animate Dots - Bouncing effect
     // ============================================
     function animateDots() {
-        if (!state.dotContainer) return;
+        if (!state.dotsEl) return;
         
-        var dots = state.dotContainer.querySelectorAll('.dot');
+        var dots = state.dotsEl.querySelectorAll('.dot');
         if (dots.length !== 3) return;
         
-        var dotIndex = 0;
+        if (state.dotInterval) {
+            clearInterval(state.dotInterval);
+        }
+        
+        var index = 0;
         
         dots.forEach(function(dot) {
             dot.style.opacity = '0.3';
             dot.style.transform = 'translateY(0)';
         });
-        
-        if (state.dotInterval) {
-            clearInterval(state.dotInterval);
-        }
         
         state.dotInterval = setInterval(function() {
             dots.forEach(function(dot) {
@@ -90,22 +105,27 @@
                 dot.style.transform = 'translateY(0)';
             });
             
-            if (dots[dotIndex]) {
-                dots[dotIndex].style.opacity = '1';
-                dots[dotIndex].style.transform = 'translateY(-4px)';
+            if (dots[index]) {
+                dots[index].style.opacity = '1';
+                dots[index].style.transform = 'translateY(-4px)';
             }
             
-            dotIndex = (dotIndex + 1) % dots.length;
+            index = (index + 1) % dots.length;
         }, CONFIG.DOT_INTERVAL);
     }
     
     // ============================================
-    // Show Loader - Core Function
+    // Show Loader
     // ============================================
     function show(message) {
-        // Prevent duplicate
+        // Skip if on auth page
+        if (isAuthPage()) {
+            console.log('Auth page - skipping loader show');
+            return;
+        }
+        
+        // If already active, just update message
         if (state.isActive) {
-            // Update message if provided
             if (message && state.textEl) {
                 state.textEl.textContent = message;
             }
@@ -115,24 +135,23 @@
         // Create elements if needed
         createLoaderElements();
         
-        // Update message
+        // Set message
         var msg = message || CONFIG.DEFAULT_MESSAGE;
         if (state.textEl) {
             state.textEl.textContent = msg;
         }
+        state.message = msg;
         
-        // Clear any existing timeout
+        // Clear any existing timeouts
         if (state.timeoutId) {
             clearTimeout(state.timeoutId);
             state.timeoutId = null;
         }
         
-        // Show with slight delay to ensure DOM is ready
+        // Show overlay with animation
         requestAnimationFrame(function() {
             state.overlay.classList.add('active');
             state.isActive = true;
-            
-            // Start dot animation
             setTimeout(animateDots, 100);
         });
         
@@ -141,30 +160,27 @@
             hide();
         }, CONFIG.TIMEOUT);
         
-        return state.isActive;
+        console.log('Loader shown:', msg);
     }
     
     // ============================================
-    // Hide Loader - Core Function
+    // Hide Loader
     // ============================================
     function hide() {
-        if (!state.isActive) return;
-        
-        state.isActive = false;
+        if (!state.isActive || !state.overlay) return;
         
         // Clear intervals and timeouts
         if (state.dotInterval) {
             clearInterval(state.dotInterval);
             state.dotInterval = null;
         }
-        
         if (state.timeoutId) {
             clearTimeout(state.timeoutId);
             state.timeoutId = null;
         }
         
-        // Hide with transition
         state.overlay.classList.remove('active');
+        state.isActive = false;
         
         // Remove from DOM after transition
         setTimeout(function() {
@@ -172,9 +188,11 @@
                 state.overlay.remove();
                 state.overlay = null;
                 state.textEl = null;
-                state.dotContainer = null;
+                state.dotsEl = null;
             }
-        }, CONFIG.TRANSITION_DELAY);
+        }, CONFIG.FADE_DURATION);
+        
+        console.log('Loader hidden');
     }
     
     // ============================================
@@ -183,6 +201,7 @@
     function updateMessage(message) {
         if (state.textEl && message) {
             state.textEl.textContent = message;
+            state.message = message;
         }
     }
     
@@ -194,47 +213,49 @@
     }
     
     // ============================================
-    // Setup Navigation Interceptor (Best Practice)
+    // Show Loader on Navigation Links
     // ============================================
-    function setupNavigationInterceptor() {
-        var links = document.querySelectorAll('a[data-loader="true"], .sidebar-link');
+    function showOnNavigation(selector) {
+        if (isAuthPage()) {
+            return;
+        }
+        
+        var links = document.querySelectorAll(selector || 'a[data-loader="true"]');
         
         links.forEach(function(link) {
             link.addEventListener('click', function(e) {
                 var href = this.getAttribute('href');
-                if (!href || href === '#' || href.startsWith('javascript:')) {
-                    return;
-                }
-                
-                // Show loader immediately
-                var message = this.dataset.loaderMessage || CONFIG.DEFAULT_MESSAGE;
-                show(message);
-                
-                // Let navigation happen naturally
-                // Loader stays visible until page loads
+                if (!href || href === '#') return;
+                show(CONFIG.DEFAULT_MESSAGE);
             });
         });
     }
     
     // ============================================
-    // Setup Form Submit Interceptor
+    // Show Loader on Form Submissions
     // ============================================
-    function setupFormInterceptor() {
-        var forms = document.querySelectorAll('form[data-loader="true"]');
+    function showOnSubmit(selector) {
+        if (isAuthPage()) {
+            return;
+        }
+        
+        var forms = document.querySelectorAll(selector || 'form[data-loader="true"]');
         
         forms.forEach(function(form) {
             form.addEventListener('submit', function() {
-                var message = this.dataset.loaderMessage || 'Processing';
-                show(message);
+                show(CONFIG.DEFAULT_MESSAGE);
             });
         });
     }
     
     // ============================================
-    // Setup AJAX Interceptor (Only for API calls)
+    // Show Loader on AJAX Requests
     // ============================================
-    function setupAjaxInterceptor() {
-        // Intercept fetch
+    function showOnAjax() {
+        if (isAuthPage()) {
+            return;
+        }
+        
         if (typeof window.fetch === 'function') {
             var originalFetch = window.fetch;
             window.fetch = function() {
@@ -250,7 +271,7 @@
                 }
                 
                 if (isApiCall) {
-                    show('Loading');
+                    show(CONFIG.DEFAULT_MESSAGE);
                 }
                 
                 return originalFetch.apply(this, args).finally(function() {
@@ -260,68 +281,6 @@
                 });
             };
         }
-        
-        // Intercept XMLHttpRequest
-        var originalXHROpen = XMLHttpRequest.prototype.open;
-        XMLHttpRequest.prototype.open = function() {
-            var args = arguments;
-            var url = args[1];
-            var isApiCall = false;
-            
-            if (typeof url === 'string') {
-                isApiCall = url.includes('/api/') && 
-                           !url.includes('/static/') && 
-                           !url.includes('.css') && 
-                           !url.includes('.js');
-            }
-            
-            if (isApiCall) {
-                show('Loading');
-            }
-            
-            var xhr = this;
-            var originalOnReadyStateChange = xhr.onreadystatechange;
-            
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && isApiCall) {
-                    hide();
-                }
-                if (originalOnReadyStateChange) {
-                    originalOnReadyStateChange.apply(this, arguments);
-                }
-            };
-            
-            xhr.addEventListener('loadend', function() {
-                if (isApiCall) {
-                    hide();
-                }
-            });
-            
-            return originalXHROpen.apply(this, args);
-        };
-    }
-    
-    // ============================================
-    // Initialize - Best Practice
-    // ============================================
-    function init() {
-        console.log('Loader module initializing...');
-        
-        // Setup interceptors
-        setupNavigationInterceptor();
-        setupFormInterceptor();
-        setupAjaxInterceptor();
-        
-        // Hide loader on page load
-        if (document.readyState === 'complete') {
-            setTimeout(hide, 300);
-        } else {
-            window.addEventListener('load', function() {
-                setTimeout(hide, 300);
-            });
-        }
-        
-        console.log('Loader module initialized.');
     }
     
     // ============================================
@@ -332,16 +291,11 @@
         hide: hide,
         updateMessage: updateMessage,
         isActive: isActive,
-        init: init
+        showOnNavigation: showOnNavigation,
+        showOnSubmit: showOnSubmit,
+        showOnAjax: showOnAjax
     };
     
-    // Auto-init
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-    
-    console.log('Loader module loaded.');
+    console.log('loader.js loaded - Logo + Text with Animated Dots');
     
 })();

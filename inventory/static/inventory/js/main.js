@@ -99,15 +99,12 @@
     function setupLoader() {
         if (typeof window.Loader !== 'undefined') {
             try {
-                // Show loader on form submissions
                 if (typeof window.Loader.showOnSubmit === 'function') {
                     window.Loader.showOnSubmit('form[data-loader="true"]');
                 }
-                // Show loader on navigation links - IMMEDIATE!
                 if (typeof window.Loader.showOnNavigation === 'function') {
                     window.Loader.showOnNavigation('a[data-loader="true"]');
                 }
-                // Show loader on AJAX requests (API calls only)
                 if (typeof window.Loader.showOnAjax === 'function') {
                     window.Loader.showOnAjax();
                 }
@@ -137,7 +134,6 @@
             
             console.log('ITAM System ready. Page:', page);
             
-            // Hide loader after page load
             if (typeof window.Loader !== 'undefined' && window.Loader.hide) {
                 setTimeout(function() {
                     try {
