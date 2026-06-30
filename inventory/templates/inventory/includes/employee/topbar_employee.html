@@ -52,11 +52,6 @@
             <div class="dropdown-menu" id="profileDropdown">
                 <div class="dropdown-header">
                     <div class="dropdown-user-info">
-                        <img class="dropdown-avatar" 
-                             src="https://ui-avatars.com/api/?name={{ user.get_full_name|default:user.username|urlencode }}&background=random&color=fff&size=64&rounded=true&bold=true&font-size=0.33" 
-                             alt="{{ user.username }}"
-                             width="64"
-                             height="64">
                         <div class="dropdown-user-details">
                             <span class="dropdown-user">{{ user.get_full_name|default:user.username }}</span>
                             <span class="dropdown-email">{{ user.email|default:"No email" }}</span>
