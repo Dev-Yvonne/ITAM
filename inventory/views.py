@@ -37,7 +37,7 @@ from .forms import (
     EmployeeForm,
     MaintenanceLogForm,
 )
-from .models import Asset, Assignment, Employee, MaintenanceLog
+from .models import Asset, Assignment, Employee, EmployeeNotification, MaintenanceLog
 from .services.metrics import (
     get_dashboard_context,
     get_overdue_assets_queryset,
@@ -612,6 +612,13 @@ class AssignAssetView(LoginRequiredMixin, UserPassesTestMixin, FormView):
                 link=reverse("asset_detail", kwargs={"pk": asset.pk}),
                 source="asset_assignment",
             )
+            create_employee_notification(
+                assignment.employee,
+                notification_type=EmployeeNotification.NotificationType.INFO,
+                title="Asset Assigned",
+                message=f'You have been assigned "{asset.name}". Please confirm receipt.',
+                link=reverse("employee_dashboard"),
+            )
 
         messages.success(self.request, "Asset assigned successfully.")
         return super().form_valid(form)
@@ -937,6 +944,13 @@ class AssetAssignAPIView(LoginRequiredMixin, View):
             Assignment.objects.create(asset=asset, employee=employee)
             asset.status = Asset.AssetStatus.ASSIGNED
             asset.save(update_fields=["status"])
+            create_employee_notification(
+                employee,
+                notification_type=EmployeeNotification.NotificationType.INFO,
+                title="Asset Assigned",
+                message=f'You have been assigned "{asset.name}". Please confirm receipt.',
+                link=reverse("employee_dashboard"),
+            )
 
         return JsonResponse(serialize_asset(asset))
 
@@ -1066,23 +1080,33 @@ def get_employee_for_user(user):
         return None
 
 
-def add_employee_session_notification(request, *, notification_type, title, message):
-    notifications = request.session.get("employee_notifications", [])
-    next_id = max(
-        [notification.get("id", 0) for notification in notifications],
-        default=0,
-    ) + 1
-    notification = {
-        "id": next_id,
-        "type": notification_type,
-        "title": title,
-        "message": message,
+def serialize_employee_notification(notification):
+    return {
+        "id": notification.id,
+        "type": notification.type,
+        "title": notification.title,
+        "message": notification.message,
+        "link": notification.link,
+        "read": notification.read,
         "created_label": "Just now",
-        "read": False,
     }
-    request.session["employee_notifications"] = [notification, *notifications[:49]]
-    request.session.modified = True
-    return notification
+
+
+def create_employee_notification(
+    employee,
+    *,
+    notification_type,
+    title,
+    message,
+    link="",
+):
+    return EmployeeNotification.objects.create(
+        employee=employee,
+        type=notification_type,
+        title=title,
+        message=message,
+        link=link,
+    )
 
 
 class EmployeePortalAccessMixin(LoginRequiredMixin):
@@ -1097,18 +1121,15 @@ class EmployeePortalAccessMixin(LoginRequiredMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        notifications = self.request.session.get("employee_notifications", [])
-        unread_notifications = [
-            notification for notification in notifications if not notification.get("read", False)
-        ]
+        notifications = self.employee.notifications.all()[:5]
         assignments = Assignment.objects.filter(employee=self.employee).select_related("asset")
 
         context.update(
             {
                 "employee": self.employee,
                 "employee_notifications": notifications,
-                "recent_notifications": notifications[:5],
-                "unread_notifications": len(unread_notifications),
+                "recent_notifications": notifications,
+                "unread_notifications": self.employee.notifications.filter(read=False).count(),
                 "employee_total_assets": assignments.count(),
                 "employee_confirmed_assets": assignments.filter(
                     confirmed_by_employee=True
@@ -1162,10 +1183,6 @@ class EmployeeDashboardView(EmployeePortalAccessMixin, TemplateView):
             confirmed_by_employee=False
         )
         
-        # Get notifications (using session storage)
-        notifications = self.request.session.get('employee_notifications', [])
-        unread_notifications = [n for n in notifications if not n.get('read', False)]
-        
         # Get due assets (optional - assets that are overdue for return)
         due_assets = active_assignments.filter(
             date_assigned__lte=timezone.now() - datetime.timedelta(days=30)
@@ -1183,8 +1200,6 @@ class EmployeeDashboardView(EmployeePortalAccessMixin, TemplateView):
             'assignment_history': assignment_history,
             'pending_confirmations': pending_confirmations,
             'pending_assets': pending_confirmations.count(),
-            'unread_notifications': len(unread_notifications),
-            'recent_notifications': notifications[:5],
             'due_assets': due_assets.count(),
             'total_assets': active_assignments.count(),
             'confirmed_assets': active_assignments.filter(confirmed_by_employee=True).count(),
@@ -1356,14 +1371,11 @@ class EmployeeNotificationsView(EmployeePortalAccessMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        # Get notifications from session storage
-        return self.request.session.get('employee_notifications', [])
+        return self.employee.notifications.all()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        notifications = self.get_queryset()
-        unread = [n for n in notifications if not n.get('read', False)]
-        context['unread_count'] = len(unread)
+        context['unread_count'] = self.employee.notifications.filter(read=False).count()
         return context
 
 
@@ -1371,26 +1383,27 @@ class EmployeeMarkNotificationReadView(EmployeePortalJSONAccessMixin, View):
     """Mark a single notification as read"""
     
     def post(self, request, pk):
-        notifications = request.session.get('employee_notifications', [])
-        for notification in notifications:
-            if notification.get('id') == pk:
-                notification['read'] = True
-                break
-        
-        request.session['employee_notifications'] = notifications
-        return JsonResponse({'success': True})
+        notification = get_object_or_404(
+            EmployeeNotification,
+            pk=pk,
+            employee=self.employee,
+        )
+        notification.read = True
+        notification.save(update_fields=["read"])
+        return JsonResponse(
+            {
+                "success": True,
+                "unread_count": self.employee.notifications.filter(read=False).count(),
+            }
+        )
 
 
 class EmployeeMarkAllNotificationsReadView(EmployeePortalJSONAccessMixin, View):
     """Mark all notifications as read"""
     
     def post(self, request):
-        notifications = request.session.get('employee_notifications', [])
-        for notification in notifications:
-            notification['read'] = True
-        
-        request.session['employee_notifications'] = notifications
-        return JsonResponse({'success': True})
+        self.employee.notifications.filter(read=False).update(read=True)
+        return JsonResponse({'success': True, "unread_count": 0})
 
 
 class EmployeeProfileView(EmployeePortalAccessMixin, TemplateView):
@@ -1459,23 +1472,19 @@ class EmployeePasswordChangeView(EmployeePortalJSONAccessMixin, View):
         request.user.set_password(new_password)
         request.user.save(update_fields=["password"])
         update_session_auth_hash(request, request.user)
-        notification = add_employee_session_notification(
-            request,
-            notification_type="success",
+        notification = create_employee_notification(
+            self.employee,
+            notification_type=EmployeeNotification.NotificationType.SUCCESS,
             title="Password Changed",
             message="Your password was changed successfully.",
         )
-        unread_count = sum(
-            1
-            for item in request.session.get("employee_notifications", [])
-            if not item.get("read", False)
-        )
+        unread_count = self.employee.notifications.filter(read=False).count()
 
         return JsonResponse(
             {
                 "success": True,
                 "message": "Password changed successfully.",
-                "notification": notification,
+                "notification": serialize_employee_notification(notification),
                 "unread_count": unread_count,
             }
         )

@@ -281,12 +281,12 @@
                 // Update badge count
                 var badge = document.querySelector('.notification-badge');
                 if (badge) {
-                    var currentCount = parseInt(badge.textContent) || 0;
-                    if (currentCount > 0) {
-                        badge.textContent = currentCount - 1;
-                        if (badge.textContent === '0') {
-                            badge.classList.add('hidden');
-                        }
+                    var unreadCount = Number.isInteger(data.unread_count)
+                        ? data.unread_count
+                        : Math.max((parseInt(badge.textContent) || 0) - 1, 0);
+                    badge.textContent = unreadCount > 0 ? unreadCount : '';
+                    if (unreadCount <= 0) {
+                        badge.classList.add('hidden');
                     }
                 }
             } else {

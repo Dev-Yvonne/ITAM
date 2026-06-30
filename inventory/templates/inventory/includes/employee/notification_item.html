@@ -9,8 +9,10 @@
         <div class="notification-time">
             {% if notification.created_label %}
                 {{ notification.created_label }}
-            {% else %}
+            {% elif notification.created_at %}
                 {{ notification.created_at|timesince }} ago
+            {% else %}
+                Just now
             {% endif %}
         </div>
     </div>

@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .forms import AssetForm, AssignmentForm, EmployeeCreateForm, EmployeeForm
-from .models import Asset, Assignment, Employee, MaintenanceLog
+from .models import Asset, Assignment, Employee, EmployeeNotification, MaintenanceLog
 
 
 class AssetFormSerialNumberValidationTests(TestCase):
@@ -174,6 +174,9 @@ class AssignmentStateMachineViewTests(TestCase):
                 date_returned__isnull=True,
             ).exists()
         )
+        notification = EmployeeNotification.objects.get(employee=self.employee)
+        self.assertEqual(notification.title, "Asset Assigned")
+        self.assertFalse(notification.read)
 
     def test_assign_asset_blocks_unavailable_asset(self):
         self.asset.status = Asset.AssetStatus.UNDER_MAINTENANCE
@@ -1001,8 +1004,10 @@ class EmployeePortalTests(TestCase):
         self.assertEqual(response.json()["success"], True)
         self.employee_user.refresh_from_db()
         self.assertTrue(self.employee_user.check_password("VeryStrongNewPass987!"))
-        notifications = self.client.session.get("employee_notifications", [])
-        self.assertEqual(notifications[0]["title"], "Password Changed")
+        notification = EmployeeNotification.objects.get(employee=self.employee)
+        self.assertEqual(notification.title, "Password Changed")
+        self.assertFalse(notification.read)
+        self.assertEqual(response.json()["notification"]["title"], "Password Changed")
         self.assertEqual(response.json()["unread_count"], 1)
 
         self.client.logout()

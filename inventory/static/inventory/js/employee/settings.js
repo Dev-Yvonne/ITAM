@@ -46,11 +46,14 @@
                 <i class="fas fa-check-circle"></i>
             </div>
             <div class="notification-content">
-                <div class="notification-title">${notification.title}</div>
-                <div class="notification-message">${notification.message}</div>
-                <div class="notification-time">${notification.created_label || 'Just now'}</div>
+                <div class="notification-title"></div>
+                <div class="notification-message"></div>
+                <div class="notification-time"></div>
             </div>
         `;
+        item.querySelector('.notification-title').textContent = notification.title || '';
+        item.querySelector('.notification-message').textContent = notification.message || '';
+        item.querySelector('.notification-time').textContent = notification.created_label || 'Just now';
         list.prepend(item);
     }
 

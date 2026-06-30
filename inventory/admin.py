@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Asset, Assignment, Employee, MaintenanceLog
+from .models import Asset, Assignment, Employee, EmployeeNotification, MaintenanceLog
 
 
 @admin.register(Asset)
@@ -50,3 +50,11 @@ class MaintenanceLogAdmin(admin.ModelAdmin):
         "issue_description",
         "technician",
     )
+
+
+@admin.register(EmployeeNotification)
+class EmployeeNotificationAdmin(admin.ModelAdmin):
+    list_display = ("employee", "title", "type", "read", "created_at")
+    list_filter = ("type", "read", "created_at")
+    search_fields = ("employee__name", "employee__email", "title", "message")
+    readonly_fields = ("created_at",)

@@ -185,3 +185,39 @@ class MaintenanceLog(models.Model):
 
     def __str__(self) -> str:
         return f"{self.asset} maintenance on {self.date}"
+
+
+class EmployeeNotification(models.Model):
+    class NotificationType(models.TextChoices):
+        INFO = "info", "Info"
+        SUCCESS = "success", "Success"
+        WARNING = "warning", "Warning"
+        ERROR = "error", "Error"
+
+    employee = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    type = models.CharField(
+        max_length=20,
+        choices=NotificationType.choices,
+        default=NotificationType.INFO,
+    )
+    title = models.CharField(max_length=150)
+    message = models.TextField()
+    link = models.CharField(max_length=255, blank=True)
+    read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        indexes = [
+            models.Index(
+                fields=["employee", "read", "-created_at"],
+                name="employee_notif_unread_idx",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.title} for {self.employee}"
