@@ -22,7 +22,7 @@
     z-index: 999999;
     opacity: 0;
     transition: opacity 0.3s ease;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--font-sans);
     will-change: opacity;
 }
 
