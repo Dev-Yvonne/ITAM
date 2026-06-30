@@ -70,6 +70,16 @@ class AssetFormSerialNumberValidationTests(TestCase):
         self.assertTrue(form.is_valid())
 
 
+class ErrorPageTests(TestCase):
+    @override_settings(DEBUG=False, ALLOWED_HOSTS=["testserver"])
+    def test_missing_page_uses_graceful_error_template(self):
+        response = self.client.get("/missing-page/")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, "inventory/error.html")
+        self.assertContains(response, "Page Not Found", status_code=404)
+
+
 class AssignmentStateMachineViewTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_superuser(

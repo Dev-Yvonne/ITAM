@@ -1,6 +1,7 @@
 import csv
 import datetime
 import json
+import logging
 
 from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
@@ -12,8 +13,9 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Max, OuterRef, Q, Subquery
 from django.db.models.deletion import ProtectedError
+from django.db.utils import DatabaseError, OperationalError, ProgrammingError
 from django.http import JsonResponse, StreamingHttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views import View
@@ -53,6 +55,61 @@ from .views_extras import (
     ReportsView,
     SettingsView,
 )
+
+
+logger = logging.getLogger(__name__)
+
+
+def error_bad_request(request, exception=None):
+    return render(
+        request,
+        "inventory/error.html",
+        {
+            "status_code": 400,
+            "title": "Bad Request",
+            "message": "The request could not be processed. Please try again.",
+        },
+        status=400,
+    )
+
+
+def error_permission_denied(request, exception=None):
+    return render(
+        request,
+        "inventory/error.html",
+        {
+            "status_code": 403,
+            "title": "Access Denied",
+            "message": "You do not have permission to access this page.",
+        },
+        status=403,
+    )
+
+
+def error_not_found(request, exception=None):
+    return render(
+        request,
+        "inventory/error.html",
+        {
+            "status_code": 404,
+            "title": "Page Not Found",
+            "message": "The page you are looking for does not exist.",
+        },
+        status=404,
+    )
+
+
+def error_server_error(request):
+    return render(
+        request,
+        "inventory/error.html",
+        {
+            "status_code": 500,
+            "title": "Something Went Wrong",
+            "message": "We hit an unexpected issue. Please try again shortly.",
+        },
+        status=500,
+    )
 
 
 # ============================================
@@ -1100,13 +1157,45 @@ def create_employee_notification(
     message,
     link="",
 ):
-    return EmployeeNotification.objects.create(
-        employee=employee,
-        type=notification_type,
-        title=title,
-        message=message,
-        link=link,
-    )
+    try:
+        return EmployeeNotification.objects.create(
+            employee=employee,
+            type=notification_type,
+            title=title,
+            message=message,
+            link=link,
+        )
+    except (DatabaseError, OperationalError, ProgrammingError):
+        logger.exception(
+            "Unable to create employee notification for employee_id=%s",
+            getattr(employee, "pk", None),
+        )
+        return None
+
+
+def get_employee_notifications(employee, limit=5):
+    try:
+        queryset = employee.notifications.all()
+        if limit is not None:
+            return list(queryset[:limit])
+        return queryset
+    except (DatabaseError, OperationalError, ProgrammingError):
+        logger.exception(
+            "Unable to load employee notifications for employee_id=%s",
+            getattr(employee, "pk", None),
+        )
+        return []
+
+
+def get_employee_unread_notification_count(employee):
+    try:
+        return employee.notifications.filter(read=False).count()
+    except (DatabaseError, OperationalError, ProgrammingError):
+        logger.exception(
+            "Unable to count employee notifications for employee_id=%s",
+            getattr(employee, "pk", None),
+        )
+        return 0
 
 
 class EmployeePortalAccessMixin(LoginRequiredMixin):
@@ -1121,7 +1210,7 @@ class EmployeePortalAccessMixin(LoginRequiredMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        notifications = self.employee.notifications.all()[:5]
+        notifications = get_employee_notifications(self.employee)
         assignments = Assignment.objects.filter(employee=self.employee).select_related("asset")
 
         context.update(
@@ -1129,7 +1218,9 @@ class EmployeePortalAccessMixin(LoginRequiredMixin):
                 "employee": self.employee,
                 "employee_notifications": notifications,
                 "recent_notifications": notifications,
-                "unread_notifications": self.employee.notifications.filter(read=False).count(),
+                "unread_notifications": get_employee_unread_notification_count(
+                    self.employee
+                ),
                 "employee_total_assets": assignments.count(),
                 "employee_confirmed_assets": assignments.filter(
                     confirmed_by_employee=True
@@ -1371,11 +1462,11 @@ class EmployeeNotificationsView(EmployeePortalAccessMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        return self.employee.notifications.all()
+        return get_employee_notifications(self.employee, limit=None)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['unread_count'] = self.employee.notifications.filter(read=False).count()
+        context['unread_count'] = get_employee_unread_notification_count(self.employee)
         return context
 
 
@@ -1383,17 +1474,27 @@ class EmployeeMarkNotificationReadView(EmployeePortalJSONAccessMixin, View):
     """Mark a single notification as read"""
     
     def post(self, request, pk):
-        notification = get_object_or_404(
-            EmployeeNotification,
-            pk=pk,
-            employee=self.employee,
-        )
-        notification.read = True
-        notification.save(update_fields=["read"])
+        try:
+            notification = get_object_or_404(
+                EmployeeNotification,
+                pk=pk,
+                employee=self.employee,
+            )
+            notification.read = True
+            notification.save(update_fields=["read"])
+        except (DatabaseError, OperationalError, ProgrammingError):
+            logger.exception(
+                "Unable to mark employee notification read for employee_id=%s",
+                self.employee.pk,
+            )
+            return JsonResponse(
+                {"success": False, "message": "Notifications are temporarily unavailable."},
+                status=503,
+            )
         return JsonResponse(
             {
                 "success": True,
-                "unread_count": self.employee.notifications.filter(read=False).count(),
+                "unread_count": get_employee_unread_notification_count(self.employee),
             }
         )
 
@@ -1402,7 +1503,17 @@ class EmployeeMarkAllNotificationsReadView(EmployeePortalJSONAccessMixin, View):
     """Mark all notifications as read"""
     
     def post(self, request):
-        self.employee.notifications.filter(read=False).update(read=True)
+        try:
+            self.employee.notifications.filter(read=False).update(read=True)
+        except (DatabaseError, OperationalError, ProgrammingError):
+            logger.exception(
+                "Unable to mark all employee notifications read for employee_id=%s",
+                self.employee.pk,
+            )
+            return JsonResponse(
+                {"success": False, "message": "Notifications are temporarily unavailable."},
+                status=503,
+            )
         return JsonResponse({'success': True, "unread_count": 0})
 
 
@@ -1478,13 +1589,17 @@ class EmployeePasswordChangeView(EmployeePortalJSONAccessMixin, View):
             title="Password Changed",
             message="Your password was changed successfully.",
         )
-        unread_count = self.employee.notifications.filter(read=False).count()
+        unread_count = get_employee_unread_notification_count(self.employee)
 
         return JsonResponse(
             {
                 "success": True,
                 "message": "Password changed successfully.",
-                "notification": serialize_employee_notification(notification),
+                "notification": (
+                    serialize_employee_notification(notification)
+                    if notification is not None
+                    else None
+                ),
                 "unread_count": unread_count,
             }
         )

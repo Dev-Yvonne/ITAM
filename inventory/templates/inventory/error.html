@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ status_code }} - {{ title }} - ITAM System</title>
+    <link rel="stylesheet" href="{% static 'inventory/css/main.css' %}?v=17">
+    <style>
+        body {
+            align-items: center;
+            background: #f8fafc;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .error-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+            max-width: 520px;
+            padding: 2rem;
+            text-align: center;
+            width: 100%;
+        }
+
+        .error-code {
+            color: #2563eb;
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 0.75rem;
+        }
+
+        .error-card h1 {
+            color: #0f172a;
+            margin-bottom: 0.75rem;
+        }
+
+        .error-card p {
+            color: #475569;
+            margin-bottom: 1.25rem;
+        }
+
+        .error-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <main class="error-card">
+        <div class="error-code">{{ status_code }}</div>
+        <h1>{{ title }}</h1>
+        <p>{{ message }}</p>
+        <div class="error-actions">
+            <a class="btn btn-primary" href="{% url 'dashboard' %}">Go to Dashboard</a>
+            <button class="btn btn-secondary" type="button" onclick="window.history.back()">Go Back</button>
+        </div>
+    </main>
+</body>
+</html>
