@@ -169,10 +169,7 @@
     font-size: var(--font-size-md, 0.9375rem);
 }
 
-/* Quick Actions */
-.quick-actions {
-    /* Inherits from .profile-card */
-}
+
 
 .action-grid {
     display: grid;
