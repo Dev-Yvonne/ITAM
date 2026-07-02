@@ -73,12 +73,15 @@ def _serialize_dashboard_result(context: dict) -> dict:
         "assigned_assets": context.get("assigned_assets", 0),
         "maintenance_assets": context.get("maintenance_assets", 0),
         "employee_count": context.get("employee_count", 0),
+        "total_employees": context.get("employee_count", 0),
         "utilization_rate": context.get("utilization_rate", 0),
         "asset_health_rate": context.get("asset_health_rate", 0),
         "overdue_assets_count": context.get("overdue_assets_count", 0),
         "overdue_cutoff": _serialize_date(context.get("overdue_cutoff")),
+        "total_assignments": context.get("total_assignments", 0),
         "dashboard_stats": dashboard_stats,
         "overdue_assets": overdue_assets,
+        "analytics": context.get("analytics", {}),
     }
 
 

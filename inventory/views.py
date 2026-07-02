@@ -309,6 +309,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context["utilization_rate"] = "—"
         context["employee_count"] = "—"
         context["asset_health_rate"] = "—"
+        context["total_assignments"] = "—"
+        context["overdue_assets_count"] = "—"
         context["overdue_assets"] = None
         return context
 

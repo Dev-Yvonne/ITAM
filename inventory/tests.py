@@ -338,7 +338,7 @@ class DashboardContextTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["async_dashboard"])
         self.assertContains(response, "data-async-dashboard")
-        self.assertContains(response, "Total Employees")
+        self.assertContains(response, "Workforce")
         self.assertContains(response, reverse("asset_list"))
         self.assertContains(response, 'class="stat-card stat-card-link stat-total"')
 
@@ -352,6 +352,14 @@ class DashboardContextTests(TestCase):
         self.assertEqual(data["maintenance_assets"], 1)
         self.assertEqual(data["employee_count"], 2)
         self.assertEqual(data["overdue_assets_count"], 0)
+        self.assertIn("analytics", data)
+        self.assertIn("asset_by_status", data["analytics"])
+        self.assertIn("total_assignments", data)
+
+        response = self.client.get(reverse("dashboard"))
+        self.assertContains(response, "Fleet Intelligence")
+        self.assertContains(response, "Analytics Canvas")
+        self.assertContains(response, "dashStatusChart")
 
     def test_dashboard_overdue_count_uses_creation_or_recent_maintenance_date(self):
         recent_asset = Asset.objects.create(

@@ -72,6 +72,7 @@ def get_dashboard_context() -> dict:
     employee_count = Employee.objects.count()
     overdue_assets = get_overdue_assets_queryset()
     asset_list_url = reverse("asset_list")
+    reports = get_reports_context()
 
     return {
         **counts,
@@ -84,6 +85,15 @@ def get_dashboard_context() -> dict:
         "overdue_cutoff": get_service_overdue_cutoff().date(),
         "utilization_rate": calculate_percentage(assigned_assets, total_assets),
         "asset_health_rate": calculate_percentage(maintenance_assets, total_assets),
+        "total_assignments": reports.get("total_assignments", 0),
+        "analytics": {
+            "asset_by_status": json.loads(reports["asset_by_status"]),
+            "asset_by_type": json.loads(reports["asset_by_type"]),
+            "monthly_assets": json.loads(reports["monthly_assets"]),
+            "maintenance_by_month": json.loads(reports["maintenance_by_month"]),
+            "top_assets": json.loads(reports["top_assets_data"]),
+            "department_counts": json.loads(reports["department_counts"]),
+        },
         "dashboard_stats": [
             {
                 "label": "Total Assets",

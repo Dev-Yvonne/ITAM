@@ -4,158 +4,289 @@
 {% block title %}Dashboard - {{ itam_product_name }}{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard.css' %}?v=7">
+    <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
-    <!-- ========================================== -->
-    <!-- WELCOME SECTION                           -->
-    <!-- ========================================== -->
-    <div class="dashboard-welcome">
-        <div class="welcome-content">
-            <div class="greeting-section">
-                <i class="fas fa-sun greeting-icon" id="greetingIcon"></i>
-                <div class="greeting-text">
-                    <h1 class="greeting-title">
-                        <span id="greetingMessage">Good Morning</span>
-                        <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
-                    </h1>
-                    <div class="user-welcome">
-                        <span class="user-role">{% if user.is_staff %}Administrator{% else %}Team Member{% endif %}</span>
+    <div class="dashboard-page"{% if async_dashboard %} data-async-dashboard="true"{% endif %}>
+
+        <!-- Welcome -->
+        <div class="dashboard-welcome">
+            <div class="welcome-content">
+                <div class="greeting-section">
+                    <i class="fas fa-sun greeting-icon" id="greetingIcon"></i>
+                    <div class="greeting-text">
+                        <h1 class="greeting-title">
+                            <span id="greetingMessage">Good Morning</span>
+                            <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                        </h1>
+                        <div class="user-welcome">
+                            <span class="user-role">{% if user.is_staff %}Administrator{% else %}Team Member{% endif %}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="welcome-typewriter">
-                <p class="typewriter-text" id="typewriterText"></p>
-            </div>
-            <div class="welcome-actions">
-                <a href="{% url 'asset_add' %}" class="btn btn-primary">
-                    <i class="fas fa-plus-circle"></i> Add New Asset
-                </a>
-                <a href="{% url 'employee_add' %}" class="btn btn-secondary">
-                    <i class="fas fa-user-plus"></i> Add Employee
-                </a>
-            </div>
-        </div>
-        <div class="welcome-time">
-            <div class="time-display" id="liveTime">00:00:00</div>
-            <div class="date-display" id="liveDate"></div>
-        </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- STATS CARDS                               -->
-    <!-- ========================================== -->
-    <div class="dashboard-stats" id="dashboard-stats"{% if async_dashboard %} data-async-dashboard="true"{% endif %}>
-        {% for stat in dashboard_stats %}
-            <a href="{{ stat.link }}" class="stat-card stat-card-link {{ stat.css_class }}" data-loader="true" data-loader-message="Loading Assets...">
-                <i class="fas {{ stat.icon }} stat-icon"></i>
-                <div class="stat-content">
-                    <h3>{{ stat.label }}</h3>
-                    <p class="stat-number"{% if stat.animate_count %} data-count="{{ stat.data_count }}"{% endif %}>{{ stat.value }}</p>
-                    <span class="stat-trend">{{ stat.trend }}</span>
+                <div class="welcome-typewriter">
+                    <p class="typewriter-text" id="typewriterText"></p>
                 </div>
-            </a>
-        {% endfor %}
-    </div>
-
-    <!-- ========================================== -->
-    <!-- QUICK STATS & OVERDUE SECTION             -->
-    <!-- ========================================== -->
-    <div class="dashboard-grid">
-        <!-- Quick Stats -->
-        <div class="quick-stats">
-            <div class="quick-stat-item">
-                <span class="quick-stat-label"><i class="fas fa-chart-pie"></i> Utilization Rate</span>
-                <span class="quick-stat-value" id="utilization-rate-value">{{ utilization_rate|default:0 }}%</span>
+                <div class="welcome-actions">
+                    <a href="{% url 'asset_add' %}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> Add New Asset
+                    </a>
+                    <a href="{% url 'employee_add' %}" class="btn btn-secondary">
+                        <i class="fas fa-user-plus"></i> Add Employee
+                    </a>
+                    <a href="{% url 'reports' %}" class="btn btn-secondary btn-ghost">
+                        <i class="fas fa-chart-line"></i> Full Reports
+                    </a>
+                </div>
             </div>
-            <a href="{% url 'employee_list' %}" class="quick-stat-item quick-stat-item-link">
-                <span class="quick-stat-label"><i class="fas fa-users"></i> Total Employees</span>
-                <span class="quick-stat-value" id="employee-count-value">{{ employee_count|default:"0" }}</span>
-            </a>
-            <a href="{% url 'asset_list' %}#maintenance-assets" class="quick-stat-item quick-stat-item-link">
-                <span class="quick-stat-label"><i class="fas fa-heartbeat"></i> Asset Health</span>
-                <span class="quick-stat-value {% if asset_health_rate|default:0 < 10 %}healthy{% else %}warning{% endif %}" id="asset-health-value">
-                    {{ asset_health_rate|default:0 }}% issues
-                </span>
-            </a>
+            <div class="welcome-time">
+                <div class="time-display" id="liveTime">00:00:00</div>
+                <div class="date-display" id="liveDate"></div>
+            </div>
         </div>
 
-        <div id="overdue-section-mount" class="{% if async_dashboard %}async-loading{% endif %}">
-        {% if async_dashboard %}
-            <div class="async-job-panel">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Loading service status in the background...</span>
-            </div>
-        {% elif overdue_assets %}
-            <div class="overdue-section">
-                <div class="overdue-header">
-                    <h2><i class="fas fa-exclamation-triangle" style="color: var(--danger-color, #ef4444);"></i> Overdue Service</h2>
-                    <span class="overdue-badge">{{ overdue_assets|length }}</span>
+        <!-- Fleet overview stats -->
+        <div class="dashboard-stats" id="dashboard-stats">
+            {% for stat in dashboard_stats %}
+                <a href="{{ stat.link }}" class="stat-card stat-card-link {{ stat.css_class }}" data-loader="true" data-loader-message="Loading Assets...">
+                    <i class="fas {{ stat.icon }} stat-icon"></i>
+                    <div class="stat-content">
+                        <h3>{{ stat.label }}</h3>
+                        <p class="stat-number"{% if stat.animate_count %} data-count="{{ stat.data_count }}"{% endif %}>{{ stat.value }}</p>
+                        <span class="stat-trend">{{ stat.trend }}</span>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+
+        <!-- Intelligence spotlight -->
+        <section class="dash-section">
+            <div class="dash-section-head">
+                <div>
+                    <h2 class="dash-section-title">Fleet Intelligence</h2>
+                    <p class="dash-section-sub">Live operational signals across your asset ecosystem</p>
                 </div>
-                <p class="overdue-subtitle">
-                    <strong>{{ overdue_assets|length }}</strong> asset{% if overdue_assets|length > 1 %}s{% endif %} overdue since {{ overdue_cutoff }}
-                </p>
-                <div class="overdue-grid">
-                    {% for asset in overdue_assets|slice:":6" %}
-                        <div class="overdue-card" data-delay="{{ forloop.counter0|add:1 }}">
-                            <div class="overdue-card-header">
-                                <span class="overdue-icon"></span>
-                                <strong>{{ asset.name }}</strong>
-                            </div>
-                            <div class="overdue-card-body">
-                                <p><span>Type</span> {{ asset.type }}</p>
-                                <p><span>Serial</span> {{ asset.serial_number }}</p>
-                                <p><span>Status</span> 
-                                    <span class="badge badge-{{ asset.status|lower|cut:' ' }}">
-                                        {{ asset.status }}
-                                    </span>
-                                </p>
-                                <p><span>Last Service</span> 
-                                    {{ asset.last_maintenance_date|default:"Never" }}
-                                </p>
-                            </div>
-                            <div class="overdue-card-footer">
-                                <a href="{% url 'asset_detail' asset.pk %}" class="btn-sm">
-                                    <i class="fas fa-eye"></i> View Details
-                                </a>
+            </div>
+            <div class="insight-spotlight" id="insight-spotlight">
+                <div class="insight-card insight-utilization">
+                    <div class="insight-ring-wrap">
+                        <div class="insight-ring" id="utilization-ring" style="--progress: {{ utilization_rate|default:0 }}%">
+                            <div class="insight-ring-inner">
+                                <span class="insight-ring-value" id="utilization-rate-value">{{ utilization_rate|default:0 }}%</span>
+                                <span class="insight-ring-label">Utilization</span>
                             </div>
                         </div>
-                    {% endfor %}
-                </div>
-                {% if overdue_assets|length > 6 %}
-                    <div class="overdue-more">
-                        <a href="{% url 'asset_list' %}?status=overdue" class="btn btn-secondary">
-                            <i class="fas fa-list"></i> View All {{ overdue_assets|length }}
-                        </a>
                     </div>
-                {% endif %}
-            </div>
-        {% else %}
-            <div class="overdue-section overdue-clear">
-                <div class="overdue-header">
-                    <h2><i class="fas fa-check-circle" style="color: var(--success-500, #22c55e);"></i> You're all caught up!</h2>
+                    <div class="insight-meta">
+                        <h3>Asset Utilization</h3>
+                        <p>Share of fleet currently assigned to employees</p>
+                    </div>
                 </div>
-                <p class="overdue-clear-message"><i class="fas fa-check"></i> All assets serviced within 6 months</p>
-            </div>
-        {% endif %}
-        </div>
-    </div>
 
-    <!-- ========================================== -->
-    <!-- DASHBOARD FOOTER                          -->
-    <!-- ========================================== -->
-    <div class="dashboard-footer">
-        <div class="footer-stat">
-            <span class="footer-stat-label"><i class="fas fa-clock"></i> Last Updated</span>
-            <span class="footer-stat-value" id="lastUpdated">{% now "Y-m-d H:i:s" %}</span>
+                <a href="{% url 'employee_list' %}" class="insight-card insight-employees insight-card-link">
+                    <div class="insight-metric">
+                        <span class="insight-metric-value" id="employee-count-value">{{ employee_count|default:"0" }}</span>
+                        <span class="insight-metric-unit">people</span>
+                    </div>
+                    <div class="insight-meta">
+                        <h3>Workforce</h3>
+                        <p>Employees tracked in the system</p>
+                    </div>
+                    <i class="fas fa-users insight-card-icon"></i>
+                </a>
+
+                <a href="{% url 'asset_list' %}#maintenance-assets" class="insight-card insight-health insight-card-link">
+                    <div class="insight-metric">
+                        <span class="insight-metric-value {% if asset_health_rate|default:0 < 10 %}healthy{% else %}warning{% endif %}" id="asset-health-value">{{ asset_health_rate|default:0 }}%</span>
+                        <span class="insight-metric-unit">in maintenance</span>
+                    </div>
+                    <div class="insight-meta">
+                        <h3>Asset Health</h3>
+                        <p>Fleet share under maintenance or repair</p>
+                    </div>
+                    <i class="fas fa-heartbeat insight-card-icon"></i>
+                </a>
+
+                <div class="insight-card insight-ops">
+                    <div class="insight-ops-grid">
+                        <div class="insight-ops-item">
+                            <span class="insight-ops-value" id="total-assignments-value">{{ total_assignments|default:0 }}</span>
+                            <span class="insight-ops-label">Total Assignments</span>
+                        </div>
+                        <div class="insight-ops-item {% if overdue_assets_count|default:0 > 0 %}danger{% else %}success{% endif %}">
+                            <span class="insight-ops-value" id="overdue-count-value">{{ overdue_assets_count|default:0 }}</span>
+                            <span class="insight-ops-label">Overdue Service</span>
+                        </div>
+                    </div>
+                    <div class="insight-meta">
+                        <h3>Operations Pulse</h3>
+                        <p>Assignment volume and service risk signals</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics bento -->
+        <section class="dash-section" id="analytics-section">
+            <div class="dash-section-head">
+                <div>
+                    <h2 class="dash-section-title">Analytics Canvas</h2>
+                    <p class="dash-section-sub">Interactive breakdowns — hover charts for detail</p>
+                </div>
+                <div class="dash-chart-tabs" role="tablist" aria-label="Chart focus">
+                    <button type="button" class="dash-tab active" data-tab="composition">Composition</button>
+                    <button type="button" class="dash-tab" data-tab="trends">Trends</button>
+                    <button type="button" class="dash-tab" data-tab="people">People</button>
+                </div>
+            </div>
+
+            <div class="analytics-bento" id="analytics-bento">
+                <div class="bento-panel active" data-panel="composition">
+                    <div class="bento-card bento-wide">
+                        <div class="bento-card-head">
+                            <h3>Fleet by Status</h3>
+                            <span class="bento-badge">Live</span>
+                        </div>
+                        <div class="bento-chart-wrap bento-chart-donut">
+                            <canvas id="dashStatusChart"></canvas>
+                            <div class="bento-donut-center" id="dashStatusCenter">
+                                <span class="bento-donut-total" id="dashStatusTotal">—</span>
+                                <span class="bento-donut-label">assets</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bento-card">
+                        <div class="bento-card-head">
+                            <h3>Assets by Type</h3>
+                        </div>
+                        <div class="bento-chart-wrap">
+                            <canvas id="dashTypeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bento-panel" data-panel="trends">
+                    <div class="bento-card bento-wide">
+                        <div class="bento-card-head">
+                            <h3>Asset Growth</h3>
+                            <span class="bento-hint">Last 6 months</span>
+                        </div>
+                        <div class="bento-chart-wrap">
+                            <canvas id="dashMonthlyChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bento-card bento-wide">
+                        <div class="bento-card-head">
+                            <h3>Maintenance Activity</h3>
+                            <span class="bento-hint">Last 6 months</span>
+                        </div>
+                        <div class="bento-chart-wrap">
+                            <canvas id="dashMaintenanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bento-panel" data-panel="people">
+                    <div class="bento-card">
+                        <div class="bento-card-head">
+                            <h3>Top Assigned Assets</h3>
+                        </div>
+                        <div class="bento-chart-wrap bento-chart-tall">
+                            <canvas id="dashTopAssetsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bento-card">
+                        <div class="bento-card-head">
+                            <h3>Department Mix</h3>
+                        </div>
+                        <div class="bento-chart-wrap">
+                            <canvas id="dashDepartmentChart"></canvas>
+                        </div>
+                        <div class="dept-legend" id="dashDeptLegend"></div>
+                    </div>
+                </div>
+
+                <div class="bento-loading" id="analytics-loading">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                    <span>Loading analytics...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Overdue -->
+        <section class="dash-section">
+            <div id="overdue-section-mount" class="{% if async_dashboard %}async-loading{% endif %}">
+            {% if async_dashboard %}
+                <div class="async-job-panel">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading service status in the background...</span>
+                </div>
+            {% elif overdue_assets %}
+                <div class="overdue-section">
+                    <div class="overdue-header">
+                        <h2><i class="fas fa-exclamation-triangle" style="color: var(--danger-color, #ef4444);"></i> Overdue Service</h2>
+                        <span class="overdue-badge">{{ overdue_assets|length }}</span>
+                    </div>
+                    <p class="overdue-subtitle">
+                        <strong>{{ overdue_assets|length }}</strong> asset{% if overdue_assets|length > 1 %}s{% endif %} overdue since {{ overdue_cutoff }}
+                    </p>
+                    <div class="overdue-grid">
+                        {% for asset in overdue_assets|slice:":6" %}
+                            <div class="overdue-card" data-delay="{{ forloop.counter0|add:1 }}">
+                                <div class="overdue-card-header">
+                                    <span class="overdue-icon"></span>
+                                    <strong>{{ asset.name }}</strong>
+                                </div>
+                                <div class="overdue-card-body">
+                                    <p><span>Type</span> {{ asset.type }}</p>
+                                    <p><span>Serial</span> {{ asset.serial_number }}</p>
+                                    <p><span>Status</span>
+                                        <span class="badge badge-{{ asset.status|lower|cut:' ' }}">{{ asset.status }}</span>
+                                    </p>
+                                    <p><span>Last Service</span> {{ asset.last_maintenance_date|default:"Never" }}</p>
+                                </div>
+                                <div class="overdue-card-footer">
+                                    <a href="{% url 'asset_detail' asset.pk %}" class="btn-sm">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if overdue_assets|length > 6 %}
+                        <div class="overdue-more">
+                            <a href="{% url 'asset_list' %}?status=overdue" class="btn btn-secondary">
+                                <i class="fas fa-list"></i> View All {{ overdue_assets|length }}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="overdue-section overdue-clear">
+                    <div class="overdue-header">
+                        <h2><i class="fas fa-check-circle" style="color: var(--success-500, #22c55e);"></i> You're all caught up!</h2>
+                    </div>
+                    <p class="overdue-clear-message"><i class="fas fa-check"></i> All assets serviced within 6 months</p>
+                </div>
+            {% endif %}
+            </div>
+        </section>
+
+        <div class="dashboard-footer">
+            <div class="footer-stat">
+                <span class="footer-stat-label"><i class="fas fa-clock"></i> Last Updated</span>
+                <span class="footer-stat-value" id="lastUpdated">{% now "Y-m-d H:i:s" %}</span>
+            </div>
         </div>
     </div>
 {% endblock %}
 
 {% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="{% static 'inventory/js/core/background-jobs.js' %}?v=1"></script>
-    <script src="{% static 'inventory/js/modules/dashboard.js' %}?v=3"></script>
+    <script src="{% static 'inventory/js/modules/dashboard-analytics.js' %}?v=1"></script>
+    <script src="{% static 'inventory/js/modules/dashboard.js' %}?v=4"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (window.Dashboard && typeof window.Dashboard.init === 'function') {
