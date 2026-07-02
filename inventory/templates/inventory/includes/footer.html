@@ -1,0 +1,97 @@
+{% load static %}
+<footer class="site-footer{% if not user.is_authenticated %} site-footer--compact{% elif user.employee and not user.is_staff and not user.is_superuser %} site-footer--employee{% endif %}" role="contentinfo">
+    <div class="site-footer-inner">
+        {% if user.is_authenticated %}
+            <div class="site-footer-grid">
+                <div class="site-footer-brand">
+                    <a href="{% if user.employee and not user.is_staff and not user.is_superuser %}{% url 'employee_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}" class="site-footer-logo">
+                        <i class="fas fa-cubes" aria-hidden="true"></i>
+                        <span>{{ itam_product_name }}</span>
+                    </a>
+                    <p class="site-footer-tagline">
+                        {% if user.employee and not user.is_staff and not user.is_superuser %}
+                            Employee portal for assigned devices and requests.
+                        {% else %}
+                            Centralized IT asset tracking, assignments, and reporting.
+                        {% endif %}
+                    </p>
+                </div>
+
+                {% if user.employee and not user.is_staff and not user.is_superuser %}
+                    <div class="site-footer-column">
+                        <h4 class="site-footer-heading">Portal</h4>
+                        <ul class="site-footer-links">
+                            <li><a href="{% url 'employee_dashboard' %}">Dashboard</a></li>
+                            <li><a href="{% url 'employee_assets' %}">My Assets</a></li>
+                            <li><a href="{% url 'employee_settings' %}">Settings</a></li>
+                        </ul>
+                    </div>
+                    <div class="site-footer-column">
+                        <h4 class="site-footer-heading">Account</h4>
+                        <ul class="site-footer-links">
+                            <li><a href="{% url 'employee_settings' %}">Profile &amp; Security</a></li>
+                            <li>
+                                <form method="post" action="{% url 'logout' %}" class="site-footer-logout-form">
+                                    {% csrf_token %}
+                                    <button type="submit">Sign out</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="site-footer-column">
+                        <h4 class="site-footer-heading">Platform</h4>
+                        <ul class="site-footer-links">
+                            <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                            <li><a href="{% url 'asset_list' %}">Assets</a></li>
+                            <li><a href="{% url 'employee_list' %}">Employees</a></li>
+                            <li><a href="{% url 'reports' %}">Reports</a></li>
+                        </ul>
+                    </div>
+                    <div class="site-footer-column">
+                        <h4 class="site-footer-heading">Account</h4>
+                        <ul class="site-footer-links">
+                            <li><a href="{% url 'profile' %}">My Profile</a></li>
+                            <li><a href="{% url 'settings' %}">Settings</a></li>
+                            <li><a href="{% url 'notifications' %}">Notifications</a></li>
+                            <li>
+                                <form method="post" action="{% url 'logout' %}" class="site-footer-logout-form">
+                                    {% csrf_token %}
+                                    <button type="submit">Sign out</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                {% endif %}
+
+                <div class="site-footer-column">
+                    <h4 class="site-footer-heading">System</h4>
+                    <ul class="site-footer-meta-list">
+                        <li><span class="site-footer-meta-label">Version</span><span class="site-footer-meta-value">{{ itam_version }}</span></li>
+                        <li><span class="site-footer-meta-label">Environment</span><span class="site-footer-meta-value">{% if user.is_staff %}Admin{% else %}User{% endif %}</span></li>
+                        <li><span class="site-footer-meta-label">Session</span><span class="site-footer-meta-value">{{ user.username }}</span></li>
+                    </ul>
+                </div>
+            </div>
+        {% else %}
+            <div class="site-footer-compact">
+                <a href="{% url 'login' %}" class="site-footer-logo">
+                    <i class="fas fa-cubes" aria-hidden="true"></i>
+                    <span>{{ itam_product_name }}</span>
+                </a>
+                <p class="site-footer-tagline">Secure IT asset management for your organization.</p>
+            </div>
+        {% endif %}
+
+        <div class="site-footer-bottom">
+            <p class="site-footer-copyright">
+                &copy; {% now "Y" %} {{ itam_product_name }}. All rights reserved.
+            </p>
+            <p class="site-footer-bottom-meta">
+                <span>{{ itam_version }}</span>
+                <span class="site-footer-dot" aria-hidden="true">&middot;</span>
+                <span>Built for inventory operations</span>
+            </p>
+        </div>
+    </div>
+</footer>
