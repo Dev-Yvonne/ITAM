@@ -74,10 +74,6 @@
                 <span class="quick-stat-value">{{ employee_count|default:"0" }}</span>
             </div>
             <div class="quick-stat-item">
-                <span class="quick-stat-label"><i class="fas fa-wrench"></i> In Maintenance</span>
-                <span class="quick-stat-value">{{ maintenance_assets|default:"0" }}</span>
-            </div>
-            <div class="quick-stat-item">
                 <span class="quick-stat-label"><i class="fas fa-heartbeat"></i> Asset Health</span>
                 <span class="quick-stat-value {% if asset_health_rate|default:0 < 10 %}healthy{% else %}warning{% endif %}">
                     {{ asset_health_rate|default:0 }}% issues
