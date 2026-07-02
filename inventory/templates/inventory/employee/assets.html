@@ -1,7 +1,7 @@
 {% extends 'inventory/base.html' %}
 {% load static %}
 
-{% block title %}My Assets - ITAM System{% endblock %}
+{% block title %}My Assets - {{ itam_product_name }}{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventory/css/employee/assets.css' %}">
