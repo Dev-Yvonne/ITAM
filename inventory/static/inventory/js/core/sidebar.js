@@ -5,82 +5,79 @@
 
 (function() {
     'use strict';
-    
+
     var sidebar = null;
     var toggleBtn = null;
     var overlay = null;
+    var openClass = 'open';
     var initialized = false;
-    
+
+    function resolveElements() {
+        toggleBtn = document.getElementById('sidebarToggle') ||
+            document.getElementById('sidebarToggleEmployee');
+        sidebar = document.getElementById('sidebar') ||
+            document.getElementById('sidebarEmployee');
+        overlay = document.getElementById('sidebarOverlay');
+        openClass = sidebar && sidebar.id === 'sidebarEmployee' ? 'active' : 'open';
+    }
+
     function initSidebar() {
         if (initialized) {
             return;
         }
-        
-        console.log('Sidebar module initializing...');
-        
-        // Get DOM elements
-        sidebar = document.getElementById('sidebar');
-        toggleBtn = document.getElementById('sidebarToggle');
-        overlay = document.getElementById('sidebarOverlay');
-        
-        console.log('Sidebar element:', sidebar);
-        console.log('Toggle button:', toggleBtn);
-        console.log('Overlay element:', overlay);
-        
+
+        resolveElements();
+
         if (toggleBtn && sidebar) {
-            console.log('Sidebar toggle found, attaching click event...');
             toggleBtn.addEventListener('click', toggleSidebar);
-        } else {
-            console.warn('Sidebar toggle button or sidebar not found.');
-            if (!toggleBtn) console.warn('Toggle button not found - check #sidebarToggle in topbar.html');
-            if (!sidebar) console.warn('Sidebar not found - check #sidebar in sidebar.html');
         }
-        
+
         if (overlay) {
             overlay.addEventListener('click', closeSidebar);
         }
-        
+
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeSidebar();
             }
         });
-        
+
         window.addEventListener('resize', function() {
-            if (window.innerWidth > 768 && sidebar && sidebar.classList.contains('open')) {
+            if (window.innerWidth > 768 && sidebar && sidebar.classList.contains(openClass)) {
                 closeSidebar();
             }
         });
-        
+
         initialized = true;
-        console.log('Sidebar module initialized.');
     }
-    
+
     function toggleSidebar(e) {
         if (e) {
             e.stopPropagation();
             e.preventDefault();
         }
-        
-        console.log('Toggling sidebar...');
-        
-        if (sidebar) {
-            sidebar.classList.toggle('open');
-            console.log('Sidebar classList:', sidebar.classList);
+
+        if (!sidebar) {
+            resolveElements();
         }
-        if (overlay) {
-            overlay.classList.toggle('active');
+        if (!sidebar) {
+            return;
         }
-        if (toggleBtn) {
-            toggleBtn.classList.toggle('open');
+
+        var isOpen = sidebar.classList.contains(openClass);
+        if (isOpen) {
+            closeSidebar();
+        } else {
+            openSidebar();
         }
     }
-    
+
     function closeSidebar() {
-        console.log('Closing sidebar...');
-        
+        if (!sidebar) {
+            resolveElements();
+        }
         if (sidebar) {
-            sidebar.classList.remove('open');
+            sidebar.classList.remove(openClass);
         }
         if (overlay) {
             overlay.classList.remove('active');
@@ -89,12 +86,13 @@
             toggleBtn.classList.remove('open');
         }
     }
-    
+
     function openSidebar() {
-        console.log('Opening sidebar...');
-        
+        if (!sidebar) {
+            resolveElements();
+        }
         if (sidebar) {
-            sidebar.classList.add('open');
+            sidebar.classList.add(openClass);
         }
         if (overlay) {
             overlay.classList.add('active');
@@ -103,24 +101,17 @@
             toggleBtn.classList.add('open');
         }
     }
-    
+
     window.Sidebar = {
         init: initSidebar,
         toggle: toggleSidebar,
         open: openSidebar,
         close: closeSidebar
     };
-    
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM ready, initializing sidebar...');
-            initSidebar();
-        });
+        document.addEventListener('DOMContentLoaded', initSidebar);
     } else {
-        console.log('DOM already ready, initializing sidebar...');
-        setTimeout(initSidebar, 50);
+        initSidebar();
     }
-    
-    console.log('Sidebar module loaded.');
-    
 })();

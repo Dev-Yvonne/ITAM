@@ -17,8 +17,8 @@
         }
         
         console.log('Topbar module initializing...');
-        
-        setupSidebarToggle();
+
+        // Sidebar toggle is handled by sidebar.js
         
         // Theme toggle is handled by theme.js
         var themeToggle = document.getElementById('themeToggle');
@@ -30,52 +30,6 @@
         
         initialized = true;
         console.log('Topbar module initialized.');
-    }
-    
-    // ============================================
-    // Setup Sidebar Toggle
-    // ============================================
-    function setupSidebarToggle() {
-        var toggleBtn = document.getElementById('sidebarToggle');
-        var sidebar = document.getElementById('sidebar');
-        var overlay = document.getElementById('sidebarOverlay');
-        
-        if (toggleBtn && sidebar) {
-            console.log('Setting up sidebar toggle...');
-            
-            toggleBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                sidebar.classList.toggle('open');
-                if (overlay) {
-                    overlay.classList.toggle('active');
-                }
-                toggleBtn.classList.toggle('open');
-            });
-        }
-        
-        if (overlay) {
-            overlay.addEventListener('click', function() {
-                sidebar.classList.remove('open');
-                overlay.classList.remove('active');
-                if (toggleBtn) {
-                    toggleBtn.classList.remove('open');
-                }
-            });
-        }
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (sidebar) {
-                    sidebar.classList.remove('open');
-                }
-                if (overlay) {
-                    overlay.classList.remove('active');
-                }
-                if (toggleBtn) {
-                    toggleBtn.classList.remove('open');
-                }
-            }
-        });
     }
     
     // ============================================

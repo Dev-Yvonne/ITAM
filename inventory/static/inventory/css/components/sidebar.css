@@ -320,12 +320,14 @@
     z-index: 999;
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transition: all 0.3s ease;
 }
 
 .sidebar-overlay.active {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
 }
 
 /* ==========================================
@@ -392,10 +394,17 @@
         opacity: 1;
         visibility: visible;
     }
-    
-    /* Show toggle button on mobile */
+
     .sidebar-toggle {
         display: flex !important;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 10px;
+        justify-content: center;
+    }
+
+    .sidebar-toggle span {
+        width: 22px;
     }
 }
 
