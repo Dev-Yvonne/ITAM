@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-    {% if page == 'login' %}Login{% elif page == 'password_reset' %}Reset Password{% elif page == 'password_reset_done' %}Check Email{% elif page == 'password_reset_confirm' %}Set New Password{% elif page == 'password_reset_complete' %}Password Reset Complete{% else %}Logged Out{% endif %} - ITAM System
+    {% if page == 'login' %}Login{% elif page == 'password_reset' %}Reset Password{% elif page == 'password_reset_done' %}Check Email{% elif page == 'password_reset_confirm' %}Set New Password{% elif page == 'password_reset_complete' %}Password Reset Complete{% else %}Logged Out{% endif %} - {{ itam_product_name }}
 {% endblock %}
 
 {% block extra_css %}
@@ -21,7 +21,7 @@
                         <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                         <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                     </svg>
-                    <span>ITAM System</span>
+                    <span>{{ itam_product_name }}</span>
                 </div>
                 <h1>Welcome Back</h1>
                 <p>Sign in to manage your IT assets</p>
@@ -82,7 +82,7 @@
                         <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                         <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                     </svg>
-                    <span>ITAM System</span>
+                    <span>{{ itam_product_name }}</span>
                 </div>
                 <h1>Reset Password</h1>
                 <p>Enter your email address and we'll send you a link to reset your password</p>
@@ -127,7 +127,7 @@
                         <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                         <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                     </svg>
-                    <span>ITAM System</span>
+                    <span>{{ itam_product_name }}</span>
                 </div>
                 <h1>Check Your Email</h1>
                 <p>We've sent you a link to reset your password. Please check your email.</p>
@@ -148,7 +148,7 @@
                         <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                         <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                     </svg>
-                    <span>ITAM System</span>
+                    <span>{{ itam_product_name }}</span>
                 </div>
                 <h1>Set New Password</h1>
                 <p>Enter your new password below</p>
@@ -210,7 +210,7 @@
                         <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                         <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                     </svg>
-                    <span>ITAM System</span>
+                    <span>{{ itam_product_name }}</span>
                 </div>
                 <h1>Password Reset Complete</h1>
                 <p>Your password has been successfully reset.</p>
@@ -231,7 +231,7 @@
                         <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                         <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                     </svg>
-                    <span>ITAM System</span>
+                    <span>{{ itam_product_name }}</span>
                 </div>
                 <h1>Logged Out</h1>
                 <p>You have been logged out successfully.</p>
