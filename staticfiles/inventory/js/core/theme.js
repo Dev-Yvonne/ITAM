@@ -17,16 +17,8 @@
     // DOM Elements
     // ============================================
     var themeToggle = null;
-    var themeIconSvg = null;
+    var themeIcon = null;
     var initialized = false;
-    
-    // ============================================
-    // SVG Icon Paths
-    // ============================================
-    var ICONS = {
-        moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
-        sun: '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
-    };
     
     // ============================================
     // Initialize Theme
@@ -37,15 +29,20 @@
             return;
         }
         
+        console.log('Theme module initializing...');
+        
         // Get theme toggle element
         themeToggle = document.getElementById('themeToggle');
         
         if (themeToggle) {
-            // Find the SVG icon inside the toggle button
-            themeIconSvg = themeToggle.querySelector('.theme-icon-svg');
+            // Find the icon inside the toggle button
+            themeIcon = themeToggle.querySelector('.theme-icon');
             
             // Attach event listener
             themeToggle.addEventListener('click', toggleTheme);
+            console.log('Theme toggle found and initialized.');
+        } else {
+            console.warn('Theme toggle button not found. Check if #themeToggle exists in the DOM.');
         }
         
         // Load saved theme or system preference
@@ -61,6 +58,7 @@
         
         setTheme(theme);
         initialized = true;
+        console.log('Theme module initialized. Current theme:', theme);
     }
     
     // ============================================
@@ -84,6 +82,8 @@
         document.dispatchEvent(new CustomEvent('theme-changed', {
             detail: { theme: theme }
         }));
+        
+        console.log('Theme set to:', theme);
     }
     
     // ============================================
@@ -95,21 +95,32 @@
         setTheme(newTheme);
         
         // Close dropdown if open (for profile dropdown)
-        var dropdown = themeToggle ? themeToggle.closest('.profile-dropdown') : null;
+        var dropdown = document.querySelector('.profile-dropdown.open');
         if (dropdown) {
             dropdown.classList.remove('open');
         }
     }
     
     // ============================================
-    // Update Theme Icon (SVG)
+    // Update Theme Icon (Font Awesome)
     // ============================================
     function updateThemeIcon(theme) {
-        if (!themeIconSvg) return;
+        if (!themeIcon) {
+            // Try to find it again
+            themeIcon = document.querySelector('.theme-icon');
+            if (!themeIcon) {
+                console.warn('Theme icon element not found. Cannot update icon.');
+                return;
+            }
+        }
         
         var isDark = theme === DARK_CLASS;
-        var iconPath = isDark ? ICONS.moon : ICONS.sun;
-        themeIconSvg.innerHTML = iconPath;
+        // Change the icon class
+        if (isDark) {
+            themeIcon.className = 'fas fa-sun theme-icon';
+        } else {
+            themeIcon.className = 'fas fa-moon theme-icon';
+        }
     }
     
     // ============================================
@@ -122,11 +133,14 @@
         // Update any theme toggle buttons on the page
         var allToggles = document.querySelectorAll('.theme-toggle-btn');
         allToggles.forEach(function(toggle) {
-            var svg = toggle.querySelector('.theme-icon-svg');
-            if (svg) {
+            var icon = toggle.querySelector('.theme-icon');
+            if (icon) {
                 var isDark = theme === DARK_CLASS;
-                var iconPath = isDark ? ICONS.moon : ICONS.sun;
-                svg.innerHTML = iconPath;
+                if (isDark) {
+                    icon.className = 'fas fa-sun theme-icon';
+                } else {
+                    icon.className = 'fas fa-moon theme-icon';
+                }
             }
         });
     }
@@ -142,7 +156,9 @@
     // Re-initialize (for dynamic content)
     // ============================================
     function reinit() {
+        console.log('Reinitializing theme...');
         initialized = false;
+        themeIcon = null;
         initTheme();
     }
     
@@ -161,7 +177,10 @@
     
     // Auto-init when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initTheme);
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM ready, initializing theme...');
+            initTheme();
+        });
     } else {
         initTheme();
     }

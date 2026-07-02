@@ -14,7 +14,8 @@
 /* ==========================================
    FORM
    ========================================== */
-form {
+/* Card-style forms only — exclude compact/navigation forms */
+form:not(.logout-form):not(.filter-form) {
     background: var(--bg-card, #ffffff);
     padding: var(--spacing-5, 1.25rem);
     border-radius: var(--radius-lg, 12px);
@@ -23,7 +24,7 @@ form {
     transition: background 0.3s ease, border-color 0.3s ease;
 }
 
-[data-theme="dark"] form {
+[data-theme="dark"] form:not(.logout-form):not(.filter-form) {
     background: var(--bg-card, #1e293b);
     border-color: var(--border-color, #334155);
 }
@@ -585,7 +586,7 @@ form,
         gap: var(--spacing-3) !important;
     }
 
-    form {
+    form:not(.logout-form):not(.filter-form) {
         padding: var(--spacing-4) !important;
     }
 }
@@ -609,7 +610,7 @@ form,
         gap: var(--spacing-1) !important;
     }
 
-    form {
+    form:not(.logout-form):not(.filter-form) {
         padding: var(--spacing-3) !important;
         border-radius: var(--radius-md) !important;
     }

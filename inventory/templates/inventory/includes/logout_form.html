@@ -1,6 +1,6 @@
-<form method="post" action="{% url 'logout' %}" class="logout-form">
+<form method="post" action="{% url 'logout' %}" class="logout-form sidebar-link sidebar-logout" data-loader="true" data-loader-message="Logging out...">
     {% csrf_token %}
-    <button type="submit" class="sidebar-link sidebar-logout" data-loader="true" data-loader-message="Logging out...">
+    <button type="submit" class="logout-submit">
         <i class="fas fa-sign-out-alt sidebar-icon"></i>
         <span class="sidebar-label">Logout</span>
     </button>

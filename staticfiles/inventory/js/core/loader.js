@@ -1,233 +1,301 @@
 /**
- * LOADER MODULE
- * Handles loading spinner management
+ * LOADER MODULE - Logo + Text with Animated Dots
+ * Animated logo with pulsing effect + "Please wait..." with bouncing dots
  */
 
 (function() {
     'use strict';
     
     // ============================================
+    // State
+    // ============================================
+    var state = {
+        isActive: false,
+        overlay: null,
+        textEl: null,
+        dotsEl: null,
+        message: 'Please wait',
+        dotInterval: null,
+        timeoutId: null
+    };
+    
+    // ============================================
     // Configuration
     // ============================================
-    var DEFAULT_MESSAGE = 'Loading...';
-    var DEFAULT_TIMEOUT = 30000; // 30 seconds
+    var CONFIG = {
+        DEFAULT_MESSAGE: 'Please wait',
+        TIMEOUT: 30000,
+        DOT_INTERVAL: 400,
+        FADE_DURATION: 300,
+        SKIP_PAGES: ['/login', '/signup', '/logout', '/auth/']
+    };
     
     // ============================================
-    // DOM Elements
+    // Check if current page is auth page
     // ============================================
-    var overlay = null;
-    var spinner = null;
-    var textEl = null;
-    var ajaxIntercepted = false;
-    
-    // ============================================
-    // Create Loading Overlay
-    // ============================================
-    function createOverlay() {
-        // Remove existing overlay if present
-        var existing = document.getElementById('loading-overlay');
-        if (existing) {
-            existing.remove();
+    function isAuthPage() {
+        var currentPath = window.location.pathname;
+        for (var i = 0; i < CONFIG.SKIP_PAGES.length; i++) {
+            if (currentPath.includes(CONFIG.SKIP_PAGES[i])) {
+                return true;
+            }
         }
+        return false;
+    }
+    
+    // ============================================
+    // Create Loader Elements - Logo + Text with Dots
+    // ============================================
+    function createLoaderElements() {
+        if (state.overlay) return;
         
-        overlay = document.createElement('div');
-        overlay.id = 'loading-overlay';
-        overlay.className = 'loading-overlay';
-        overlay.innerHTML = `
-            <div class="spinner-container">
-                <div class="spinner spinner-primary spinner-lg"></div>
-                <p class="spinner-text">${DEFAULT_MESSAGE}</p>
+        state.overlay = document.createElement('div');
+        state.overlay.id = 'loading-overlay';
+        state.overlay.className = 'loading-overlay';
+        state.overlay.innerHTML = `
+            <div class="loader-container">
+                <!-- Animated Logo -->
+                <div class="loader-logo-wrapper">
+                    <svg class="loader-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <!-- Text with Dots -->
+                <div class="loader-text-wrapper">
+                    <span class="loader-text" id="loaderText">${CONFIG.DEFAULT_MESSAGE}</span>
+                    <span class="loader-dots" id="loaderDots">
+                        <span class="dot">.</span>
+                        <span class="dot">.</span>
+                        <span class="dot">.</span>
+                    </span>
+                </div>
             </div>
         `;
         
-        document.body.appendChild(overlay);
+        document.body.appendChild(state.overlay);
+        state.textEl = state.overlay.querySelector('#loaderText');
+        state.dotsEl = state.overlay.querySelector('#loaderDots');
+    }
+    
+    // ============================================
+    // Animate Dots - Bouncing effect
+    // ============================================
+    function animateDots() {
+        if (!state.dotsEl) return;
         
-        spinner = overlay.querySelector('.spinner');
-        textEl = overlay.querySelector('.spinner-text');
+        var dots = state.dotsEl.querySelectorAll('.dot');
+        if (dots.length !== 3) return;
         
-        return overlay;
+        if (state.dotInterval) {
+            clearInterval(state.dotInterval);
+        }
+        
+        var index = 0;
+        
+        dots.forEach(function(dot) {
+            dot.style.opacity = '0.3';
+            dot.style.transform = 'translateY(0)';
+        });
+        
+        state.dotInterval = setInterval(function() {
+            dots.forEach(function(dot) {
+                dot.style.opacity = '0.3';
+                dot.style.transform = 'translateY(0)';
+            });
+            
+            if (dots[index]) {
+                dots[index].style.opacity = '1';
+                dots[index].style.transform = 'translateY(-4px)';
+            }
+            
+            index = (index + 1) % dots.length;
+        }, CONFIG.DOT_INTERVAL);
     }
     
     // ============================================
     // Show Loader
     // ============================================
-    function showLoader(message) {
-        message = message || DEFAULT_MESSAGE;
-        
-        if (!overlay || !document.body.contains(overlay)) {
-            createOverlay();
+    function show(message) {
+        // Skip if on auth page
+        if (isAuthPage()) {
+            console.log('Auth page - skipping loader show');
+            return;
         }
         
-        if (textEl) {
-            textEl.textContent = message;
+        // If already active, just update message
+        if (state.isActive) {
+            if (message && state.textEl) {
+                state.textEl.textContent = message;
+            }
+            return;
         }
         
-        // Force reflow for animation
-        void overlay.offsetWidth;
+        // Create elements if needed
+        createLoaderElements();
         
-        overlay.classList.add('active');
+        // Set message
+        var msg = message || CONFIG.DEFAULT_MESSAGE;
+        if (state.textEl) {
+            state.textEl.textContent = msg;
+        }
+        state.message = msg;
         
-        // Auto-hide after timeout (safety net)
-        clearTimeout(overlay._timeout);
-        overlay._timeout = setTimeout(function() {
-            hideLoader();
-        }, DEFAULT_TIMEOUT);
+        // Clear any existing timeouts
+        if (state.timeoutId) {
+            clearTimeout(state.timeoutId);
+            state.timeoutId = null;
+        }
+        
+        // Show overlay with animation
+        requestAnimationFrame(function() {
+            state.overlay.classList.add('active');
+            state.isActive = true;
+            setTimeout(animateDots, 100);
+        });
+        
+        // Safety timeout
+        state.timeoutId = setTimeout(function() {
+            hide();
+        }, CONFIG.TIMEOUT);
+        
+        console.log('Loader shown:', msg);
     }
     
     // ============================================
     // Hide Loader
     // ============================================
-    function hideLoader() {
-        if (overlay) {
-            overlay.classList.remove('active');
-            clearTimeout(overlay._timeout);
-            
-            // Remove from DOM after transition
-            setTimeout(function() {
-                if (overlay && overlay.parentNode) {
-                    overlay.remove();
-                    overlay = null;
-                    spinner = null;
-                    textEl = null;
-                }
-            }, 300);
+    function hide() {
+        if (!state.isActive || !state.overlay) return;
+        
+        // Clear intervals and timeouts
+        if (state.dotInterval) {
+            clearInterval(state.dotInterval);
+            state.dotInterval = null;
+        }
+        if (state.timeoutId) {
+            clearTimeout(state.timeoutId);
+            state.timeoutId = null;
+        }
+        
+        state.overlay.classList.remove('active');
+        state.isActive = false;
+        
+        // Remove from DOM after transition
+        setTimeout(function() {
+            if (state.overlay && state.overlay.parentNode) {
+                state.overlay.remove();
+                state.overlay = null;
+                state.textEl = null;
+                state.dotsEl = null;
+            }
+        }, CONFIG.FADE_DURATION);
+        
+        console.log('Loader hidden');
+    }
+    
+    // ============================================
+    // Update Message
+    // ============================================
+    function updateMessage(message) {
+        if (state.textEl && message) {
+            state.textEl.textContent = message;
+            state.message = message;
         }
     }
     
     // ============================================
-    // Update Loader Message
+    // Check if Active
     // ============================================
-    function updateLoaderMessage(message) {
-        if (textEl) {
-            textEl.textContent = message || DEFAULT_MESSAGE;
-        }
+    function isActive() {
+        return state.isActive;
     }
     
     // ============================================
-    // Create Inline Spinner
+    // Show Loader on Navigation Links
     // ============================================
-    function createInlineSpinner(size) {
-        size = size || 'sm';
-        var spinnerEl = document.createElement('span');
-        spinnerEl.className = 'spinner-inline';
-        if (size === 'sm') {
-            spinnerEl.style.width = '16px';
-            spinnerEl.style.height = '16px';
-        } else if (size === 'lg') {
-            spinnerEl.style.width = '24px';
-            spinnerEl.style.height = '24px';
-        }
-        return spinnerEl;
-    }
-    
-    // ============================================
-    // Show Loader on Form Submit
-    // ============================================
-    function showLoaderOnSubmit(formSelector) {
-        var forms = document.querySelectorAll(formSelector || 'form[data-loader="true"]');
-        forms.forEach(function(form) {
-            form.addEventListener('submit', function() {
-                var message = this.dataset.loaderMessage || 'Saving...';
-                showLoader(message);
-            });
-        });
-    }
-    
-    // ============================================
-    // Show Loader on Navigation
-    // ============================================
-    function showLoaderOnNavigation(linksSelector) {
-        var links = document.querySelectorAll(linksSelector || 'a[data-loader="true"]');
-        links.forEach(function(link) {
-            link.addEventListener('click', function() {
-                var message = this.dataset.loaderMessage || 'Loading...';
-                showLoader(message);
-            });
-        });
-    }
-    
-    // ============================================
-    // Show Loader on AJAX Requests - FIXED
-    // ============================================
-    function showLoaderOnAjax() {
-        // Prevent duplicate interception
-        if (ajaxIntercepted) {
+    function showOnNavigation(selector) {
+        if (isAuthPage()) {
             return;
         }
-        ajaxIntercepted = true;
         
-        // Intercept fetch requests
+        var links = document.querySelectorAll(selector || 'a[data-loader="true"]');
+        
+        links.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                var href = this.getAttribute('href');
+                if (!href || href === '#') return;
+                show(CONFIG.DEFAULT_MESSAGE);
+            });
+        });
+    }
+    
+    // ============================================
+    // Show Loader on Form Submissions
+    // ============================================
+    function showOnSubmit(selector) {
+        if (isAuthPage()) {
+            return;
+        }
+        
+        var forms = document.querySelectorAll(selector || 'form[data-loader="true"]');
+        
+        forms.forEach(function(form) {
+            form.addEventListener('submit', function() {
+                show(CONFIG.DEFAULT_MESSAGE);
+            });
+        });
+    }
+    
+    // ============================================
+    // Show Loader on AJAX Requests
+    // ============================================
+    function showOnAjax() {
+        if (isAuthPage()) {
+            return;
+        }
+        
         if (typeof window.fetch === 'function') {
             var originalFetch = window.fetch;
             window.fetch = function() {
                 var args = arguments;
                 var url = args[0];
-                // Don't show loader for static files
-                if (typeof url === 'string' && 
-                    !url.includes('/static/') && 
-                    !url.includes('.css') && 
-                    !url.includes('.js') &&
-                    !url.includes('favicon') &&
-                    !url.includes('manifest')) {
-                    showLoader('Loading data...');
+                var isApiCall = false;
+                
+                if (typeof url === 'string') {
+                    isApiCall = url.includes('/api/') && 
+                               !url.includes('/static/') && 
+                               !url.includes('.css') && 
+                               !url.includes('.js');
                 }
+                
+                if (isApiCall) {
+                    show(CONFIG.DEFAULT_MESSAGE);
+                }
+                
                 return originalFetch.apply(this, args).finally(function() {
-                    hideLoader();
+                    if (isApiCall) {
+                        hide();
+                    }
                 });
             };
         }
-        
-        // Intercept XMLHttpRequest
-        var originalXHROpen = XMLHttpRequest.prototype.open;
-        XMLHttpRequest.prototype.open = function() {
-            var args = arguments;
-            var url = args[1];
-            if (typeof url === 'string' && 
-                !url.includes('/static/') && 
-                !url.includes('.css') && 
-                !url.includes('.js') &&
-                !url.includes('favicon') &&
-                !url.includes('manifest')) {
-                showLoader('Loading data...');
-            }
-            var xhr = this;
-            var originalOnReadyStateChange = xhr.onreadystatechange;
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    hideLoader();
-                }
-                if (originalOnReadyStateChange) {
-                    originalOnReadyStateChange.apply(this, arguments);
-                }
-            };
-            xhr.addEventListener('loadend', function() {
-                hideLoader();
-            });
-            return originalXHROpen.apply(this, args);
-        };
-    }
-    
-    // ============================================
-    // Check if Loader is Active
-    // ============================================
-    function isActive() {
-        return overlay ? overlay.classList.contains('active') : false;
     }
     
     // ============================================
     // Export
     // ============================================
     window.Loader = {
-        show: showLoader,
-        hide: hideLoader,
-        updateMessage: updateLoaderMessage,
-        createInline: createInlineSpinner,
-        showOnSubmit: showLoaderOnSubmit,
-        showOnNavigation: showLoaderOnNavigation,
-        showOnAjax: showLoaderOnAjax,
-        isActive: isActive
+        show: show,
+        hide: hide,
+        updateMessage: updateMessage,
+        isActive: isActive,
+        showOnNavigation: showOnNavigation,
+        showOnSubmit: showOnSubmit,
+        showOnAjax: showOnAjax
     };
     
-    console.log('Loader module loaded.');
+    console.log('loader.js loaded - Logo + Text with Animated Dots');
     
 })();

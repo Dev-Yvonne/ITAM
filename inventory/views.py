@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.forms import UserCreationForm
@@ -283,7 +284,18 @@ class AuthLoginView(LoginView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page"] = "login"
+        context["remember_me"] = bool(self.request.POST.get("remember"))
         return context
+
+    def form_valid(self, form):
+        remember_me = self.request.POST.get("remember")
+        login(self.request, form.get_user())
+        if remember_me:
+            self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+        else:
+            self.request.session.set_expiry(0)
+        self.request.session.modified = True
+        return redirect(self.get_success_url())
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:

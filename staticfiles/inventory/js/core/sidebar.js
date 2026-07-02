@@ -1,6 +1,6 @@
 /**
  * SIDEBAR MODULE
- * Handles sidebar toggle functionality
+ * Handles sidebar toggle functionality for mobile menu
  */
 
 (function() {
@@ -9,14 +9,31 @@
     var sidebar = null;
     var toggleBtn = null;
     var overlay = null;
+    var initialized = false;
     
     function initSidebar() {
+        if (initialized) {
+            return;
+        }
+        
+        console.log('Sidebar module initializing...');
+        
+        // Get DOM elements
         sidebar = document.getElementById('sidebar');
         toggleBtn = document.getElementById('sidebarToggle');
         overlay = document.getElementById('sidebarOverlay');
         
+        console.log('Sidebar element:', sidebar);
+        console.log('Toggle button:', toggleBtn);
+        console.log('Overlay element:', overlay);
+        
         if (toggleBtn && sidebar) {
+            console.log('Sidebar toggle found, attaching click event...');
             toggleBtn.addEventListener('click', toggleSidebar);
+        } else {
+            console.warn('Sidebar toggle button or sidebar not found.');
+            if (!toggleBtn) console.warn('Toggle button not found - check #sidebarToggle in topbar.html');
+            if (!sidebar) console.warn('Sidebar not found - check #sidebar in sidebar.html');
         }
         
         if (overlay) {
@@ -28,14 +45,28 @@
                 closeSidebar();
             }
         });
+        
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768 && sidebar && sidebar.classList.contains('open')) {
+                closeSidebar();
+            }
+        });
+        
+        initialized = true;
+        console.log('Sidebar module initialized.');
     }
     
     function toggleSidebar(e) {
         if (e) {
             e.stopPropagation();
+            e.preventDefault();
         }
+        
+        console.log('Toggling sidebar...');
+        
         if (sidebar) {
             sidebar.classList.toggle('open');
+            console.log('Sidebar classList:', sidebar.classList);
         }
         if (overlay) {
             overlay.classList.toggle('active');
@@ -46,6 +77,8 @@
     }
     
     function closeSidebar() {
+        console.log('Closing sidebar...');
+        
         if (sidebar) {
             sidebar.classList.remove('open');
         }
@@ -58,6 +91,8 @@
     }
     
     function openSidebar() {
+        console.log('Opening sidebar...');
+        
         if (sidebar) {
             sidebar.classList.add('open');
         }
@@ -76,11 +111,14 @@
         close: closeSidebar
     };
     
-    // Auto-init when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initSidebar);
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM ready, initializing sidebar...');
+            initSidebar();
+        });
     } else {
-        initSidebar();
+        console.log('DOM already ready, initializing sidebar...');
+        setTimeout(initSidebar, 50);
     }
     
     console.log('Sidebar module loaded.');

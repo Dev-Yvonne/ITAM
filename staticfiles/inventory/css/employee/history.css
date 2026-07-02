@@ -1,0 +1,109 @@
+/* ==========================================
+   EMPLOYEE - HISTORY.CSS
+   ========================================== */
+
+.employee-history {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.history-filters {
+    display: flex;
+    gap: var(--spacing-3, 0.75rem);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-5, 1.25rem);
+}
+
+.date-input {
+    padding: var(--spacing-2, 0.5rem) var(--spacing-4, 1rem);
+    border: 1.5px solid var(--border-light, #e2e8f0);
+    border-radius: var(--radius-md, 10px);
+    font-size: var(--font-size-sm, 0.8125rem);
+    background: var(--bg-primary, #ffffff);
+    color: var(--text-primary, #1e293b);
+    transition: all 0.2s ease;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--color-primary, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.history-table-wrapper {
+    overflow-x: auto;
+    background: var(--bg-primary, #ffffff);
+    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--border-light, #e2e8f0);
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-sm, 0.8125rem);
+}
+
+.history-table thead {
+    background: var(--bg-tertiary, #f1f5f9);
+}
+
+.history-table th {
+    padding: var(--spacing-3, 0.75rem) var(--spacing-4, 1rem);
+    text-align: left;
+    font-weight: var(--font-weight-semibold, 600);
+    color: var(--text-primary, #1e293b);
+    border-bottom: 1px solid var(--border-light, #e2e8f0);
+    white-space: nowrap;
+}
+
+.history-table td {
+    padding: var(--spacing-3, 0.75rem) var(--spacing-4, 1rem);
+    border-bottom: 1px solid var(--border-light, #e2e8f0);
+    color: var(--text-primary, #1e293b);
+}
+
+.history-table tbody tr:hover {
+    background: var(--bg-hover, #f8fafc);
+}
+
+.history-table .empty-row {
+    text-align: center;
+    color: var(--text-secondary, #64748b);
+    padding: var(--spacing-8, 2rem);
+}
+
+.asset-name {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2, 0.5rem);
+}
+
+.asset-icon-small {
+    font-size: 1.25rem;
+}
+
+/* Badges - History specific */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spacing-1, 0.25rem) var(--spacing-3, 0.75rem);
+    border-radius: var(--radius-full, 9999px);
+    font-size: var(--font-size-xs, 0.75rem);
+    font-weight: var(--font-weight-medium, 500);
+}
+
+.badge-assigned {
+    background: var(--color-primary-light, #dbeafe);
+    color: var(--color-primary-dark, #1e40af);
+}
+
+.badge-returned {
+    background: var(--bg-tertiary, #f1f5f9);
+    color: var(--text-secondary, #64748b);
+}
+
+.badge-confirmed {
+    background: var(--color-success-light, #dcfce7);
+    color: var(--color-success-dark, #166534);
+}

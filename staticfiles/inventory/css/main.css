@@ -1,7 +1,8 @@
-
 /* ========================================
    MAIN.CSS - Main Entry Point
    ======================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 @import url('base/variables.css');
 @import url('base/reset.css');
@@ -17,42 +18,90 @@
 @import url('components/sidebar.css');
 @import url('components/topbar.css');
 @import url('components/spinner.css');
+@import url('components/notifications.css');
 
 @import url('layouts/auth.css');
 @import url('layouts/dashboard.css');
+@import url('layouts/profile.css');
+@import url('layouts/notifications.css');
+@import url('layouts/reports.css');
 
 /* ==========================================
-   MAIN WRAPPER - FIXED
+   EMPLOYEE CSS
+   ========================================== */
+@import url('employee/employee-common.css');
+@import url('employee/dashboard.css');
+@import url('employee/assets.css');
+@import url('employee/asset-detail.css');
+@import url('employee/notifications.css');
+@import url('employee/profile.css');
+@import url('employee/settings.css');
+@import url('employee/history.css');
+
+/* ==========================================
+   GLOBAL RESET
+   ========================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    background: var(--bg-secondary, #f8fafc);
+    transition: background 0.3s ease;
+    font-family: var(--font-sans);
+    overflow: hidden;
+}
+
+[data-theme="dark"] body {
+    background: var(--bg-secondary, #1e293b);
+}
+
+/* ==========================================
+   MAIN WRAPPER
    ========================================== */
 .main-wrapper {
     margin-left: 240px;
-    min-height: 100vh;
+    flex: 1;
     display: flex;
     flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
     transition: margin-left 0.3s ease;
-    flex: 1;
-    width: auto;
-    overflow: visible !important;
+    background: var(--bg-secondary, #f8fafc);
+}
+
+[data-theme="dark"] .main-wrapper {
+    background: var(--bg-secondary, #1e293b);
 }
 
 @media (max-width: 768px) {
     .main-wrapper {
         margin-left: 0;
-        width: 100%;
     }
 }
 
 /* ==========================================
-   MAIN CONTENT - FIXED WIDTH & SCROLLING
+   MAIN CONTENT
    ========================================== */
 main {
-    flex: 1 0 auto;
-    max-width: 100%;
-    width: 100%;
-    padding: 1.5rem 2rem 3rem 2rem;
-    box-sizing: border-box;
-    overflow: visible !important;
-    margin: 0 auto;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1.5rem 2rem 2rem;
+    background: var(--bg-secondary, #f8fafc);
+}
+
+[data-theme="dark"] main {
+    background: var(--bg-secondary, #1e293b);
 }
 
 @media (max-width: 768px) {
@@ -68,23 +117,27 @@ main {
 }
 
 /* ==========================================
-   BODY - FIXED
+   SIDEBAR OVERLAY
    ========================================== */
-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background: var(--bg-secondary, #f8fafc);
-    transition: background 0.3s ease;
-    margin: 0;
-    padding: 0;
-    overflow: visible !important;
-    overflow-y: auto !important;
-    height: auto !important;
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 90;
 }
 
-[data-theme="dark"] body {
-    background: var(--bg-secondary, #1e293b);
+.sidebar-overlay.active {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .sidebar-overlay.active {
+        display: block;
+    }
 }
 
 /* ==========================================
@@ -95,23 +148,23 @@ body {
 .flex-between { display: flex; align-items: center; justify-content: space-between; }
 .flex-column { display: flex; flex-direction: column; }
 
-.gap-1 { gap: var(--spacing-1, 0.25rem); }
-.gap-2 { gap: var(--spacing-2, 0.5rem); }
-.gap-3 { gap: var(--spacing-3, 0.75rem); }
-.gap-4 { gap: var(--spacing-4, 1rem); }
-.gap-6 { gap: var(--spacing-6, 1.5rem); }
+.gap-1 { gap: 0.25rem; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+.gap-6 { gap: 1.5rem; }
 
-.mt-1 { margin-top: var(--spacing-1, 0.25rem); }
-.mt-2 { margin-top: var(--spacing-2, 0.5rem); }
-.mt-3 { margin-top: var(--spacing-3, 0.75rem); }
-.mt-4 { margin-top: var(--spacing-4, 1rem); }
-.mt-6 { margin-top: var(--spacing-6, 1.5rem); }
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
 
-.mb-1 { margin-bottom: var(--spacing-1, 0.25rem); }
-.mb-2 { margin-bottom: var(--spacing-2, 0.5rem); }
-.mb-3 { margin-bottom: var(--spacing-3, 0.75rem); }
-.mb-4 { margin-bottom: var(--spacing-4, 1rem); }
-.mb-6 { margin-bottom: var(--spacing-6, 1.5rem); }
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 0.75rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
 
 .w-full { width: 100%; }
 .h-full { height: 100%; }
@@ -142,21 +195,21 @@ body {
 
 ::-webkit-scrollbar-track {
     background: var(--bg-secondary, #f8fafc);
-    border-radius: var(--radius-full, 9999px);
+    border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--gray-400, #94a3b8);
-    border-radius: var(--radius-full, 9999px);
+    background: #94a3b8;
+    border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--gray-500, #64748b);
+    background: #64748b;
 }
 
 * {
     scrollbar-width: thin;
-    scrollbar-color: var(--gray-400, #94a3b8) var(--bg-secondary, #f8fafc);
+    scrollbar-color: #94a3b8 var(--bg-secondary, #f8fafc);
 }
 
 /* ==========================================
@@ -180,4 +233,89 @@ button, button:hover, button:focus, button:active,
 .btn, .btn:hover,
 .nav-link, .nav-link:hover {
     text-decoration: none !important;
+}
+/* ========================================
+   MAIN.CSS - RESPONSIVE FIXES (Add to end)
+   ======================================== */
+
+/* FIX: Content squeeze issue */
+.main-wrapper {
+    width: calc(100% - 240px) !important;
+}
+
+/* FIX: Remove unwanted centering */
+main {
+    margin: 0 !important;
+}
+
+/* FIX: Better mobile padding */
+@media (max-width: 1024px) {
+    main {
+        padding: 1.25rem 1.5rem 2.5rem 1.5rem !important;
+    }
+}
+
+@media (max-width: 768px) {
+    main {
+        padding: 1rem 1rem 2rem 1rem !important;
+    }
+}
+
+@media (max-width: 640px) {
+    main {
+        padding: 0.75rem 0.75rem 1.5rem 0.75rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    main {
+        padding: 0.5rem 0.5rem 1rem 0.5rem !important;
+    }
+}
+
+/* Sidebar logout — inlined here so cache-busting on main.css applies */
+.sidebar-nav-bottom .logout-form.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.5rem 0.85rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent !important;
+    color: #f87171;
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.sidebar-nav-bottom .logout-form .logout-submit {
+    display: contents;
+    border: none;
+    background: none !important;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    box-shadow: none;
+    min-height: 0;
+}
+
+.sidebar-nav-bottom .logout-form.sidebar-logout:hover,
+.sidebar-nav-bottom .logout-form.sidebar-link:hover {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .sidebar-nav-bottom .logout-form.sidebar-logout:hover,
+[data-theme="dark"] .sidebar-nav-bottom .logout-form.sidebar-link:hover {
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #fca5a5;
 }

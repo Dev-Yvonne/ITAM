@@ -1,0 +1,304 @@
+/* ==========================================
+   NOTIFICATIONS PAGE
+   ========================================== */
+
+.notifications-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem 0;
+}
+
+.notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.notifications-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary, #1e293b);
+    margin: 0;
+}
+
+.notifications-header .notifications-subtitle {
+    color: var(--text-secondary, #64748b);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+[data-theme="dark"] .notifications-header h1 {
+    color: #f0f0f0;
+}
+
+[data-theme="dark"] .notifications-header .notifications-subtitle {
+    color: #94a3b8;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: var(--primary-color, #3b82f6);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover, #2563eb);
+    transform: translateY(-1px);
+}
+
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.notification-item-page {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-card, #ffffff);
+    border-radius: 10px;
+    border: 1px solid var(--border-color, #e2e8f0);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.notification-item-page:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .notification-item-page {
+    background: var(--bg-card, #1e293b);
+    border-color: var(--border-color, #334155);
+}
+
+.notification-item-page.unread {
+    border-left: 3px solid var(--primary-color, #3b82f6);
+    background: rgba(59, 130, 246, 0.04);
+}
+
+[data-theme="dark"] .notification-item-page.unread {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+.notification-icon-page {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+}
+
+.notification-icon-page.info {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.notification-icon-page.success {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.notification-icon-page.warning {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.notification-icon-page.error {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+[data-theme="dark"] .notification-icon-page.info {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .notification-icon-page.success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+[data-theme="dark"] .notification-icon-page.warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .notification-icon-page.error {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+.notification-content-page {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-title-page {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary, #1e293b);
+    margin-bottom: 0.15rem;
+}
+
+[data-theme="dark"] .notification-title-page {
+    color: #f1f5f9;
+}
+
+.notification-message-page {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #64748b);
+    line-height: 1.4;
+}
+
+[data-theme="dark"] .notification-message-page {
+    color: #94a3b8;
+}
+
+.notification-time-page {
+    font-size: 0.7rem;
+    color: var(--text-secondary, #64748b);
+    margin-top: 0.25rem;
+    opacity: 0.7;
+}
+
+[data-theme="dark"] .notification-time-page {
+    color: #94a3b8;
+}
+
+.notification-mark-read {
+    background: none;
+    border: none;
+    color: var(--primary-color, #3b82f6);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+}
+
+.notification-mark-read:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="dark"] .notification-mark-read {
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .notification-mark-read:hover {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.notification-empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--bg-card, #ffffff);
+    border-radius: 12px;
+    border: 1px solid var(--border-color, #e2e8f0);
+}
+
+[data-theme="dark"] .notification-empty-state {
+    background: var(--bg-card, #1e293b);
+    border-color: var(--border-color, #334155);
+}
+
+.notification-empty-state i {
+    font-size: 3rem;
+    color: var(--text-secondary, #64748b);
+    opacity: 0.3;
+    margin-bottom: 1rem;
+}
+
+.notification-empty-state h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary, #1e293b);
+    margin-bottom: 0.25rem;
+}
+
+.notification-empty-state p {
+    color: var(--text-secondary, #64748b);
+}
+
+[data-theme="dark"] .notification-empty-state h3 {
+    color: #f0f0f0;
+}
+
+[data-theme="dark"] .notification-empty-state p {
+    color: #94a3b8;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 768px) {
+    .notifications-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .notification-item-page {
+        padding: 0.75rem 1rem;
+    }
+
+    .notification-icon-page {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+
+    .notification-title-page {
+        font-size: 0.85rem;
+    }
+
+    .notification-message-page {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .notifications-page {
+        padding: 0.5rem 0;
+    }
+
+    .notification-item-page {
+        padding: 0.6rem 0.75rem;
+        gap: 0.75rem;
+    }
+
+    .notification-icon-page {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+
+    .notification-title-page {
+        font-size: 0.8rem;
+    }
+
+    .notification-message-page {
+        font-size: 0.75rem;
+    }
+}

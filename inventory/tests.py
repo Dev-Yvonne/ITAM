@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
@@ -598,6 +599,47 @@ class AuthRoutingTests(TestCase):
         self.assertEqual(first.status_code, 200)
         self.assertEqual(second.status_code, 200)
         self.assertEqual(int(self.client.session["_auth_user_id"]), user.pk)
+
+    def test_login_remember_me_sets_persistent_session(self):
+        user = get_user_model().objects.create_user(
+            username="remember-user",
+            email="remember-user@example.com",
+            password="test-pass-12345",
+        )
+
+        response = self.client.post(
+            reverse("login"),
+            data={
+                "username": "remember-user",
+                "password": "test-pass-12345",
+                "remember": "on",
+            },
+        )
+
+        self.assertRedirects(response, reverse("dashboard"))
+        self.assertFalse(self.client.session.get_expire_at_browser_close())
+        self.assertEqual(
+            self.client.session.get_expiry_age(),
+            settings.SESSION_COOKIE_AGE,
+        )
+
+    def test_login_without_remember_me_uses_browser_session(self):
+        user = get_user_model().objects.create_user(
+            username="browser-session-user",
+            email="browser-session-user@example.com",
+            password="test-pass-12345",
+        )
+
+        response = self.client.post(
+            reverse("login"),
+            data={
+                "username": "browser-session-user",
+                "password": "test-pass-12345",
+            },
+        )
+
+        self.assertRedirects(response, reverse("dashboard"))
+        self.assertTrue(self.client.session.get_expire_at_browser_close())
 
 
 class AssetCSVExportTests(TestCase):

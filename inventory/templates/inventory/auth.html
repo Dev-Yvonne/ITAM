@@ -51,7 +51,7 @@
                 
                 <div class="form-options">
                     <div class="remember-me">
-                        <input type="checkbox" name="remember" id="rememberMe">
+                        <input type="checkbox" name="remember" id="rememberMe"{% if remember_me %} checked{% endif %}>
                         <label for="rememberMe">Remember me</label>
                     </div>
                     <a href="{% url 'password_reset' %}" class="forgot-password">Forgot Password?</a>

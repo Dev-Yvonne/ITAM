@@ -149,6 +149,7 @@
         clearFieldError(field);
         
         field.classList.add('is-invalid');
+        formGroup.classList.add('has-error');
         
         const errorDiv = document.createElement('div');
         errorDiv.className = 'field-error-message';
@@ -164,11 +165,19 @@
         if (errorDiv) {
             errorDiv.remove();
         }
+        if (!formGroup.querySelector('.field-errors')) {
+            formGroup.classList.remove('has-error');
+        }
     }
     
     function clearAllErrors(form) {
         form.querySelectorAll('.is-invalid').forEach(function(el) {
             el.classList.remove('is-invalid');
+        });
+        form.querySelectorAll('.form-group.has-error').forEach(function(el) {
+            if (!el.querySelector('.field-errors')) {
+                el.classList.remove('has-error');
+            }
         });
         form.querySelectorAll('.field-error-message').forEach(function(el) {
             el.remove();
@@ -196,6 +205,7 @@
     // ============================================
     function handleAssetFormSubmit(event, form) {
         event.preventDefault();
+        form.classList.add('validation-attempted');
         clearAllErrors(form);
         
         if (!validateForm(form)) {

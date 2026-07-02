@@ -272,3 +272,50 @@ main {
         padding: 0.5rem 0.5rem 1rem 0.5rem !important;
     }
 }
+
+/* Sidebar logout — inlined here so cache-busting on main.css applies */
+.sidebar-nav-bottom .logout-form.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.5rem 0.85rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent !important;
+    color: #f87171;
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.sidebar-nav-bottom .logout-form .logout-submit {
+    display: contents;
+    border: none;
+    background: none !important;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    box-shadow: none;
+    min-height: 0;
+}
+
+.sidebar-nav-bottom .logout-form.sidebar-logout:hover,
+.sidebar-nav-bottom .logout-form.sidebar-link:hover {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .sidebar-nav-bottom .logout-form.sidebar-logout:hover,
+[data-theme="dark"] .sidebar-nav-bottom .logout-form.sidebar-link:hover {
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #fca5a5;
+}

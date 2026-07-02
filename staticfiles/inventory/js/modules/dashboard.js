@@ -9,21 +9,24 @@
     // ============================================
     // Configuration
     // ============================================
-    var TYPING_SPEED = 80;
-    var ERASING_SPEED = 40;
+    var TYPING_SPEED = 70;
+    var ERASING_SPEED = 35;
     var PAUSE_BEFORE_ERASE = 3000;
     var PAUSE_BEFORE_TYPING = 500;
     
     var typewriterMessages = [
-        'Welcome to ITAM System',
+        'Welcome to ITAM V2.0',
         'Manage your assets efficiently',
         'Track assignments in real-time',
         'Stay on top of maintenance',
         'Your IT assets, organized'
     ];
     
+    var isStatsAnimated = false;
+    var statsObserver = null;
+    
     // ============================================
-    // Greeting Function
+    // Greeting Function with Font Awesome Icons
     // ============================================
     function getGreeting() {
         var hour = new Date().getHours();
@@ -32,16 +35,16 @@
         
         if (hour >= 5 && hour < 12) {
             message = 'Good Morning';
-            icon = '🌅';
+            icon = 'fa-sun';
         } else if (hour >= 12 && hour < 17) {
             message = 'Good Afternoon';
-            icon = '☀️';
+            icon = 'fa-cloud-sun';
         } else if (hour >= 17 && hour < 21) {
             message = 'Good Evening';
-            icon = '🌆';
+            icon = 'fa-moon';
         } else {
             message = 'Good Night';
-            icon = '🌙';
+            icon = 'fa-star';
         }
         
         return { message: message, icon: icon };
@@ -59,7 +62,8 @@
             greetingElement.textContent = greeting.message;
         }
         if (iconElement) {
-            iconElement.textContent = greeting.icon;
+            // Update Font Awesome icon
+            iconElement.className = 'fas ' + greeting.icon + ' greeting-icon';
         }
     }
     
@@ -165,6 +169,9 @@
             var increment = target / steps;
             var stepTime = duration / steps;
             
+            // Reset to 0 first
+            stat.textContent = '0';
+            
             var timer = setInterval(function() {
                 current += increment;
                 if (current >= target) {
@@ -180,17 +187,62 @@
     // Animate Overdue Cards
     // ============================================
     function animateOverdueCards() {
-        var cards = document.querySelectorAll('.overdue-card[data-delay]');
-        cards.forEach(function(card) {
-            var delay = parseInt(card.getAttribute('data-delay')) * 100;
+        var cards = document.querySelectorAll('.overdue-card');
+        cards.forEach(function(card, index) {
+            var delay = (index + 1) * 100;
             card.style.opacity = '0';
             card.style.transform = 'translateY(20px)';
-            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            card.classList.remove('visible');
             
             setTimeout(function() {
-                card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
+                card.classList.add('visible');
             }, delay);
+        });
+    }
+    
+    // ============================================
+    // Setup Scroll Observer for Stats
+    // ============================================
+    function setupScrollObserver() {
+        var statsSection = document.querySelector('.dashboard-stats');
+        if (!statsSection) return;
+        
+        if ('IntersectionObserver' in window) {
+            statsObserver = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting && !isStatsAnimated) {
+                        isStatsAnimated = true;
+                        animateStats();
+                        animateOverdueCards();
+                        statsObserver.disconnect();
+                    }
+                });
+            }, {
+                threshold: 0.2,
+                rootMargin: '0px 0px -50px 0px'
+            });
+            
+            statsObserver.observe(statsSection);
+        } else {
+            animateStats();
+            animateOverdueCards();
+        }
+    }
+    
+    // ============================================
+    // Reset Stats for Re-animation
+    // ============================================
+    function resetStats() {
+        var statNumbers = document.querySelectorAll('.stat-number[data-count]');
+        statNumbers.forEach(function(stat) {
+            stat.textContent = '0';
+        });
+        
+        var cards = document.querySelectorAll('.overdue-card');
+        cards.forEach(function(card) {
+            card.classList.remove('visible');
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
         });
     }
     
@@ -198,6 +250,7 @@
     // Refresh Dashboard Data
     // ============================================
     function refreshDashboardData() {
+        // Only update the clock - NO page reload
         updateClock();
     }
     
@@ -208,20 +261,18 @@
         console.log('Dashboard module initializing...');
         
         updateGreeting();
-        
         updateClock();
+        
+        // Update clock every second
         setInterval(updateClock, 1000);
         
+        // Typewriter effect
         typewriterEffect();
         
-        setTimeout(function() {
-            animateStats();
-        }, 300);
+        // Setup scroll observer for stats
+        setupScrollObserver();
         
-        setTimeout(function() {
-            animateOverdueCards();
-        }, 500);
-        
+        // Refresh data every minute (NO page reload)
         setInterval(refreshDashboardData, 60000);
         
         console.log('Dashboard module initialized.');
@@ -233,7 +284,9 @@
     window.Dashboard = {
         init: init,
         refresh: refreshDashboardData,
-        getGreeting: getGreeting
+        getGreeting: getGreeting,
+        animateStats: animateStats,
+        resetStats: resetStats
     };
     
     console.log('Dashboard module loaded.');

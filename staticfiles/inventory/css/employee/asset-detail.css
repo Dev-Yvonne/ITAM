@@ -1,0 +1,192 @@
+/* ==========================================
+   EMPLOYEE - ASSET-DETAIL.CSS
+   ========================================== */
+
+.asset-detail {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2, 0.5rem);
+    color: var(--text-secondary, #64748b);
+    text-decoration: none;
+    font-size: var(--font-size-sm, 0.8125rem);
+    margin-bottom: var(--spacing-5, 1.25rem);
+    transition: color 0.2s ease;
+}
+
+.back-link:hover {
+    color: var(--color-primary, #3b82f6);
+}
+
+/* Asset Header */
+.asset-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-5, 1.25rem);
+    background: var(--bg-primary, #ffffff);
+    padding: var(--spacing-6, 1.5rem);
+    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--border-light, #e2e8f0);
+    margin-bottom: var(--spacing-6, 1.5rem);
+    flex-wrap: wrap;
+}
+
+.asset-icon-large {
+    font-size: 3rem;
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-hover, #f1f5f9);
+    border-radius: var(--radius-lg, 12px);
+    flex-shrink: 0;
+}
+
+.asset-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.asset-title h1 {
+    font-size: var(--font-size-2xl, 1.75rem);
+    font-weight: var(--font-weight-bold, 700);
+    color: var(--text-primary, #1e293b);
+    margin: 0;
+}
+
+.asset-title .asset-serial {
+    color: var(--text-secondary, #64748b);
+    font-size: var(--font-size-sm, 0.8125rem);
+    margin: var(--spacing-1, 0.25rem) 0 0 0;
+}
+
+.asset-status-badge {
+    margin-left: auto;
+}
+
+/* Asset Details Grid */
+.asset-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-6, 1.5rem);
+    margin-bottom: var(--spacing-6, 1.5rem);
+}
+
+@media (max-width: 768px) {
+    .asset-details-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.detail-card {
+    background: var(--bg-primary, #ffffff);
+    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--border-light, #e2e8f0);
+    padding: var(--spacing-5, 1.25rem);
+}
+
+.detail-card h3 {
+    font-size: var(--font-size-md, 0.9375rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: var(--text-primary, #1e293b);
+    margin: 0 0 var(--spacing-4, 1rem) 0;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-2, 0.5rem) 0;
+    border-bottom: 1px solid var(--border-light, #e2e8f0);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-row .label {
+    color: var(--text-secondary, #64748b);
+    font-size: var(--font-size-sm, 0.8125rem);
+}
+
+.detail-row .value {
+    color: var(--text-primary, #1e293b);
+    font-weight: var(--font-weight-medium, 500);
+    font-size: var(--font-size-sm, 0.8125rem);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3, 0.75rem);
+}
+
+.action-buttons .btn {
+    justify-content: center;
+    width: 100%;
+}
+
+/* Timeline */
+.history-section {
+    background: var(--bg-primary, #ffffff);
+    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--border-light, #e2e8f0);
+    padding: var(--spacing-5, 1.25rem);
+}
+
+.history-section h3 {
+    font-size: var(--font-size-md, 0.9375rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: var(--text-primary, #1e293b);
+    margin: 0 0 var(--spacing-4, 1rem) 0;
+}
+
+.timeline {
+    position: relative;
+    padding-left: var(--spacing-5, 1.25rem);
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-light, #e2e8f0);
+}
+
+.timeline-item {
+    position: relative;
+    padding: var(--spacing-2, 0.5rem) 0 var(--spacing-2, 0.5rem) var(--spacing-5, 1.25rem);
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -10px;
+    top: 0.75rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-primary, #3b82f6);
+    border: 2px solid var(--bg-primary, #ffffff);
+    box-shadow: 0 0 0 2px var(--color-primary, #3b82f6);
+}
+
+.timeline-date {
+    font-size: var(--font-size-xs, 0.75rem);
+    color: var(--text-muted, #94a3b8);
+    display: block;
+}
+
+.timeline-event {
+    font-size: var(--font-size-sm, 0.8125rem);
+    color: var(--text-primary, #1e293b);
+}

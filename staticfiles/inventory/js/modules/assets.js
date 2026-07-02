@@ -10,11 +10,16 @@
     // DOM Elements
     // ============================================
     let elements = {};
+    let isInitialized = false;
     
     // ============================================
     // Initialize Asset Module
     // ============================================
     function init() {
+        if (isInitialized) {
+            return;
+        }
+        isInitialized = true;
         // Cache DOM elements
         elements = {
             assetTable: document.querySelector('.asset-table'),
@@ -110,14 +115,14 @@
 
         return (
             '<tr>' +
-                '<td><a href="/assets/' + encodeURIComponent(asset.id) + '/">' + escapeHtml(asset.name) + '</a></td>' +
+                '<td><a href="/assets/' + encodeURIComponent(asset.id) + '/" class="asset-name-link">' + escapeHtml(asset.name) + '</a></td>' +
                 '<td>' + escapeHtml(asset.type) + '</td>' +
                 '<td>' + escapeHtml(asset.serial_number) + '</td>' +
                 '<td><span class="badge badge-' + escapeHtml(statusClass) + '">' + escapeHtml(statusLabel) + '</span></td>' +
                 '<td>' + assignee + '</td>' +
-                '<td>' + formatDateTime(asset.date_created) + '</td>' +
-                '<td>' + formatDateTime(asset.date_assigned) + '</td>' +
-                '<td>' + formatDateTime(asset.date_returned) + '</td>' +
+                '<td class="date-cell">' + formatDate(asset.date_created) + '</td>' +
+                '<td class="date-cell">' + formatDate(asset.date_assigned) + '</td>' +
+                '<td class="date-cell">' + formatDate(asset.date_returned) + '</td>' +
                 '<td class="actions-cell">' +
                     '<a href="/assets/' + encodeURIComponent(asset.id) + '/" class="btn btn-sm btn-primary">View</a>' +
                     '<a href="/assets/' + encodeURIComponent(asset.id) + '/edit/" class="btn btn-sm btn-secondary">Edit</a>' +
@@ -129,7 +134,7 @@
 
     function formatAssignee(employee) {
         if (!employee) {
-            return '-';
+            return '—';
         }
 
         const abbreviation = employee.department_abbreviation || abbreviateDepartment(employee.department);
@@ -174,23 +179,21 @@
             '</tr>';
     }
 
-    function formatDateTime(value) {
+    function formatDate(value) {
         if (!value) {
-            return '-';
+            return '—';
         }
 
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) {
-            return '-';
+            return '—';
         }
 
         const month = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
         const day = String(date.getDate()).padStart(2, '0');
         const year = date.getFullYear();
-        const hour = String(date.getHours()).padStart(2, '0');
-        const minute = String(date.getMinutes()).padStart(2, '0');
 
-        return month + ' ' + day + ', ' + year + ' ' + hour + ':' + minute;
+        return month + ' ' + day + ', ' + year;
     }
 
     function escapeHtml(value) {

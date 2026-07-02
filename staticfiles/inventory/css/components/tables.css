@@ -194,6 +194,12 @@ tbody td {
     box-shadow: none;
 }
 
+.filter-label {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm, 0.875rem);
+    font-weight: 600;
+}
+
 .filter-select {
     padding: var(--spacing-2, 0.5rem) var(--spacing-3, 0.75rem);
     border: 1px solid var(--border-color);
