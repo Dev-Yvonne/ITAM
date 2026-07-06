@@ -25,19 +25,37 @@
 
     // ---- API Calls ----
     async function returnAsset(assetId) {
-        const response = await fetch(`/api/assets/${assetId}/return/`, {
+        if (window.Utils && typeof window.Utils.fetchJson === 'function') {
+            return window.Utils.fetchJson('/api/assets/' + assetId + '/return/', { method: 'POST' });
+        }
+        const response = await fetch('/api/assets/' + assetId + '/return/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRFToken': getCSRFToken(),
             },
             credentials: 'same-origin',
         });
+        const parser = window.Utils && window.Utils.parseJsonResponse
+            ? window.Utils.parseJsonResponse(response)
+            : response.json();
+        const data = await parser;
         if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.error || `HTTP ${response.status}`);
+            throw new Error(
+                window.Utils
+                    ? window.Utils.extractApiError(data, 'Unable to return asset.')
+                    : 'Unable to return asset.'
+            );
         }
-        return response.json();
+        return data;
+    }
+
+    function friendlyError(error, fallback) {
+        if (window.Utils && typeof window.Utils.getUserFacingError === 'function') {
+            return window.Utils.getUserFacingError(error, fallback);
+        }
+        return fallback;
     }
 
     async function requestAsset(data) {
@@ -120,10 +138,11 @@
             // Refresh the asset list (trigger custom event)
             document.dispatchEvent(new CustomEvent('assets-updated'));
         } catch (error) {
+            const message = friendlyError(error, 'Unable to return asset.');
             if (window.showToast) {
-                window.showToast(`❌ Failed: ${error.message}`, 'error');
+                window.showToast(message, 'error');
             } else {
-                alert('Error: ' + error.message);
+                console.error(message);
             }
         }
     }
@@ -143,7 +162,7 @@
                 }
             } catch (error) {
                 if (window.showToast) {
-                    window.showToast(`❌ Request failed: ${error.message}`, 'error');
+                    window.showToast(friendlyError(error, 'Request failed. Please try again.'), 'error');
                 }
             }
         });

@@ -26,12 +26,25 @@
     // API Functions
     // ============================================
     async function fetchProfile() {
-        const response = await fetch('/api/profile/');
+        if (window.Utils && typeof window.Utils.fetchJson === 'function') {
+            return window.Utils.fetchJson('/api/profile/');
+        }
+        const response = await fetch('/api/profile/', {
+            headers: { 'Accept': 'application/json' },
+            credentials: 'same-origin'
+        });
         if (!response.ok) throw new Error('Failed to load profile');
         return response.json();
     }
 
     async function updateProfile(data) {
+        if (window.Utils && typeof window.Utils.fetchJson === 'function') {
+            return window.Utils.fetchJson('/api/profile/', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+        }
         const response = await fetch('/api/profile/', {
             method: 'PUT',
             headers: {
@@ -43,6 +56,20 @@
         });
         if (!response.ok) throw new Error('Update failed');
         return response.json();
+    }
+
+    function friendlyError(error, fallback) {
+        if (window.Utils && typeof window.Utils.getUserFacingError === 'function') {
+            return window.Utils.getUserFacingError(error, fallback);
+        }
+        return fallback;
+    }
+
+    function safeHtml(value) {
+        if (window.Utils && typeof window.Utils.escapeHtml === 'function') {
+            return window.Utils.escapeHtml(value);
+        }
+        return String(value == null ? '' : value);
     }
 
     // ============================================
@@ -83,7 +110,7 @@
                 }
             } catch (error) {
                 if (window.showToast) {
-                    window.showToast('❌ ' + error.message, 'error');
+                    window.showToast(friendlyError(error, 'Unable to update profile.'), 'error');
                 }
             }
         });
@@ -111,12 +138,11 @@
         } catch (error) {
             const container = document.getElementById(containerId);
             if (container) {
-                container.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle"></i>
-                        ${error.message}
-                    </div>
-                `;
+                container.innerHTML =
+                    '<div class="alert alert-danger">' +
+                        '<i class="fas fa-exclamation-circle"></i> ' +
+                        safeHtml(friendlyError(error, 'Unable to load profile. Refresh the page and try again.')) +
+                    '</div>';
             }
         }
     }

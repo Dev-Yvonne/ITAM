@@ -8,8 +8,18 @@
     var activePolls = {};
 
     function getCsrfToken() {
+        if (window.Utils && typeof window.Utils.getCSRFToken === 'function') {
+            return window.Utils.getCSRFToken();
+        }
         var match = document.cookie.match(/csrftoken=([^;]+)/);
-        return match ? match[1] : '';
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    function parseResponse(response) {
+        if (window.Utils && typeof window.Utils.parseJsonResponse === 'function') {
+            return window.Utils.parseJsonResponse(response);
+        }
+        return response.json();
     }
 
     function sleep(ms) {
@@ -34,12 +44,17 @@
                 params: options.params || {}
             })
         }).then(function(response) {
-            if (!response.ok) {
-                return response.json().then(function(data) {
-                    throw new Error(data.detail || 'Failed to start background job');
-                });
-            }
-            return response.json();
+            return parseResponse(response).then(function(data) {
+                if (!response.ok) {
+                    var fallback = 'Failed to start background job';
+                    throw new Error(
+                        window.Utils
+                            ? window.Utils.extractApiError(data, fallback)
+                            : (data.detail || fallback)
+                    );
+                }
+                return data;
+            });
         });
     }
 
@@ -48,10 +63,17 @@
             headers: { 'Accept': 'application/json' },
             credentials: 'same-origin'
         }).then(function(response) {
-            if (!response.ok) {
-                throw new Error('Failed to fetch job status');
-            }
-            return response.json();
+            return parseResponse(response).then(function(data) {
+                if (!response.ok) {
+                    var fallback = 'Failed to fetch job status';
+                    throw new Error(
+                        window.Utils
+                            ? window.Utils.extractApiError(data, fallback)
+                            : (data.detail || fallback)
+                    );
+                }
+                return data;
+            });
         });
     }
 
@@ -70,7 +92,14 @@
                     return job;
                 }
                 if (job.status === 'failed') {
-                    throw new Error(job.error_message || 'Background job failed');
+                    throw new Error(
+                        window.Utils
+                            ? window.Utils.getUserFacingError(
+                                { message: job.error_message },
+                                'Background job failed. Please try again.'
+                            )
+                            : (job.error_message || 'Background job failed')
+                    );
                 }
                 await sleep(POLL_MS);
             }

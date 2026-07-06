@@ -115,7 +115,11 @@
                 setStatus('Suggested serial applied.');
                 setButtonState(true, '<i class="fas fa-magic"></i> Suggest');
             }).catch(function(error) {
-                setStatus(error.message || 'Suggestion failed.');
+                setStatus(
+                    window.Utils
+                        ? window.Utils.getUserFacingError(error, 'Suggestion failed.')
+                        : 'Suggestion failed.'
+                );
                 setButtonState(true, '<i class="fas fa-magic"></i> Suggest');
             });
             return;
@@ -151,7 +155,11 @@
             setStatus('Suggestions ready.');
         }).catch(function(error) {
             setButtonState(true, '<i class="fas fa-magic"></i> Suggest');
-            setStatus(error.message || 'Could not preload suggestions.');
+            setStatus(
+                window.Utils
+                    ? window.Utils.getUserFacingError(error, 'Could not preload suggestions.')
+                    : 'Could not preload suggestions.'
+            );
         });
 
         var button = getSuggestButton();

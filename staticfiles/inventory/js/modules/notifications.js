@@ -1,6 +1,6 @@
 /**
  * NOTIFICATION MODULE - ITAM SYSTEM
- * Handles notification bell, badge updates, and polling
+ * Handles notification bell, badge updates, dropdown rendering, and polling
  */
 
 (function() {
@@ -11,95 +11,173 @@
     var unreadCount = 0;
     var badge = null;
     var bell = null;
+    var dropdown = null;
+    var dropdownList = null;
+    var markAllButton = null;
     var isFetching = false;
+    var cachedNotifications = [];
     
-    // ============================================
-    // Configuration
-    // ============================================
     var CONFIG = {
-        POLL_INTERVAL: 30000, // 30 seconds
+        POLL_INTERVAL: 30000,
         BADGE_UPDATE_URL: '/api/notifications/',
         MARK_READ_URL: '/api/notifications/mark-all-read/'
     };
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function iconClassForType(type) {
+        if (type === 'success') {
+            return 'fa-check-circle';
+        }
+        if (type === 'warning') {
+            return 'fa-exclamation-triangle';
+        }
+        if (type === 'error' || type === 'danger') {
+            return 'fa-times-circle';
+        }
+        return 'fa-info-circle';
+    }
+
+    function formatNotificationTime(value) {
+        if (!value) {
+            return 'Just now';
+        }
+
+        var date = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return 'Just now';
+        }
+
+        var diffMs = Date.now() - date.getTime();
+        var minutes = Math.floor(diffMs / 60000);
+        if (minutes < 1) {
+            return 'Just now';
+        }
+        if (minutes < 60) {
+            return minutes + ' minute' + (minutes === 1 ? '' : 's') + ' ago';
+        }
+
+        var hours = Math.floor(minutes / 60);
+        if (hours < 24) {
+            return hours + ' hour' + (hours === 1 ? '' : 's') + ' ago';
+        }
+
+        var days = Math.floor(hours / 24);
+        return days + ' day' + (days === 1 ? '' : 's') + ' ago';
+    }
+
+    function renderDropdownList(notifications) {
+        if (!dropdownList) {
+            return;
+        }
+
+        cachedNotifications = Array.isArray(notifications) ? notifications : [];
+
+        if (!cachedNotifications.length) {
+            dropdownList.innerHTML = '<div class="notification-empty">No notifications yet.</div>';
+            return;
+        }
+
+        dropdownList.innerHTML = cachedNotifications.slice(0, 10).map(function(notification) {
+            var unreadClass = notification.read ? '' : ' unread';
+            var type = notification.type || 'info';
+            return '' +
+                '<div class="notification-item' + unreadClass + '" data-notification-id="' + escapeHtml(notification.id) + '">' +
+                    '<div class="notification-icon ' + escapeHtml(type) + '">' +
+                        '<i class="fas ' + iconClassForType(type) + '"></i>' +
+                    '</div>' +
+                    '<div class="notification-content">' +
+                        '<div class="notification-title">' + escapeHtml(notification.title) + '</div>' +
+                        '<div class="notification-message">' + escapeHtml(notification.message) + '</div>' +
+                        '<div class="notification-time">' + escapeHtml(formatNotificationTime(notification.time)) + '</div>' +
+                    '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    function updateMarkAllVisibility() {
+        if (!markAllButton) {
+            return;
+        }
+
+        if (unreadCount > 0) {
+            markAllButton.classList.remove('hidden');
+        } else {
+            markAllButton.classList.add('hidden');
+        }
+    }
     
-    // ============================================
-    // Initialize
-    // ============================================
     function init() {
         if (initialized) {
             return;
         }
         
-        console.log('Notification module initializing...');
-        
-        // Get DOM elements
         badge = document.getElementById('notificationBadge');
         bell = document.getElementById('notificationBell');
+        dropdown = document.getElementById('notificationDropdown');
+        dropdownList = document.getElementById('notificationDropdownList');
+        markAllButton = document.getElementById('notificationMarkAllBtn');
         
-        if (!badge || !bell) {
-            console.warn('Notification elements not found.');
+        if (!badge || !bell || !dropdown) {
             return;
         }
+
+        if (!dropdownList) {
+            dropdownList = dropdown.querySelector('.notification-dropdown-list');
+        }
         
-        // Check if we just came back from notifications page
         var justViewed = sessionStorage.getItem('notifications_viewed');
         if (justViewed === 'true') {
-            // Clear the badge immediately
             updateBadge(0);
             sessionStorage.removeItem('notifications_viewed');
-            // Fetch fresh count
             fetchNotifications();
         } else {
             loadNotificationCount();
         }
         
-        // Listen for click on bell - clear badge and remember return page
         bell.addEventListener('click', function() {
-            sessionStorage.setItem('notifications_viewed', 'true');
-            sessionStorage.setItem(
-                'notifications_return_url',
-                window.location.pathname + window.location.search
-            );
-            updateBadge(0);
+            fetchNotifications();
         });
+
+        if (markAllButton) {
+            markAllButton.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                markAllAsRead();
+            });
+        }
         
-        // Start polling for updates
         startPolling();
         
-        // Listen for notification events
-        document.addEventListener('new-notification', function(e) {
-            if (e.detail && e.detail.count) {
-                updateBadge(e.detail.count);
+        document.addEventListener('new-notification', function(event) {
+            if (event.detail && event.detail.count) {
+                updateBadge(event.detail.count);
             }
+            fetchNotifications();
         });
         
         initialized = true;
-        console.log('Notification module initialized.');
     }
     
-    // ============================================
-    // Load Notification Count
-    // ============================================
     function loadNotificationCount() {
-        // Check if we have a count in session storage
         var savedCount = sessionStorage.getItem('notification_count');
         if (savedCount !== null) {
             unreadCount = parseInt(savedCount, 10);
             updateBadge(unreadCount);
-            return;
         }
         
-        // Fetch from server
         fetchNotifications();
     }
     
-    // ============================================
-    // Fetch Notifications from Server
-    // ============================================
     function fetchNotifications() {
-        // Prevent multiple simultaneous fetches
         if (isFetching) {
-            console.log('Notification fetch already in progress, skipping...');
             return;
         }
         
@@ -108,21 +186,31 @@
         fetch(CONFIG.BADGE_UPDATE_URL, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
-            }
+            },
+            credentials: 'same-origin'
         })
         .then(function(response) {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
+            var parser = window.Utils && window.Utils.parseJsonResponse
+                ? window.Utils.parseJsonResponse(response)
+                : response.json();
+            return parser.then(function(data) {
+                if (!response.ok) {
+                    throw new Error('Unable to refresh notifications.');
+                }
+                return data;
+            });
         })
         .then(function(data) {
+            if (data && Array.isArray(data.notifications)) {
+                renderDropdownList(data.notifications);
+            }
             if (data && typeof data.unread_count !== 'undefined') {
                 unreadCount = data.unread_count;
                 sessionStorage.setItem('notification_count', unreadCount);
                 updateBadge(unreadCount);
+                updateMarkAllVisibility();
             }
         })
         .catch(function(error) {
@@ -133,11 +221,10 @@
         });
     }
     
-    // ============================================
-    // Update Badge
-    // ============================================
     function updateBadge(count) {
-        if (!badge) return;
+        if (!badge) {
+            return;
+        }
         
         unreadCount = count || 0;
         sessionStorage.setItem('notification_count', unreadCount);
@@ -145,55 +232,51 @@
         if (unreadCount > 0) {
             badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
             badge.classList.remove('hidden');
-            
-            // Add special animation for many notifications
-            if (unreadCount > 10) {
-                badge.classList.add('many');
-            } else {
-                badge.classList.remove('many');
-            }
+            badge.classList.toggle('many', unreadCount > 10);
         } else {
             badge.classList.add('hidden');
             badge.classList.remove('many');
             badge.textContent = '';
         }
+
+        updateMarkAllVisibility();
     }
     
-    // ==========================================
-    // Increment Badge
-    // ==========================================
     function incrementBadge() {
-        var newCount = unreadCount + 1;
-        updateBadge(newCount);
-        
-        // Play notification sound
+        updateBadge(unreadCount + 1);
         playNotificationSound();
+        fetchNotifications();
     }
     
-    // ==========================================
-    // Mark All as Read
-    // ==========================================
     function markAllAsRead() {
         fetch(CONFIG.MARK_READ_URL, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCSRFToken(),
+                'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
-            }
+            },
+            credentials: 'same-origin'
         })
         .then(function(response) {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
+            var parser = window.Utils && window.Utils.parseJsonResponse
+                ? window.Utils.parseJsonResponse(response)
+                : response.json();
+            return parser.then(function(data) {
+                if (!response.ok) {
+                    throw new Error('Unable to mark notifications as read.');
+                }
+                return data;
+            });
         })
         .then(function(data) {
             if (data.success) {
+                cachedNotifications = cachedNotifications.map(function(notification) {
+                    return Object.assign({}, notification, { read: true });
+                });
+                renderDropdownList(cachedNotifications);
                 updateBadge(0);
                 sessionStorage.removeItem('notification_count');
-                sessionStorage.setItem('notifications_viewed', 'true');
-                document.dispatchEvent(new CustomEvent('notifications-cleared'));
-                returnToPreviousPage();
             }
         })
         .catch(function(error) {
@@ -201,52 +284,23 @@
         });
     }
     
-    // ============================================
-    // Return to page before notifications
-    // ============================================
-    function returnToPreviousPage() {
-        var returnUrl = sessionStorage.getItem('notifications_return_url');
-        sessionStorage.removeItem('notifications_return_url');
-
-        if (returnUrl && returnUrl.indexOf('/notifications') === -1) {
-            window.location.href = returnUrl;
-            return;
-        }
-
-        if (document.referrer) {
-            try {
-                var referrerPath = new URL(document.referrer).pathname;
-                if (referrerPath.indexOf('/notifications') === -1) {
-                    window.location.href = document.referrer;
-                    return;
-                }
-            } catch (e) {
-                // Fall through to dashboard.
-            }
-        }
-
-        window.location.href = '/';
-    }
-
-    // ============================================
-    // Get CSRF Token
-    // ============================================
     function getCSRFToken() {
+        if (window.Utils && typeof window.Utils.getCSRFToken === 'function') {
+            return window.Utils.getCSRFToken();
+        }
+
         var cookieValue = null;
         var cookies = document.cookie.split(';');
         for (var i = 0; i < cookies.length; i++) {
             var cookie = cookies[i].trim();
             if (cookie.startsWith('csrftoken=')) {
-                cookieValue = cookie.substring('csrftoken='.length, cookie.length);
+                cookieValue = cookie.substring('csrftoken='.length);
                 break;
             }
         }
         return cookieValue || '';
     }
     
-    // ============================================
-    // Play Notification Sound
-    // ============================================
     function playNotificationSound() {
         try {
             var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -255,93 +309,61 @@
             
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-            
             oscillator.frequency.value = 800;
             oscillator.type = 'sine';
-            
             gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-            
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 0.2);
-        } catch (e) {
-            // Silent fail if audio not supported
+        } catch (error) {
+            // Audio unsupported.
         }
     }
     
-    // ============================================
-    // Start Polling - Single interval only
-    // ============================================
     function startPolling() {
-        // Clear any existing interval
         if (pollInterval) {
             clearInterval(pollInterval);
-            pollInterval = null;
         }
         
-        // Set a single interval for polling
         pollInterval = setInterval(function() {
-            // Only poll if document is visible and not already fetching
             if (!document.hidden && !isFetching) {
-                var viewed = sessionStorage.getItem('notifications_viewed');
-                if (viewed !== 'true') {
-                    fetchNotifications();
-                }
+                fetchNotifications();
             }
         }, CONFIG.POLL_INTERVAL);
-        
-        console.log('Notification polling started with interval:', CONFIG.POLL_INTERVAL, 'ms');
     }
     
-    // ============================================
-    // Stop Polling
-    // ============================================
     function stopPolling() {
         if (pollInterval) {
             clearInterval(pollInterval);
             pollInterval = null;
-            console.log('Notification polling stopped.');
         }
     }
     
-    // ============================================
-    // Reinitialize
-    // ============================================
     function reinit() {
-        console.log('Reinitializing notifications...');
         stopPolling();
         initialized = false;
         init();
     }
     
-    // ============================================
-    // Export
-    // ============================================
     window.Notifications = {
         init: init,
         reinit: reinit,
         updateBadge: updateBadge,
         incrementBadge: incrementBadge,
         markAllAsRead: markAllAsRead,
-        returnToPreviousPage: returnToPreviousPage,
+        fetchNotifications: fetchNotifications,
         getUnreadCount: function() { return unreadCount; },
         stopPolling: stopPolling,
         startPolling: startPolling
     };
+
+    window.markAllRead = function() {
+        markAllAsRead();
+    };
     
-    // Auto-init when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM ready, initializing notifications...');
-            init();
-        });
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        if (!initialized) {
-            console.log('DOM already ready, initializing notifications...');
-            init();
-        }
+        init();
     }
-    
-    console.log('Notification module loaded.');
-    
 })();

@@ -9,6 +9,8 @@
     max-width: 720px;
     margin: 0 auto;
     padding: 0 var(--spacing-2);
+    position: relative;
+    z-index: 5;
 }
 
 /* ==========================================
@@ -22,6 +24,8 @@ form:not(.logout-form):not(.filter-form) {
     border: 1px solid var(--border-color, #e2e8f0);
     box-shadow: var(--shadow-sm, 0 1px 2px 0 rgb(0 0 0 / 0.05));
     transition: background 0.3s ease, border-color 0.3s ease;
+    position: relative;
+    z-index: 10;
 }
 
 [data-theme="dark"] form:not(.logout-form):not(.filter-form) {

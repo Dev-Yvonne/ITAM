@@ -95,11 +95,25 @@
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCSRFToken(),
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
         })
         .then(function(response) {
-            return response.json();
+            var parser = window.Utils && window.Utils.parseJsonResponse
+                ? window.Utils.parseJsonResponse(response)
+                : response.json();
+            return parser.then(function(data) {
+                if (!response.ok) {
+                    throw new Error(
+                        window.Utils
+                            ? window.Utils.extractApiError(data, 'Error confirming asset.')
+                            : 'Error confirming asset.'
+                    );
+                }
+                return data;
+            });
         })
         .then(function(data) {
             if (data.success) {
@@ -116,7 +130,12 @@
             }
         })
         .catch(function(error) {
-            showToast('Error confirming asset', 'error');
+            showToast(
+                window.Utils
+                    ? window.Utils.getUserFacingError(error, 'Error confirming asset.')
+                    : 'Error confirming asset.',
+                'error'
+            );
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-check"></i> Confirm';
@@ -175,11 +194,26 @@
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCSRFToken(),
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({})
         })
         .then(function(response) {
-            return response.json();
+            var parser = window.Utils && window.Utils.parseJsonResponse
+                ? window.Utils.parseJsonResponse(response)
+                : response.json();
+            return parser.then(function(data) {
+                if (!response.ok) {
+                    throw new Error(
+                        window.Utils
+                            ? window.Utils.extractApiError(data, 'Error requesting maintenance.')
+                            : 'Error requesting maintenance.'
+                    );
+                }
+                return data;
+            });
         })
         .then(function(data) {
             if (data.success) {
@@ -193,7 +227,12 @@
             }
         })
         .catch(function(error) {
-            showToast('Error requesting maintenance', 'error');
+            showToast(
+                window.Utils
+                    ? window.Utils.getUserFacingError(error, 'Error requesting maintenance.')
+                    : 'Error requesting maintenance.',
+                'error'
+            );
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-tools"></i> Request Maintenance';
@@ -224,11 +263,25 @@
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCSRFToken(),
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
         })
         .then(function(response) {
-            return response.json();
+            var parser = window.Utils && window.Utils.parseJsonResponse
+                ? window.Utils.parseJsonResponse(response)
+                : response.json();
+            return parser.then(function(data) {
+                if (!response.ok) {
+                    throw new Error(
+                        window.Utils
+                            ? window.Utils.extractApiError(data, 'Error returning asset.')
+                            : 'Error returning asset.'
+                    );
+                }
+                return data;
+            });
         })
         .then(function(data) {
             if (data.success) {
@@ -245,7 +298,12 @@
             }
         })
         .catch(function(error) {
-            showToast('Error returning asset', 'error');
+            showToast(
+                window.Utils
+                    ? window.Utils.getUserFacingError(error, 'Error returning asset.')
+                    : 'Error returning asset.',
+                'error'
+            );
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-undo"></i> Return Asset';
@@ -266,11 +324,25 @@
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCSRFToken(),
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
         })
         .then(function(response) {
-            return response.json();
+            var parser = window.Utils && window.Utils.parseJsonResponse
+                ? window.Utils.parseJsonResponse(response)
+                : response.json();
+            return parser.then(function(data) {
+                if (!response.ok) {
+                    throw new Error(
+                        window.Utils
+                            ? window.Utils.extractApiError(data, 'Error marking notification as read.')
+                            : 'Error marking notification as read.'
+                    );
+                }
+                return data;
+            });
         })
         .then(function(data) {
             if (data.success) {
@@ -296,7 +368,12 @@
             }
         })
         .catch(function(error) {
-            showToast('Error marking notification as read', 'error');
+            showToast(
+                window.Utils
+                    ? window.Utils.getUserFacingError(error, 'Error marking notification as read.')
+                    : 'Error marking notification as read.',
+                'error'
+            );
         });
     }
     
@@ -308,11 +385,25 @@
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCSRFToken(),
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
         })
         .then(function(response) {
-            return response.json();
+            var parser = window.Utils && window.Utils.parseJsonResponse
+                ? window.Utils.parseJsonResponse(response)
+                : response.json();
+            return parser.then(function(data) {
+                if (!response.ok) {
+                    throw new Error(
+                        window.Utils
+                            ? window.Utils.extractApiError(data, 'Error marking notifications as read.')
+                            : 'Error marking notifications as read.'
+                    );
+                }
+                return data;
+            });
         })
         .then(function(data) {
             if (data.success) {
@@ -331,7 +422,12 @@
             }
         })
         .catch(function(error) {
-            showToast('Error marking notifications as read', 'error');
+            showToast(
+                window.Utils
+                    ? window.Utils.getUserFacingError(error, 'Error marking notifications as read.')
+                    : 'Error marking notifications as read.',
+                'error'
+            );
         });
     }
     

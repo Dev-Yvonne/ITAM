@@ -138,12 +138,116 @@ tbody td {
     gap: var(--spacing-1, 0.25rem);
     flex-wrap: wrap;
     align-items: center;
+    justify-content: flex-end;
+    position: relative;
+    width: 3rem;
+    min-width: 3rem;
+    padding-right: 0.75rem !important;
 }
 
 .actions-cell .btn {
     min-height: 28px;
     padding: 0 var(--spacing-2, 0.5rem);
     font-size: var(--font-size-xs, 0.75rem);
+}
+
+.asset-row-menu {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.asset-row-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.asset-row-menu-trigger:hover,
+.asset-row-menu.is-open .asset-row-menu-trigger {
+    background: rgba(148, 163, 184, 0.18);
+    color: var(--text-primary, #0f172a);
+}
+
+.asset-row-menu-dropdown {
+    min-width: 9.5rem;
+    padding: 0.35rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-color, #e2e8f0);
+    background: var(--bg-dropdown, #fff);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+}
+
+.asset-row-menu-dropdown.open {
+    display: block;
+}
+
+.asset-row-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-primary, #0f172a);
+    font-size: 0.875rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.asset-row-menu-item i {
+    width: 1rem;
+    text-align: center;
+    color: var(--text-muted, #64748b);
+}
+
+.asset-row-menu-item:hover,
+.asset-row-menu-item:focus-visible {
+    background: rgba(37, 99, 235, 0.08);
+    outline: none;
+}
+
+.asset-row-menu-item-danger,
+.asset-row-menu-item-danger i {
+    color: #dc2626;
+}
+
+.asset-row-menu-item-danger:hover,
+.asset-row-menu-item-danger:focus-visible {
+    background: rgba(220, 38, 38, 0.08);
+}
+
+[data-theme="dark"] .asset-row-menu-trigger:hover,
+[data-theme="dark"] .asset-row-menu.is-open .asset-row-menu-trigger {
+    background: rgba(148, 163, 184, 0.14);
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .asset-row-menu-dropdown {
+    background: var(--bg-dropdown, #1e293b);
+    border-color: var(--border-color, #334155);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .asset-row-menu-item {
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .asset-row-menu-item i {
+    color: #94a3b8;
 }
 
 /* ==========================================
@@ -211,12 +315,26 @@ tbody td {
     min-height: 36px;
     cursor: pointer;
     transition: all 0.15s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2364748b' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    background-size: 10px;
+    padding-right: 2rem;
+}
+
+[data-theme="dark"] .filter-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2394a3b8' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
 }
 
 .filter-select:focus {
     outline: none;
     border-color: var(--primary-500);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="dark"] .filter-select:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 /* ==========================================
@@ -330,14 +448,8 @@ tbody td {
     }
 
     .actions-cell {
-        flex-direction: column;
-        gap: var(--spacing-1, 0.25rem);
-    }
-
-    .actions-cell .btn {
-        width: 100%;
         justify-content: center;
-        min-height: 32px;
+        padding-right: 0.5rem !important;
     }
 
     .pagination .step-links {

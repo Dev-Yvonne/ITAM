@@ -275,6 +275,62 @@ main {
     }
 }
 
+/* ==========================================
+   APP FOOTER
+   ========================================== */
+.app-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--border-color, rgba(148, 163, 184, 0.2));
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    color: var(--text-secondary, #475569);
+    font-size: 0.9rem;
+}
+
+[data-theme="dark"] .app-footer {
+    background: rgba(15, 23, 42, 0.92);
+    color: var(--text-secondary, #cbd5e1);
+}
+
+.app-footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+}
+
+.app-footer a {
+    color: var(--text-secondary, #475569);
+    transition: color 0.2s ease;
+}
+
+.app-footer a:hover {
+    color: var(--primary-500, #2563eb);
+}
+
+.app-footer-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    color: var(--text-muted, #64748b);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .app-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+    }
+
+    .app-footer-meta {
+        margin-top: 0.25rem;
+    }
+}
+
 /* Sidebar logout — inlined here so cache-busting on main.css applies */
 .sidebar-nav-bottom .logout-form.sidebar-link {
     display: flex;
@@ -339,12 +395,25 @@ main {
 
 .async-job-error {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
     padding: 1rem;
     color: #ef4444;
     background: rgba(239, 68, 68, 0.08);
     border-radius: 8px;
+}
+
+.async-job-error-copy {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.async-job-error-copy p {
+    margin: 0;
+    color: #b91c1c;
+    line-height: 1.45;
 }
 
 .reports-container.async-loading .chart-body canvas {

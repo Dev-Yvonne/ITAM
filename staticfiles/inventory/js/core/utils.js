@@ -7,6 +7,11 @@
 // CSRF Token Helper
 // ============================================
 function getCSRFToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta && meta.getAttribute('content')) {
+        return meta.getAttribute('content');
+    }
+
     const name = 'csrftoken';
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -22,45 +27,192 @@ function getCSRFToken() {
     return cookieValue;
 }
 
+function escapeHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function isNetworkError(error) {
+    return error instanceof TypeError && String(error.message || '').toLowerCase().indexOf('fetch') !== -1;
+}
+
+function isUnexpectedResponseError(error) {
+    if (!error || !error.message) {
+        return false;
+    }
+    var message = String(error.message);
+    return message.indexOf('Unexpected token') !== -1 ||
+        message.indexOf('not valid JSON') !== -1 ||
+        error instanceof SyntaxError;
+}
+
+function getUserFacingError(error, fallback) {
+    fallback = fallback || 'Something went wrong. Please try again.';
+    if (!error) {
+        return fallback;
+    }
+    if (typeof error === 'string') {
+        return error;
+    }
+    if (isNetworkError(error)) {
+        return 'Unable to reach the server. Check your connection and try again.';
+    }
+    if (isUnexpectedResponseError(error)) {
+        return 'The server returned an unexpected response. Refresh the page and try again.';
+    }
+
+    var message = String(error.message || '').trim();
+    if (!message || message.length > 240 || message.indexOf('Traceback') !== -1) {
+        return fallback;
+    }
+    return message;
+}
+
+function extractApiError(data, fallback) {
+    fallback = fallback || 'Request failed. Please try again.';
+    if (!data || typeof data !== 'object') {
+        return fallback;
+    }
+    if (typeof data.message === 'string' && data.message) {
+        return data.message;
+    }
+    if (typeof data.detail === 'string' && data.detail) {
+        return data.detail;
+    }
+    if (typeof data.error === 'string' && data.error) {
+        return data.error;
+    }
+    if (data.errors && typeof data.errors === 'object') {
+        var firstKey = Object.keys(data.errors)[0];
+        if (firstKey) {
+            var value = data.errors[firstKey];
+            if (Array.isArray(value) && value.length) {
+                return String(value[0]);
+            }
+            if (typeof value === 'string') {
+                return value;
+            }
+        }
+    }
+
+    var flatKeys = Object.keys(data).filter(function(key) {
+        return key !== 'success' && key !== 'code';
+    });
+    if (flatKeys.length === 1) {
+        var flatValue = data[flatKeys[0]];
+        if (Array.isArray(flatValue) && flatValue.length) {
+            return String(flatValue[0]);
+        }
+    }
+
+    return fallback;
+}
+
+function parseJsonResponse(response) {
+    var contentType = response.headers.get('content-type') || '';
+    if (contentType.indexOf('application/json') === -1) {
+        return response.text().then(function() {
+            if (response.status === 403) {
+                throw new Error('Your session may have expired. Refresh the page and try again.');
+            }
+            if (response.status === 404) {
+                throw new Error('The requested resource was not found.');
+            }
+            if (response.status >= 500) {
+                throw new Error('The server encountered a problem. Please try again in a moment.');
+            }
+            throw new Error('The server returned an unexpected response. Refresh the page and try again.');
+        });
+    }
+
+    return response.json().catch(function() {
+        throw new Error('The server returned an unexpected response. Refresh the page and try again.');
+    });
+}
+
+function showAsyncError(mount, message, options) {
+    options = options || {};
+    if (!mount) {
+        return;
+    }
+
+    mount.classList.remove('async-loading');
+    var retryLabel = options.retryLabel || 'Refresh page';
+    mount.innerHTML =
+        '<div class="async-job-error">' +
+            '<div class="async-job-error-copy">' +
+                '<i class="fas fa-exclamation-circle" aria-hidden="true"></i>' +
+                '<p>' + escapeHtml(message) + '</p>' +
+            '</div>' +
+            '<button type="button" class="btn btn-secondary btn-sm async-error-retry">' +
+                escapeHtml(retryLabel) +
+            '</button>' +
+        '</div>';
+
+    var retryBtn = mount.querySelector('.async-error-retry');
+    if (retryBtn) {
+        retryBtn.addEventListener('click', function() {
+            if (typeof options.onRetry === 'function') {
+                options.onRetry();
+                return;
+            }
+            window.location.reload();
+        });
+    }
+}
+
 // ============================================
 // Toast Notification System
 // ============================================
 function showToast(message, type, duration) {
     type = type || 'info';
     duration = duration || 4000;
-    
-    const container = document.getElementById('toast-container');
+    message = getUserFacingError({ message: message }, String(message || 'Something went wrong.'));
+
+    var container = document.getElementById('toast-container');
     if (!container) {
-        const newContainer = document.createElement('div');
+        var newContainer = document.createElement('div');
         newContainer.id = 'toast-container';
         newContainer.className = 'toast-container';
         document.body.appendChild(newContainer);
+        container = newContainer;
     }
-    
-    const toastContainer = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = 'toast toast-' + type;
-    
-    const icons = {
+
+    var icons = {
         success: '✓',
         error: '✕',
         warning: '⚠',
         info: 'ℹ'
     };
-    
-    toast.innerHTML = `
-        <span class="toast-icon">${icons[type] || 'ℹ'}</span>
-        <span class="toast-message">${message}</span>
-        <button class="toast-close" aria-label="Close toast">&times;</button>
-    `;
-    
-    toastContainer.appendChild(toast);
-    
-    const closeBtn = toast.querySelector('.toast-close');
+
+    var toast = document.createElement('div');
+    toast.className = 'toast toast-' + type;
+
+    var icon = document.createElement('span');
+    icon.className = 'toast-icon';
+    icon.textContent = icons[type] || 'ℹ';
+
+    var text = document.createElement('span');
+    text.className = 'toast-message';
+    text.textContent = message;
+
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'toast-close';
+    closeBtn.setAttribute('aria-label', 'Close toast');
+    closeBtn.textContent = '×';
     closeBtn.addEventListener('click', function() {
         toast.remove();
     });
-    
+
+    toast.appendChild(icon);
+    toast.appendChild(text);
+    toast.appendChild(closeBtn);
+    container.appendChild(toast);
+
     setTimeout(function() {
         if (toast.parentNode) {
             toast.style.opacity = '0';
@@ -107,12 +259,11 @@ function validateNumber(value) {
 function showFieldError(field, message) {
     const formGroup = field.closest('.form-group');
     if (!formGroup) return;
-    
-    // Remove existing errors
+
     clearFieldError(field);
-    
+
     field.classList.add('is-invalid');
-    
+
     const errorDiv = document.createElement('div');
     errorDiv.className = 'field-error-message';
     errorDiv.textContent = message;
@@ -147,49 +298,60 @@ async function apiRequest(url, method, data) {
         method: method,
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
         },
         credentials: 'same-origin',
     };
-    
+
     if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
         options.body = JSON.stringify(data);
     }
-    
+
     const csrfToken = getCSRFToken();
     if (csrfToken) {
         options.headers['X-CSRFToken'] = csrfToken;
     }
-    
+
     try {
         const response = await fetch(url, options);
-        const responseData = await response.json().catch(function() {
-            return {};
-        });
-        
+        const responseData = await parseJsonResponse(response);
+
         if (!response.ok) {
-            let errorMessage = 'An error occurred.';
-            if (responseData.message) {
-                errorMessage = responseData.message;
-            } else if (responseData.detail) {
-                errorMessage = responseData.detail;
-            } else if (responseData.errors) {
-                const errors = responseData.errors;
-                const firstKey = Object.keys(errors)[0];
-                if (firstKey) {
-                    errorMessage = errors[firstKey];
-                    if (Array.isArray(errorMessage)) {
-                        errorMessage = errorMessage[0];
-                    }
-                }
-            }
-            throw new Error(errorMessage);
+            throw new Error(extractApiError(responseData, 'Request failed. Please try again.'));
         }
-        
+
+        if (responseData && responseData.success === false) {
+            throw new Error(extractApiError(responseData, 'Request failed. Please try again.'));
+        }
+
         return responseData;
     } catch (error) {
         console.error('API Request Error:', error);
-        throw error;
+        throw new Error(getUserFacingError(error, 'Request failed. Please try again.'));
     }
+}
+
+async function fetchJson(url, options) {
+    options = options || {};
+    options.credentials = options.credentials || 'same-origin';
+    options.headers = Object.assign({ 'Accept': 'application/json' }, options.headers || {});
+
+    if (!options.headers['X-CSRFToken']) {
+        var token = getCSRFToken();
+        if (token) {
+            options.headers['X-CSRFToken'] = token;
+        }
+    }
+
+    const response = await fetch(url, options);
+    const data = await parseJsonResponse(response);
+    if (!response.ok) {
+        throw new Error(extractApiError(data, 'Request failed. Please try again.'));
+    }
+    if (data && data.success === false) {
+        throw new Error(extractApiError(data, 'Request failed. Please try again.'));
+    }
+    return data;
 }
 
 // ============================================
@@ -225,6 +387,10 @@ function domReady(fn) {
 // ============================================
 window.Utils = {
     getCSRFToken: getCSRFToken,
+    escapeHtml: escapeHtml,
+    getUserFacingError: getUserFacingError,
+    extractApiError: extractApiError,
+    showAsyncError: showAsyncError,
     showToast: showToast,
     validateEmail: validateEmail,
     validateRequired: validateRequired,
@@ -236,6 +402,8 @@ window.Utils = {
     clearFieldError: clearFieldError,
     clearAllErrors: clearAllErrors,
     apiRequest: apiRequest,
+    fetchJson: fetchJson,
+    parseJsonResponse: parseJsonResponse,
     debounce: debounce,
     domReady: domReady
 };

@@ -4,7 +4,13 @@
     'use strict';
 
     async function fetchReportData() {
-        const response = await fetch('/api/reports/asset-usage/');
+        if (window.Utils && typeof window.Utils.fetchJson === 'function') {
+            return window.Utils.fetchJson('/api/reports/asset-usage/');
+        }
+        const response = await fetch('/api/reports/asset-usage/', {
+            headers: { 'Accept': 'application/json' },
+            credentials: 'same-origin'
+        });
         if (!response.ok) throw new Error('Failed to load report');
         return response.json();
     }

@@ -65,7 +65,10 @@
         } catch (error) {
             console.error('Return failed:', error);
             if (window.Utils && typeof window.Utils.showToast === 'function') {
-                window.Utils.showToast('Return failed: ' + error.message, 'error');
+                window.Utils.showToast(
+                    window.Utils.getUserFacingError(error, 'Return failed. Please try again.'),
+                    'error'
+                );
             }
         }
     }
@@ -115,7 +118,10 @@
         } catch (error) {
             console.error('Assignment failed:', error);
             if (window.Utils && typeof window.Utils.showToast === 'function') {
-                window.Utils.showToast('Assignment failed: ' + error.message, 'error');
+                window.Utils.showToast(
+                    window.Utils.getUserFacingError(error, 'Assignment failed. Please try again.'),
+                    'error'
+                );
             }
         }
     }

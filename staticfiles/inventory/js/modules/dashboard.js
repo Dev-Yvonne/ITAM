@@ -15,7 +15,7 @@
     var PAUSE_BEFORE_TYPING = 500;
     
     var typewriterMessages = [
-        'Welcome to ITAM V2.0',
+        'Welcome to ITAM 3.0',
         'Manage your assets efficiently',
         'Track assignments in real-time',
         'Stay on top of maintenance',
@@ -317,7 +317,7 @@
         }).join('');
 
         var moreLink = overdueAssets.length > 6
-            ? '<div class="overdue-more"><a href="/assets/?status=overdue" class="btn btn-secondary"><i class="fas fa-list"></i> View All ' + overdueAssets.length + '</a></div>'
+            ? '<div class="overdue-more"><a href="' + (data.overdue_list_url || '') + '" class="btn btn-secondary"><i class="fas fa-list"></i> View All ' + overdueAssets.length + '</a></div>'
             : '';
 
         container.innerHTML = '' +
@@ -332,42 +332,16 @@
             '</div>';
     }
 
-    function updateQuickStats(data) {
-        var utilization = document.getElementById('utilization-rate-value');
-        var employees = document.getElementById('employee-count-value');
-        var health = document.getElementById('asset-health-value');
-        var assignments = document.getElementById('total-assignments-value');
-        var overdueCount = document.getElementById('overdue-count-value');
-        if (utilization) {
-            utilization.textContent = data.utilization_rate + '%';
-        }
-        if (employees) {
-            employees.textContent = data.employee_count;
-        }
-        if (health) {
-            health.textContent = data.asset_health_rate + '%';
-            health.classList.toggle('healthy', data.asset_health_rate < 10);
-            health.classList.toggle('warning', data.asset_health_rate >= 10);
-        }
-        if (assignments) {
-            assignments.textContent = data.total_assignments || 0;
-        }
-        if (overdueCount) {
-            overdueCount.textContent = data.overdue_assets_count || 0;
-            var opsItem = overdueCount.closest('.insight-ops-item');
-            if (opsItem) {
-                opsItem.classList.toggle('danger', (data.overdue_assets_count || 0) > 0);
-                opsItem.classList.toggle('success', !(data.overdue_assets_count || 0));
-            }
-        }
+    function applyDashboardData(data) {
+        renderDashboardStats(data.dashboard_stats || []);
+        renderOverdueSection(data);
         if (window.DashboardAnalytics) {
-            window.DashboardAnalytics.render(data);
+            window.DashboardAnalytics.applyData(data);
         }
     }
 
     function loadAsyncDashboard() {
         var mount = document.getElementById('dashboard-stats');
-        var page = document.querySelector('.dashboard-page');
         if (!mount || !window.BackgroundJobs) {
             return;
         }
@@ -375,6 +349,7 @@
         mount.classList.add('async-loading');
         if (window.DashboardAnalytics) {
             window.DashboardAnalytics.initTabs();
+            window.DashboardAnalytics.applyData(null);
         }
         window.BackgroundJobs.run('dashboard').then(function(job) {
             var data = job.result || {};
@@ -383,14 +358,26 @@
             if (overdueMount) {
                 overdueMount.classList.remove('async-loading');
             }
-            renderDashboardStats(data.dashboard_stats || []);
-            renderOverdueSection(data);
-            updateQuickStats(data);
+            applyDashboardData(data);
             isStatsAnimated = false;
             setupScrollObserver();
         }).catch(function(error) {
             mount.classList.remove('async-loading');
+            var overdueMount = document.getElementById('overdue-section-mount');
+            if (overdueMount) {
+                overdueMount.classList.remove('async-loading');
+            }
             console.error('Dashboard async load failed:', error);
+            if (window.Utils && typeof window.Utils.showAsyncError === 'function') {
+                window.Utils.showAsyncError(
+                    mount,
+                    window.Utils.getUserFacingError(
+                        error,
+                        'Unable to load dashboard metrics. Refresh the page to try again.'
+                    ),
+                    { onRetry: loadAsyncDashboard }
+                );
+            }
         });
     }
 
