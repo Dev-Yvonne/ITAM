@@ -345,8 +345,9 @@ def serialize_import_rows(rows: list[dict]) -> list[dict]:
     return serialized
 
 
-def serialize_catalog_asset(asset: CatalogAsset) -> dict:
-    return {
+def serialize_catalog_asset(asset: CatalogAsset, *, serial_to_pk: dict | None = None) -> dict:
+    payload = {
+        "id": asset.pk,
         "name": asset.name,
         "type": asset.type,
         "serial_number": asset.serial_number,
@@ -358,16 +359,21 @@ def serialize_catalog_asset(asset: CatalogAsset) -> dict:
         ),
         "imported_at": asset.imported_at.isoformat() if asset.imported_at else None,
     }
+    if serial_to_pk:
+        payload["linked_asset_id"] = serial_to_pk.get(asset.serial_number)
+    return payload
 
 
-def serialize_catalog(catalog: AssetCatalog) -> dict:
+def serialize_catalog(catalog: AssetCatalog, *, serial_to_pk: dict | None = None) -> dict:
     assets = list(catalog.assets.all().order_by("name", "serial_number"))
     return {
         "id": catalog.pk,
         "name": catalog.name,
         "created_at": catalog.created_at.isoformat() if catalog.created_at else None,
         "asset_count": len(assets),
-        "assets": [serialize_catalog_asset(asset) for asset in assets],
+        "assets": [
+            serialize_catalog_asset(asset, serial_to_pk=serial_to_pk) for asset in assets
+        ],
     }
 
 

@@ -1,28 +1,27 @@
 /**
  * ASSET MODULE
- * Handles asset management: list, detail, and actions
+ * Handles asset management: list, detail card, assign, and return
  */
 
 (function() {
     'use strict';
-    
-    // ============================================
-    // DOM Elements
-    // ============================================
+
     let elements = {};
     let isInitialized = false;
     let assetCache = new Map();
     let activeAssetId = null;
-    
-    // ============================================
-    // Initialize Asset Module
-    // ============================================
+    let employeeList = [];
+    let isAdmin = false;
+
     function init() {
         if (isInitialized) {
             return;
         }
         isInitialized = true;
-        // Cache DOM elements
+
+        const adminHost = document.querySelector('[data-user-is-admin]');
+        isAdmin = adminHost && adminHost.getAttribute('data-user-is-admin') === 'true';
+
         elements = {
             assetTable: document.querySelector('.asset-table'),
             assetTableBody: document.querySelector('#asset-table-body'),
@@ -32,20 +31,39 @@
             returnButtons: document.querySelectorAll('.action-return'),
             deleteButtons: document.querySelectorAll('.action-delete')
         };
-        
-        // Setup event listeners
+
         setupFilterForm();
         setupActionButtons();
-        setupRowInteractions();
+        setupGlobalRowInteractions();
         setupDetailCard();
         loadAssetTable();
-        
+
+        if (isAdmin) {
+            loadEmployees();
+        }
+
         console.log('Asset module initialized.');
     }
 
-    // ============================================
-    // Asset Table Rendering
-    // ============================================
+    async function loadEmployees() {
+        if (!window.Utils || typeof window.Utils.apiRequest !== 'function') {
+            return;
+        }
+
+        try {
+            const employees = await window.Utils.apiRequest('/api/employees/');
+            employeeList = Array.isArray(employees)
+                ? employees.slice().sort(function(a, b) {
+                    return String(a.name || '').localeCompare(String(b.name || ''), undefined, {
+                        sensitivity: 'base'
+                    });
+                })
+                : [];
+        } catch (error) {
+            console.error('Failed to load employees:', error);
+        }
+    }
+
     async function loadAssetTable() {
         if (!elements.assetTableBody || !window.Utils || typeof window.Utils.apiRequest !== 'function') {
             return;
@@ -222,14 +240,13 @@
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
-    
-    function setupRowInteractions() {
-        if (!elements.assetTableBody) {
-            return;
-        }
 
-        elements.assetTableBody.addEventListener('click', function(event) {
+    function setupGlobalRowInteractions() {
+        document.addEventListener('click', function(event) {
             if (event.target.closest('[data-row-action="true"]')) {
+                return;
+            }
+            if (event.target.closest('.asset-detail-card-panel')) {
                 return;
             }
 
@@ -238,10 +255,11 @@
                 return;
             }
 
-            openAssetDetailCard(row.dataset.assetId);
+            event.preventDefault();
+            handleRowActivation(row);
         });
 
-        elements.assetTableBody.addEventListener('keydown', function(event) {
+        document.addEventListener('keydown', function(event) {
             if (event.key !== 'Enter' && event.key !== ' ') {
                 return;
             }
@@ -252,8 +270,56 @@
             }
 
             event.preventDefault();
-            openAssetDetailCard(row.dataset.assetId);
+            handleRowActivation(row);
         });
+    }
+
+    function handleRowActivation(row) {
+        const assetId = row.dataset.assetId;
+        if (assetId) {
+            openAssetDetailCard(assetId);
+            return;
+        }
+
+        if (row.classList.contains('asset-catalog-row')) {
+            openCatalogOnlyDetailCard(row);
+        }
+    }
+
+    function openCatalogOnlyDetailCard(row) {
+        if (!elements.detailCard) {
+            return;
+        }
+
+        activeAssetId = null;
+        const title = elements.detailCard.querySelector('#asset-detail-card-title');
+        const subtitle = elements.detailCard.querySelector('.asset-detail-card-subtitle');
+        const body = elements.detailCard.querySelector('.asset-detail-card-body');
+        const footer = elements.detailCard.querySelector('.asset-detail-card-footer');
+
+        if (title) {
+            title.textContent = row.dataset.catalogName || 'Catalog Asset';
+        }
+        if (subtitle) {
+            subtitle.innerHTML = '<span class="badge badge-' + escapeHtml(String(row.dataset.catalogStatus || '').toLowerCase().replace(/\s+/g, '')) + '">' +
+                escapeHtml(row.dataset.catalogStatus || '') + '</span>';
+        }
+        if (body) {
+            body.innerHTML =
+                '<div class="asset-detail-grid">' +
+                    detailField('Type', row.dataset.catalogType) +
+                    detailField('Serial Number', row.dataset.serialNumber, true) +
+                    detailField('Status', row.dataset.catalogStatus) +
+                '</div>' +
+                '<section class="asset-detail-section">' +
+                    '<p class="asset-detail-empty">This catalog entry is not linked to a live inventory asset yet.</p>' +
+                '</section>';
+        }
+        if (footer) {
+            footer.innerHTML = '';
+        }
+
+        showDetailCard();
     }
 
     function setupDetailCard() {
@@ -266,29 +332,51 @@
         });
 
         document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && activeAssetId !== null) {
+            if (event.key === 'Escape' && elements.detailCard.classList.contains('open')) {
                 closeAssetDetailCard();
             }
         });
     }
 
-    function openAssetDetailCard(assetId) {
-        const asset = assetCache.get(String(assetId));
-        if (!asset || !elements.detailCard) {
+    async function openAssetDetailCard(assetId) {
+        if (!elements.detailCard) {
+            return;
+        }
+
+        let asset = assetCache.get(String(assetId));
+
+        if (!asset && window.Utils && typeof window.Utils.apiRequest === 'function') {
+            try {
+                asset = await window.Utils.apiRequest('/api/assets/' + encodeURIComponent(assetId) + '/');
+                assetCache.set(String(assetId), asset);
+            } catch (error) {
+                if (typeof window.Utils.showToast === 'function') {
+                    window.Utils.showToast(
+                        window.Utils.getUserFacingError(error, 'Unable to load asset details.'),
+                        'error'
+                    );
+                }
+                return;
+            }
+        }
+
+        if (!asset) {
             return;
         }
 
         activeAssetId = String(assetId);
         renderAssetDetailCard(asset);
+        showDetailCard();
 
+        document.querySelectorAll('.asset-table-row').forEach(function(row) {
+            row.classList.toggle('selected', row.dataset.assetId === activeAssetId);
+        });
+    }
+
+    function showDetailCard() {
         elements.detailCard.classList.add('open');
         elements.detailCard.setAttribute('aria-hidden', 'false');
         document.body.classList.add('asset-detail-card-open');
-
-        const rows = elements.assetTableBody.querySelectorAll('.asset-table-row');
-        rows.forEach(function(row) {
-            row.classList.toggle('selected', row.dataset.assetId === activeAssetId);
-        });
 
         const closeButton = elements.detailCard.querySelector('.asset-detail-card-close');
         if (closeButton) {
@@ -306,11 +394,9 @@
         elements.detailCard.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('asset-detail-card-open');
 
-        if (elements.assetTableBody) {
-            elements.assetTableBody.querySelectorAll('.asset-table-row.selected').forEach(function(row) {
-                row.classList.remove('selected');
-            });
-        }
+        document.querySelectorAll('.asset-table-row.selected').forEach(function(row) {
+            row.classList.remove('selected');
+        });
     }
 
     function renderAssetDetailCard(asset) {
@@ -343,10 +429,76 @@
                 renderAssignmentSection(employee);
         }
 
-        if (footer) {
-            footer.innerHTML =
-                '<a href="/assets/' + encodeURIComponent(asset.id) + '/edit/" class="btn btn-secondary">Edit</a>' +
-                '<a href="/assets/' + encodeURIComponent(asset.id) + '/delete/" class="btn btn-danger">Delete</a>';
+        renderAssetDetailCardFooter(asset, footer);
+    }
+
+    function isAssetAssigned(asset) {
+        if (asset.assigned_employee) {
+            return true;
+        }
+        if (asset.assignment_calendar && asset.assignment_calendar.currently_assigned) {
+            return true;
+        }
+        const status = String(asset.status_label || asset.status || '').toLowerCase();
+        return status === 'assigned';
+    }
+
+    function renderAssetDetailCardFooter(asset, footer) {
+        if (!footer) {
+            return;
+        }
+
+        if (!isAdmin) {
+            footer.innerHTML = '';
+            return;
+        }
+
+        const assigned = isAssetAssigned(asset);
+        let html = '';
+
+        if (!assigned) {
+            html += '<div class="asset-detail-assign">' +
+                '<select class="asset-assign-select" aria-label="Select employee to assign">' +
+                    '<option value="">Select employee...</option>' +
+                    employeeList.map(function(employee) {
+                        return '<option value="' + encodeURIComponent(employee.id) + '">' +
+                            escapeHtml(employee.name) + '</option>';
+                    }).join('') +
+                '</select>' +
+                '<button type="button" class="btn btn-primary asset-detail-assign-btn">Assign</button>' +
+            '</div>';
+        }
+
+        if (assigned) {
+            html += '<button type="button" class="btn btn-warning asset-detail-return-btn">Return Asset</button>';
+        }
+
+        html += '<a href="/assets/' + encodeURIComponent(asset.id) + '/delete/" class="btn btn-danger">Delete</a>';
+        footer.innerHTML = html;
+
+        const assignBtn = footer.querySelector('.asset-detail-assign-btn');
+        if (assignBtn) {
+            assignBtn.addEventListener('click', function() {
+                const select = footer.querySelector('.asset-assign-select');
+                const employeeId = select ? select.value : '';
+                if (!employeeId) {
+                    if (window.Utils && typeof window.Utils.showToast === 'function') {
+                        window.Utils.showToast('Select an employee before assigning.', 'warning');
+                    }
+                    return;
+                }
+                performAssign(asset.id, employeeId, asset.name);
+            });
+        }
+
+        const returnBtn = footer.querySelector('.asset-detail-return-btn');
+        if (returnBtn) {
+            returnBtn.addEventListener('click', function() {
+                if (!confirm('Return "' + asset.name + '" to inventory?')) {
+                    return;
+                }
+                performReturn(asset.id);
+            });
         }
     }
 
@@ -402,9 +554,6 @@
         }).format(date);
     }
 
-    // ============================================
-    // Setup Filter Form
-    // ============================================
     function setupFilterForm() {
         if (elements.filterForm) {
             const selectors = elements.filterForm.querySelectorAll('select');
@@ -415,33 +564,26 @@
             });
         }
     }
-    
-    // ============================================
-    // Setup Action Buttons
-    // ============================================
+
     function setupActionButtons() {
-        // Assign buttons
         elements.assignButtons.forEach(function(button) {
-            button.addEventListener('click', function(event) {
+            button.addEventListener('click', function() {
                 const assetId = this.dataset.id;
                 const assetName = this.dataset.name;
                 handleAssign(assetId, assetName);
             });
         });
-        
-        // Return buttons
+
         elements.returnButtons.forEach(function(button) {
-            button.addEventListener('click', function(event) {
+            button.addEventListener('click', function() {
                 const assetId = this.dataset.id;
                 const assetName = this.dataset.name;
                 handleReturn(assetId, assetName);
             });
         });
-        
-        // Delete buttons
+
         elements.deleteButtons.forEach(function(button) {
             button.addEventListener('click', function(event) {
-                const assetId = this.dataset.id;
                 const assetName = this.dataset.name;
                 if (!confirm('Are you sure you want to delete "' + assetName + '"? This action cannot be undone.')) {
                     event.preventDefault();
@@ -449,50 +591,48 @@
             });
         });
     }
-    
-    // ============================================
-    // Handle Assign Action
-    // ============================================
+
     function handleAssign(assetId, assetName) {
         const employeeId = prompt('Enter the Employee ID to assign "' + assetName + '":');
-        
-        if (!employeeId) return;
-        
+
+        if (!employeeId) {
+            return;
+        }
+
         if (!employeeId.match(/^\d+$/)) {
             if (window.Utils && typeof window.Utils.showToast === 'function') {
                 window.Utils.showToast('Please enter a valid Employee ID.', 'error');
             }
             return;
         }
-        
+
         if (confirm('Assign "' + assetName + '" to Employee ID ' + employeeId + '?')) {
-            performAssign(assetId, employeeId);
+            performAssign(assetId, employeeId, assetName);
         }
     }
-    
-    // ============================================
-    // Perform Assign API Call
-    // ============================================
-    async function performAssign(assetId, employeeId) {
+
+    async function performAssign(assetId, employeeId, assetName) {
         try {
             if (window.Utils && typeof window.Utils.showToast === 'function') {
                 window.Utils.showToast('Assigning asset...', 'info');
             }
-            
+
             const url = '/api/assets/' + assetId + '/assign/';
-            const data = { employee_id: employeeId };
-            
-            const result = await window.Utils.apiRequest(url, 'POST', data);
-            
+            const result = await window.Utils.apiRequest(url, 'POST', { employee_id: employeeId });
+
+            assetCache.set(String(assetId), result);
+
             if (window.Utils && typeof window.Utils.showToast === 'function') {
-                window.Utils.showToast('Asset assigned successfully!', 'success');
+                window.Utils.showToast(
+                    assetName ? ('"' + assetName + '" assigned successfully!') : 'Asset assigned successfully!',
+                    'success'
+                );
             }
-            
-            // Refresh the page to update the list
-            setTimeout(function() {
-                window.location.reload();
-            }, 1000);
-            
+
+            await refreshAllTables();
+            if (activeAssetId === String(assetId)) {
+                renderAssetDetailCard(result);
+            }
         } catch (error) {
             console.error('Assignment failed:', error);
             if (window.Utils && typeof window.Utils.showToast === 'function') {
@@ -503,40 +643,34 @@
             }
         }
     }
-    
-    // ============================================
-    // Handle Return Action
-    // ============================================
+
     function handleReturn(assetId, assetName) {
         if (!confirm('Return "' + assetName + '" to inventory?')) {
             return;
         }
-        
+
         performReturn(assetId);
     }
-    
-    // ============================================
-    // Perform Return API Call
-    // ============================================
+
     async function performReturn(assetId) {
         try {
             if (window.Utils && typeof window.Utils.showToast === 'function') {
                 window.Utils.showToast('Returning asset...', 'info');
             }
-            
+
             const url = '/api/assets/' + assetId + '/return/';
-            
-            await window.Utils.apiRequest(url, 'POST');
-            
+            const result = await window.Utils.apiRequest(url, 'POST');
+
+            assetCache.set(String(assetId), result);
+
             if (window.Utils && typeof window.Utils.showToast === 'function') {
                 window.Utils.showToast('Asset returned successfully!', 'success');
             }
-            
-            // Refresh the page to update the list
-            setTimeout(function() {
-                window.location.reload();
-            }, 1000);
-            
+
+            await refreshAllTables();
+            if (activeAssetId === String(assetId)) {
+                renderAssetDetailCard(result);
+            }
         } catch (error) {
             console.error('Return failed:', error);
             if (window.Utils && typeof window.Utils.showToast === 'function') {
@@ -547,16 +681,29 @@
             }
         }
     }
-    
-    // ============================================
-    // Export
-    // ============================================
+
+    async function refreshAllTables() {
+        await loadAssetTable();
+
+        const mount = document.getElementById('asset-sections-mount');
+        if (!mount || !window.BackgroundJobs || !window.AssetSections) {
+            return;
+        }
+
+        try {
+            const job = await window.BackgroundJobs.run('asset_sections', { force: true });
+            mount.innerHTML = window.AssetSections.renderAll(job.result || {});
+        } catch (error) {
+            console.error('Failed to refresh asset sections:', error);
+        }
+    }
+
     window.AssetManager = {
         init: init,
         handleAssign: handleAssign,
         handleReturn: handleReturn,
         openAssetDetailCard: openAssetDetailCard,
-        closeAssetDetailCard: closeAssetDetailCard
+        closeAssetDetailCard: closeAssetDetailCard,
+        refreshAllTables: refreshAllTables
     };
-    
 })();

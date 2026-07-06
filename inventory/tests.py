@@ -1336,6 +1336,26 @@ class FrontendAPIBridgeTests(TestCase):
         )
         self.assertTrue(response.json()["date_returned"].startswith(today))
         self.assertFalse(response.json()["assignment_calendar"]["currently_assigned"])
+        notification = EmployeeNotification.objects.get(employee=self.employee)
+        self.assertEqual(notification.title, "Asset Returned")
+        self.assertFalse(notification.read)
+        admin_notifications = self.client.session.get("notifications", [])
+        self.assertTrue(any(item["title"] == "Asset Returned" for item in admin_notifications))
+
+    def test_asset_api_assign_notifies_admin_and_employee(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            reverse("api_asset_assign", kwargs={"pk": self.asset.pk}),
+            data={"employee_id": self.employee.pk},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        notification = EmployeeNotification.objects.get(employee=self.employee)
+        self.assertEqual(notification.title, "Asset Assigned")
+        admin_notifications = self.client.session.get("notifications", [])
+        self.assertTrue(any(item["title"] == "Asset Assigned" for item in admin_notifications))
 
     def test_employee_api_list_returns_assigned_asset_counts(self):
         Assignment.objects.create(asset=self.asset, employee=self.employee)

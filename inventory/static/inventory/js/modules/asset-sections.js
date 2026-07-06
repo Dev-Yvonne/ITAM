@@ -35,8 +35,10 @@
         return '<span class="badge badge-' + escapeHtml(css) + '">' + escapeHtml(status) + '</span>';
     }
 
-    function assetLink(pk, name) {
-        return '<a href="/assets/' + pk + '/" class="asset-name-link">' + escapeHtml(name) + '</a>';
+    function clickableRow(assetPk, cells, label) {
+        return '<tr class="asset-table-row" data-asset-id="' + encodeURIComponent(assetPk) + '" tabindex="0" role="button" aria-label="View details for ' + escapeHtml(label) + '">' +
+            cells +
+            '</tr>';
     }
 
     function sectionHeader(id, icon, title, count) {
@@ -60,11 +62,15 @@
             '<th>Asset Name</th><th>Type</th><th>Assignee</th><th>Date Assigned</th><th>Return Date</th>' +
             '</tr></thead><tbody>';
         rows.forEach(function(row) {
-            html += '<tr><td>' + assetLink(row.asset_pk, row.name) + '</td>' +
-                '<td>' + escapeHtml(row.type) + '</td>' +
-                '<td>' + escapeHtml(row.assignee) + '</td>' +
-                '<td>' + formatDate(row.date_assigned) + '</td>' +
-                '<td>' + formatDate(row.expected_return_date) + '</td></tr>';
+            html += clickableRow(
+                row.asset_pk,
+                '<td><span class="asset-name-text">' + escapeHtml(row.name) + '</span></td>' +
+                    '<td>' + escapeHtml(row.type) + '</td>' +
+                    '<td>' + escapeHtml(row.assignee) + '</td>' +
+                    '<td>' + formatDate(row.date_assigned) + '</td>' +
+                    '<td>' + formatDate(row.expected_return_date) + '</td>',
+                row.name
+            );
         });
         return html + '</tbody></table></div></section>';
     }
@@ -77,9 +83,13 @@
         html += '<div class="table-wrapper asset-section-table"><table><thead><tr>' +
             '<th>Asset Name</th><th>Type</th><th>Available Since</th></tr></thead><tbody>';
         rows.forEach(function(row) {
-            html += '<tr><td>' + assetLink(row.asset_pk, row.name) + '</td>' +
-                '<td>' + escapeHtml(row.type) + '</td>' +
-                '<td>' + escapeHtml(row.available_since) + '</td></tr>';
+            html += clickableRow(
+                row.asset_pk,
+                '<td><span class="asset-name-text">' + escapeHtml(row.name) + '</span></td>' +
+                    '<td>' + escapeHtml(row.type) + '</td>' +
+                    '<td>' + escapeHtml(row.available_since) + '</td>',
+                row.name
+            );
         });
         return html + '</tbody></table></div></section>';
     }
@@ -93,11 +103,15 @@
             '<th>Asset Name</th><th>Type</th><th>Repair Shop</th><th>Maintenance Worker Contact</th><th>Period Till Full Repair</th>' +
             '</tr></thead><tbody>';
         rows.forEach(function(row) {
-            html += '<tr><td>' + assetLink(row.asset_pk, row.name) + '</td>' +
-                '<td>' + escapeHtml(row.type) + '</td>' +
-                '<td>' + escapeHtml(row.repair_shop) + '</td>' +
-                '<td>' + escapeHtml(row.worker_contact) + '</td>' +
-                '<td>' + escapeHtml(row.repair_period) + '</td></tr>';
+            html += clickableRow(
+                row.asset_pk,
+                '<td><span class="asset-name-text">' + escapeHtml(row.name) + '</span></td>' +
+                    '<td>' + escapeHtml(row.type) + '</td>' +
+                    '<td>' + escapeHtml(row.repair_shop) + '</td>' +
+                    '<td>' + escapeHtml(row.worker_contact) + '</td>' +
+                    '<td>' + escapeHtml(row.repair_period) + '</td>',
+                row.name
+            );
         });
         return html + '</tbody></table></div></section>';
     }
@@ -110,10 +124,14 @@
         html += '<div class="table-wrapper asset-section-table"><table><thead><tr>' +
             '<th>Asset Name</th><th>Type</th><th>Serial Number</th><th>Status</th></tr></thead><tbody>';
         rows.forEach(function(row) {
-            html += '<tr><td>' + assetLink(row.asset_pk, row.name) + '</td>' +
-                '<td>' + escapeHtml(row.type) + '</td>' +
-                '<td>' + escapeHtml(row.serial_number) + '</td>' +
-                '<td>' + statusBadge(row.status) + '</td></tr>';
+            html += clickableRow(
+                row.asset_pk,
+                '<td><span class="asset-name-text">' + escapeHtml(row.name) + '</span></td>' +
+                    '<td>' + escapeHtml(row.type) + '</td>' +
+                    '<td>' + escapeHtml(row.serial_number) + '</td>' +
+                    '<td>' + statusBadge(row.status) + '</td>',
+                row.name
+            );
         });
         return html + '</tbody></table></div></section>';
     }

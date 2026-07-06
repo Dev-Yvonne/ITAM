@@ -485,13 +485,15 @@ class AssetListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        serial_to_pk = dict(Asset.objects.values_list("serial_number", "pk"))
         context.update(
             {
                 "selected_type": self.request.GET.get("type", ""),
                 "selected_status": self.request.GET.get("status", ""),
                 "overdue_cutoff": get_service_overdue_cutoff().date(),
+                "user_is_admin": user_has_admin_access(self.request.user),
                 "asset_catalogs": [
-                    serialize_catalog(catalog)
+                    serialize_catalog(catalog, serial_to_pk=serial_to_pk)
                     for catalog in AssetCatalog.objects.prefetch_related("assets")
                     .order_by("-created_at", "name")
                 ],
@@ -799,6 +801,7 @@ class ReturnAssetView(LoginRequiredMixin, UserPassesTestMixin, View):
 
             asset.status = Asset.AssetStatus.AVAILABLE
             asset.save(update_fields=["status"])
+            employee = assignment.employee
             add_session_notification(
                 request,
                 notification_type="info",
@@ -806,6 +809,16 @@ class ReturnAssetView(LoginRequiredMixin, UserPassesTestMixin, View):
                 message=f'Asset "{asset.name}" has been returned to inventory.',
                 link=reverse("asset_detail", kwargs={"pk": asset.pk}),
                 source="asset_return",
+            )
+            create_employee_notification(
+                employee,
+                notification_type=EmployeeNotification.NotificationType.INFO,
+                title="Asset Returned",
+                message=(
+                    f'"{asset.name}" has been returned to inventory and '
+                    "removed from your assigned assets."
+                ),
+                link=reverse("employee_dashboard"),
             )
 
         messages.success(
@@ -1244,6 +1257,17 @@ class AssetAssignAPIView(LoginRequiredMixin, View):
             )
             asset.status = Asset.AssetStatus.ASSIGNED
             asset.save(update_fields=["status"])
+            add_session_notification(
+                request,
+                notification_type="success",
+                title="Asset Assigned",
+                message=(
+                    f'Asset "{asset.name}" has been assigned to '
+                    f"{employee.name}."
+                ),
+                link=reverse("asset_list"),
+                source="asset_assignment",
+            )
             create_employee_notification(
                 employee,
                 notification_type=EmployeeNotification.NotificationType.INFO,
@@ -1273,10 +1297,32 @@ class AssetReturnAPIView(LoginRequiredMixin, View):
                     status=400,
                 )
 
+            employee = assignment.employee
             assignment.date_returned = timezone.now()
             assignment.save(update_fields=["date_returned"])
             asset.status = Asset.AssetStatus.AVAILABLE
             asset.save(update_fields=["status"])
+            add_session_notification(
+                request,
+                notification_type="info",
+                title="Asset Returned",
+                message=(
+                    f'Asset "{asset.name}" has been returned from '
+                    f"{employee.name}."
+                ),
+                link=reverse("asset_list"),
+                source="asset_return",
+            )
+            create_employee_notification(
+                employee,
+                notification_type=EmployeeNotification.NotificationType.INFO,
+                title="Asset Returned",
+                message=(
+                    f'"{asset.name}" has been returned to inventory and '
+                    "removed from your assigned assets."
+                ),
+                link=reverse("employee_dashboard"),
+            )
 
         return JsonResponse(serialize_asset(asset))
 

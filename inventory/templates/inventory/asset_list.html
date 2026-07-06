@@ -5,12 +5,12 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventory/css/components/tables.css' %}?v=14">
-    <link rel="stylesheet" href="{% static 'inventory/css/components/asset-list-sections.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'inventory/css/components/asset-list-sections.css' %}?v=4">
     <link rel="stylesheet" href="{% static 'inventory/css/components/asset-import.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
-    <div class="page-header">
+    <div class="page-header" data-user-is-admin="{% if user_is_admin %}true{% else %}false{% endif %}">
         <h1>Assets</h1>
         <div class="actions">
             <a href="{% url 'asset_add' %}" class="btn btn-primary">Add Asset</a>
@@ -65,7 +65,15 @@
                         </thead>
                         <tbody>
                             {% for asset in catalog.assets %}
-                                <tr>
+                                <tr class="asset-table-row{% if not asset.linked_asset_id %} asset-catalog-row{% endif %}"
+                                    {% if asset.linked_asset_id %}data-asset-id="{{ asset.linked_asset_id }}"{% endif %}
+                                    data-serial-number="{{ asset.serial_number }}"
+                                    data-catalog-name="{{ asset.name }}"
+                                    data-catalog-type="{{ asset.type }}"
+                                    data-catalog-status="{{ asset.status }}"
+                                    tabindex="0"
+                                    role="button"
+                                    aria-label="View details for {{ asset.name }}">
                                     <td><span class="asset-name-text">{{ asset.name }}</span></td>
                                     <td>{{ asset.type }}</td>
                                     <td>{{ asset.serial_number }}</td>
@@ -359,8 +367,8 @@
 {% block extra_js %}
     <script src="{% static 'inventory/js/core/background-jobs.js' %}?v=3"></script>
     <script src="{% static 'inventory/js/modules/asset-import.js' %}?v=7"></script>
-    <script src="{% static 'inventory/js/modules/asset-sections.js' %}?v=2"></script>
-    <script src="{% static 'inventory/js/modules/assets.js' %}?v=16"></script>
+    <script src="{% static 'inventory/js/modules/asset-sections.js' %}?v=3"></script>
+    <script src="{% static 'inventory/js/modules/assets.js' %}?v=17"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (window.AssetImport && typeof window.AssetImport.init === 'function') {
