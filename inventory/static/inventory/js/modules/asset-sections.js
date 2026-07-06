@@ -30,11 +30,6 @@
         });
     }
 
-    function statusBadge(status) {
-        var css = String(status || '').toLowerCase().replace(/\s+/g, '');
-        return '<span class="badge badge-' + escapeHtml(css) + '">' + escapeHtml(status) + '</span>';
-    }
-
     function tableHead(columns) {
         var bulkHead = window.AssetBulkSelect
             ? window.AssetBulkSelect.headerCellHtml()
@@ -150,14 +145,13 @@
             return html + '<div class="asset-section-empty">No ' + title.toLowerCase() + ' found.</div></section>';
         }
         html += '<div class="table-wrapper asset-section-table"><table><thead><tr>' +
-            tableHead('<th>Asset Name</th><th>Type</th><th>Status</th>') +
+            tableHead('<th>Asset Name</th><th>Type</th>') +
             '</tr></thead><tbody>';
         rows.forEach(function(row) {
             html += clickableRow(
                 row.asset_pk,
                 '<td><span class="asset-name-text">' + escapeHtml(row.name) + '</span></td>' +
-                    '<td>' + escapeHtml(row.type) + '</td>' +
-                    '<td>' + statusBadge(row.status) + '</td>',
+                    '<td>' + escapeHtml(row.type) + '</td>',
                 row.name,
                 row.status
             );

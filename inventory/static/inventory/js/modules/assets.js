@@ -138,7 +138,6 @@
                     (isAdmin ? '<td><span class="skeleton skeleton-text"></span></td>' : '') +
                     '<td><span class="skeleton skeleton-text skeleton-wide"></span></td>' +
                     '<td><span class="skeleton skeleton-text"></span></td>' +
-                    '<td><span class="skeleton skeleton-badge"></span></td>' +
                     '<td><span class="skeleton skeleton-text skeleton-wide"></span></td>' +
                     '<td><span class="skeleton skeleton-text skeleton-wide"></span></td>' +
                     '<td><span class="skeleton skeleton-text skeleton-wide"></span></td>' +
@@ -172,8 +171,6 @@
     }
 
     function renderAssetRow(asset) {
-        const statusLabel = asset.status_label || asset.status || '';
-        const statusClass = String(statusLabel).toLowerCase().replace(/\s+/g, '');
         const assignee = formatAssignee(asset.assigned_employee);
 
         return (
@@ -181,7 +178,6 @@
                 bulkRowHtml(asset.id, asset.name) +
                 '<td><span class="asset-name-text">' + escapeHtml(asset.name) + '</span></td>' +
                 '<td>' + escapeHtml(asset.type) + '</td>' +
-                '<td><span class="badge badge-' + escapeHtml(statusClass) + '">' + escapeHtml(statusLabel) + '</span></td>' +
                 '<td>' + assignee + '</td>' +
                 '<td class="date-cell">' + formatDate(asset.date_created) + '</td>' +
                 '<td class="date-cell">' + formatDate(asset.date_assigned) + '</td>' +
@@ -234,7 +230,7 @@
     function renderTableMessage(message) {
         elements.assetTableBody.innerHTML =
             '<tr>' +
-                '<td colspan="' + tableColspan(8) + '" class="empty-state">' +
+                '<td colspan="' + tableColspan(7) + '" class="empty-state">' +
                     '<div class="empty-state-content">' +
                         '<h3>' + escapeHtml(message) + '</h3>' +
                     '</div>' +
