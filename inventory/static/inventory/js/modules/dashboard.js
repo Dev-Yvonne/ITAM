@@ -15,7 +15,7 @@
     var PAUSE_BEFORE_TYPING = 500;
     
     var typewriterMessages = [
-        'Welcome to ITAM V2.0',
+        'Welcome to ITAM 3.0',
         'Manage your assets efficiently',
         'Track assignments in real-time',
         'Stay on top of maintenance',

@@ -58,6 +58,9 @@
         els.columnError = document.getElementById('import-column-error');
         els.assignmentList = document.getElementById('import-assignment-list');
         els.assignmentIntro = document.getElementById('import-assignment-intro');
+        els.conflictBulkActions = document.getElementById('import-conflict-bulk-actions');
+        els.replaceAllBtn = document.getElementById('import-replace-all-btn');
+        els.addAllBtn = document.getElementById('import-add-all-btn');
         els.conflictList = document.getElementById('import-conflict-list');
         els.catalogNameWrap = document.getElementById('import-catalog-name-wrap');
         els.catalogNameInput = document.getElementById('import-catalog-name');
@@ -368,8 +371,37 @@
             (errors ? ' · ' + errors + ' row' + (errors === 1 ? '' : 's') + ' skipped' : '');
     }
 
+    function setConflictResolution(card, resolution) {
+        if (!card) return;
+        var serial = card.getAttribute('data-serial');
+        state.resolutions[serial] = resolution;
+        card.querySelectorAll('.import-resolution-btns .btn').forEach(function(btn) {
+            btn.classList.toggle('selected', btn.getAttribute('data-resolution') === resolution);
+        });
+    }
+
+    function applyBulkResolution(mode) {
+        if (!els.conflictList) return;
+
+        els.conflictList.querySelectorAll('.import-conflict-card').forEach(function(card) {
+            var serial = card.getAttribute('data-serial');
+            var conflict = state.conflicts.find(function(item) {
+                return item.serial === serial;
+            });
+            if (!conflict) return;
+
+            var resolution = mode === 'replace' && conflict.conflict_type === 'existing_asset'
+                ? 'replace'
+                : 'add_new';
+            setConflictResolution(card, resolution);
+        });
+    }
+
     function renderConflicts() {
         if (!els.conflictList) return;
+        if (els.conflictBulkActions) {
+            els.conflictBulkActions.hidden = !state.conflicts.length;
+        }
         els.conflictList.innerHTML = state.conflicts.map(function(conflict) {
             var existingBlock = '';
             if (conflict.conflict_type === 'existing_asset') {
@@ -409,11 +441,7 @@
         els.conflictList.querySelectorAll('.import-resolution-btns .btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var card = btn.closest('.import-conflict-card');
-                var serial = card.getAttribute('data-serial');
-                state.resolutions[serial] = btn.getAttribute('data-resolution');
-                card.querySelectorAll('.import-resolution-btns .btn').forEach(function(b) {
-                    b.classList.toggle('selected', b === btn);
-                });
+                setConflictResolution(card, btn.getAttribute('data-resolution'));
             });
         });
     }
@@ -597,6 +625,17 @@
         els.dropzone.addEventListener('click', function() {
             els.fileInput.click();
         });
+
+        if (els.replaceAllBtn) {
+            els.replaceAllBtn.addEventListener('click', function() {
+                applyBulkResolution('replace');
+            });
+        }
+        if (els.addAllBtn) {
+            els.addAllBtn.addEventListener('click', function() {
+                applyBulkResolution('add_new');
+            });
+        }
 
         MAPPING_FIELDS.forEach(function(field) {
             var select = document.getElementById(field.selectId);

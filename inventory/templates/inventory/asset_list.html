@@ -6,7 +6,7 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventory/css/components/tables.css' %}?v=14">
     <link rel="stylesheet" href="{% static 'inventory/css/components/asset-list-sections.css' %}?v=3">
-    <link rel="stylesheet" href="{% static 'inventory/css/components/asset-import.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'inventory/css/components/asset-import.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -309,6 +309,10 @@
                 <div id="import-step-conflicts" class="import-step">
                     <p class="import-summary" id="import-parse-summary"></p>
                     <p class="import-summary">Resolve serial number conflicts before continuing.</p>
+                    <div id="import-conflict-bulk-actions" class="import-conflict-bulk-actions">
+                        <button type="button" class="btn btn-secondary" id="import-replace-all-btn">Replace All</button>
+                        <button type="button" class="btn btn-secondary" id="import-add-all-btn">Add All as New</button>
+                    </div>
                     <div id="import-conflict-list" class="import-conflict-list"></div>
                 </div>
 
@@ -353,7 +357,7 @@
 
 {% block extra_js %}
     <script src="{% static 'inventory/js/core/background-jobs.js' %}?v=1"></script>
-    <script src="{% static 'inventory/js/modules/asset-import.js' %}?v=5"></script>
+    <script src="{% static 'inventory/js/modules/asset-import.js' %}?v=6"></script>
     <script src="{% static 'inventory/js/modules/asset-sections.js' %}?v=1"></script>
     <script src="{% static 'inventory/js/modules/assets.js' %}?v=16"></script>
     <script>
