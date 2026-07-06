@@ -757,7 +757,7 @@ class AuthRoutingTests(TestCase):
         self.assertTrue(response["Location"].startswith("/login/"))
         self.assertIn("next=", response["Location"])
 
-    def test_logout_route_renders_auth_template(self):
+    def test_logout_route_redirects_to_login(self):
         user = get_user_model().objects.create_user(
             username="logout-user",
             email="logout-user@example.com",
@@ -767,9 +767,8 @@ class AuthRoutingTests(TestCase):
 
         response = self.client.post(reverse("logout"))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "inventory/auth.html")
-        self.assertEqual(response.context["page"], "logout")
+        self.assertRedirects(response, reverse("login"))
+        self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_logout_get_does_not_end_active_session(self):
         user = get_user_model().objects.create_user(

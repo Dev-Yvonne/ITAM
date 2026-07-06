@@ -85,12 +85,12 @@ class AuthLogoutView(View):
 
     def post(self, request, *args, **kwargs):
         logout(request)
-        return render(request, self.template_name, {"page": "logout"})
+        return redirect("login")
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect("dashboard")
-        return render(request, self.template_name, {"page": "logout"})
+        return redirect("login")
 
 
 # ============================================
