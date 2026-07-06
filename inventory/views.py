@@ -1048,6 +1048,9 @@ class ImportAssetCSVValidateView(LoginRequiredMixin, UserPassesTestMixin, View):
                     "valid_count": result["valid_count"],
                     "error_count": result["error_count"],
                     "column_mapping": result.get("column_mapping", {}),
+                    "has_employee_column": result.get("has_employee_column", False),
+                    "assignment_reviews": result.get("assignment_reviews", []),
+                    "employees": result.get("employees", []),
                 }
             )
         except json.JSONDecodeError:
@@ -1075,6 +1078,7 @@ class ImportAssetCSVExecuteView(LoginRequiredMixin, UserPassesTestMixin, View):
         mode = data.get("mode")
         catalog_name = data.get("catalog_name", "")
         resolutions = data.get("resolutions") or {}
+        assignment_confirmations = data.get("assignment_confirmations") or {}
 
         if mode not in {"merge", "catalog"}:
             return JsonResponse({"detail": "Import mode is required."}, status=400)
@@ -1087,6 +1091,7 @@ class ImportAssetCSVExecuteView(LoginRequiredMixin, UserPassesTestMixin, View):
                 mode=mode,
                 catalog_name=catalog_name,
                 resolutions=resolutions,
+                assignment_confirmations=assignment_confirmations,
                 user=request.user,
             )
             return JsonResponse(result)

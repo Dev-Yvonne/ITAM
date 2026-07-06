@@ -6,7 +6,7 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventory/css/components/tables.css' %}?v=14">
     <link rel="stylesheet" href="{% static 'inventory/css/components/asset-list-sections.css' %}?v=3">
-    <link rel="stylesheet" href="{% static 'inventory/css/components/asset-import.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'inventory/css/components/asset-import.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -284,6 +284,12 @@
                             </select>
                         </div>
                         <div class="import-map-row import-map-row-optional">
+                            <label for="import-map-employee">Employee <span class="import-optional">(optional)</span></label>
+                            <select id="import-map-employee">
+                                <option value="">Not mapped</option>
+                            </select>
+                        </div>
+                        <div class="import-map-row import-map-row-optional">
                             <label for="import-map-maintenance">Last maintenance date <span class="import-optional">(optional)</span></label>
                             <select id="import-map-maintenance">
                                 <option value="">Not mapped</option>
@@ -291,6 +297,13 @@
                         </div>
                     </form>
                     <div id="import-column-error" class="import-error" hidden></div>
+                </div>
+
+                <div id="import-step-assignments" class="import-step">
+                    <p class="import-summary" id="import-assignment-intro">
+                        These assets are marked as assigned. Confirm who each asset belongs to before continuing.
+                    </p>
+                    <div id="import-assignment-list" class="import-assignment-list"></div>
                 </div>
 
                 <div id="import-step-conflicts" class="import-step">
@@ -340,7 +353,7 @@
 
 {% block extra_js %}
     <script src="{% static 'inventory/js/core/background-jobs.js' %}?v=1"></script>
-    <script src="{% static 'inventory/js/modules/asset-import.js' %}?v=4"></script>
+    <script src="{% static 'inventory/js/modules/asset-import.js' %}?v=5"></script>
     <script src="{% static 'inventory/js/modules/asset-sections.js' %}?v=1"></script>
     <script src="{% static 'inventory/js/modules/assets.js' %}?v=16"></script>
     <script>

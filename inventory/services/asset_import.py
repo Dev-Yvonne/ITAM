@@ -6,7 +6,14 @@ from datetime import datetime
 from django.db import transaction
 from django.utils import timezone
 
-from inventory.models import Asset, AssetCatalog, CatalogAsset, MaintenanceLog
+from inventory.models import (
+    Asset,
+    AssetCatalog,
+    Assignment,
+    CatalogAsset,
+    Employee,
+    MaintenanceLog,
+)
 
 CSV_HEADERS = [
     "Name",
@@ -22,9 +29,23 @@ HEADER_ALIASES = {
     "serial number": "serial_number",
     "serial": "serial_number",
     "status": "status",
+    "employee": "employee",
+    "assigned to": "employee",
+    "assigned employee": "employee",
+    "assignee": "employee",
+    "employee name": "employee",
     "last maintenance date": "last_maintenance_date",
     "last maintenance": "last_maintenance_date",
 }
+
+AUTO_MAPPED_FIELDS = frozenset({
+    "name",
+    "type",
+    "serial_number",
+    "status",
+    "employee",
+    "last_maintenance_date",
+})
 
 TYPE_TO_MODEL = {
     "laptop": Asset.AssetType.LAPTOP,
@@ -122,7 +143,7 @@ def _auto_column_map(headers: list[str]) -> dict[str, int]:
     column_map = {}
     for index, header in enumerate(headers):
         key = HEADER_ALIASES.get(_normalize_header(header))
-        if key and key not in column_map:
+        if key in AUTO_MAPPED_FIELDS and key not in column_map:
             column_map[key] = index
     return column_map
 
@@ -133,6 +154,7 @@ def _fuzzy_suggest_mapping(headers: list[str], column_map: dict[str, int]) -> di
         "type": None,
         "serial_number": None,
         "status": None,
+        "employee": None,
         "last_maintenance_date": None,
     }
     for field, index in column_map.items():
@@ -143,7 +165,8 @@ def _fuzzy_suggest_mapping(headers: list[str], column_map: dict[str, int]) -> di
         "name": ("asset name", "device name", "equipment name", "product name", "item name"),
         "type": ("asset type", "device type", "category", "equipment type"),
         "serial_number": ("serial no", "serial #", "sn", "serial number", "asset tag", "tag"),
-        "status": ("asset status", "state", "condition"),
+        "status": ("asset status",),
+        "employee": ("assigned to", "assigned employee", "assignee", "employee name", "owner"),
         "last_maintenance_date": ("last service", "service date", "maintenance date"),
     }
     for header in headers:
@@ -165,6 +188,7 @@ def _column_map_from_user_mapping(headers: list[str], mapping: dict) -> dict[str
             "type",
             "serial_number",
             "status",
+            "employee",
             "last_maintenance_date",
         }:
             continue
@@ -217,6 +241,7 @@ def _parse_csv_rows(text: str, dialect: csv.Dialect, column_map: dict[str, int])
                 "type": asset_type,
                 "serial_number": serial,
                 "status": status,
+                "employee_name": cell("employee"),
                 "last_maintenance_date": _parse_maintenance_date(
                     cell("last_maintenance_date")
                 ),
@@ -274,6 +299,11 @@ def validate_csv_upload(uploaded_file, column_mapping: dict | None = None) -> di
         if index < len(headers)
     }
     conflicts = detect_serial_conflicts(rows)
+    has_employee_column = "employee" in column_map
+    assignment_payload = build_assignment_review_payload(
+        rows,
+        has_employee_column=has_employee_column,
+    )
     return {
         "ready": True,
         "rows": rows,
@@ -281,6 +311,8 @@ def validate_csv_upload(uploaded_file, column_mapping: dict | None = None) -> di
         "valid_count": len(valid_rows),
         "error_count": sum(1 for row in rows if "error" in row),
         "column_mapping": applied_mapping,
+        "has_employee_column": has_employee_column,
+        **assignment_payload,
     }
 
 
@@ -384,6 +416,87 @@ def detect_serial_conflicts(rows: list[dict]) -> list[dict]:
     return deduped
 
 
+_UNSET = object()
+
+
+def _employee_lookup() -> tuple[dict[str, Employee], dict[str, Employee]]:
+    by_name: dict[str, Employee] = {}
+    by_email: dict[str, Employee] = {}
+    for employee in Employee.objects.all().order_by("name"):
+        by_name[employee.name.strip().lower()] = employee
+        by_email[employee.email.strip().lower()] = employee
+    return by_name, by_email
+
+
+def _match_employee(value: str, by_name: dict[str, Employee], by_email: dict[str, Employee]) -> Employee | None:
+    if not value or not str(value).strip():
+        return None
+    key = str(value).strip().lower()
+    return by_name.get(key) or by_email.get(key)
+
+
+def serialize_employees_for_import() -> list[dict]:
+    return [
+        {
+            "id": employee.pk,
+            "name": employee.name,
+            "email": employee.email,
+            "department": employee.department,
+        }
+        for employee in Employee.objects.all().order_by("name")
+    ]
+
+
+def build_assignment_review_payload(rows: list[dict], *, has_employee_column: bool) -> dict:
+    by_name, by_email = _employee_lookup()
+    reviews = []
+
+    for row in rows:
+        if "error" in row or row.get("status") != Asset.AssetStatus.ASSIGNED:
+            continue
+
+        csv_employee_name = (row.get("employee_name") or "").strip()
+        suggested_employee = _match_employee(csv_employee_name, by_name, by_email)
+        source = "csv" if csv_employee_name else "system"
+
+        if not suggested_employee and not has_employee_column:
+            existing = Asset.objects.filter(
+                serial_number__iexact=row["serial_number"]
+            ).first()
+            if existing:
+                active_assignment = (
+                    Assignment.objects.filter(
+                        asset=existing,
+                        date_returned__isnull=True,
+                    )
+                    .select_related("employee")
+                    .first()
+                )
+                if active_assignment:
+                    suggested_employee = active_assignment.employee
+                    source = "system"
+
+        reviews.append(
+            {
+                "serial": row["serial_number"],
+                "asset_name": row["name"],
+                "csv_employee_name": csv_employee_name,
+                "suggested_employee_id": (
+                    suggested_employee.pk if suggested_employee else None
+                ),
+                "suggested_employee_name": (
+                    suggested_employee.name if suggested_employee else None
+                ),
+                "source": source if suggested_employee or csv_employee_name else "manual",
+            }
+        )
+
+    return {
+        "assignment_reviews": reviews,
+        "employees": serialize_employees_for_import(),
+    }
+
+
 def _unique_serial(serial: str, *, exclude_pk: int | None = None) -> str:
     candidate = serial
     suffix = 1
@@ -405,6 +518,54 @@ def _apply_maintenance_date(asset: Asset, maintenance_date):
     )
 
 
+def _apply_import_assignment(asset: Asset, employee_id: int | None) -> None:
+    if not employee_id:
+        return
+
+    employee = Employee.objects.filter(pk=employee_id).first()
+    if not employee:
+        return
+
+    Assignment.objects.filter(
+        asset=asset,
+        date_returned__isnull=True,
+    ).update(date_returned=timezone.now())
+
+    Assignment.objects.create(asset=asset, employee=employee)
+    asset.status = Asset.AssetStatus.ASSIGNED
+    asset.save(update_fields=["status"])
+
+
+def _assignment_employee_id(row: dict, assignment_confirmations: dict) -> int | None:
+    serial = row["serial_number"]
+    confirmation = assignment_confirmations.get(serial, _UNSET)
+    if confirmation is _UNSET:
+        by_name, by_email = _employee_lookup()
+        matched = _match_employee(row.get("employee_name", ""), by_name, by_email)
+        return matched.pk if matched else None
+    if confirmation in ("", "available", None):
+        return None
+    try:
+        return int(confirmation)
+    except (TypeError, ValueError):
+        return None
+
+
+def _resolve_import_status(row: dict, assignment_confirmations: dict, employee_id: int | None) -> str:
+    serial = row["serial_number"]
+    if row.get("status") != Asset.AssetStatus.ASSIGNED:
+        return row["status"]
+
+    confirmation = assignment_confirmations.get(serial, _UNSET)
+    if confirmation in ("", "available"):
+        return Asset.AssetStatus.AVAILABLE
+    if employee_id:
+        return Asset.AssetStatus.ASSIGNED
+    if confirmation is _UNSET:
+        return row["status"]
+    return Asset.AssetStatus.AVAILABLE
+
+
 @transaction.atomic
 def execute_import(
     rows: list[dict],
@@ -412,9 +573,11 @@ def execute_import(
     mode: str,
     catalog_name: str = "",
     resolutions: dict | None = None,
+    assignment_confirmations: dict | None = None,
     user=None,
 ) -> dict:
     resolutions = resolutions or {}
+    assignment_confirmations = assignment_confirmations or {}
     valid_rows = [row for row in rows if "error" not in row]
     created = 0
     updated = 0
@@ -436,12 +599,14 @@ def execute_import(
             if serial.lower() in catalog_serials:
                 serial = f"{serial}-import-{uuid.uuid4().hex[:6]}"
             catalog_serials.add(serial.lower())
+            employee_id = _assignment_employee_id(row, assignment_confirmations)
+            import_status = _resolve_import_status(row, assignment_confirmations, employee_id)
             CatalogAsset.objects.create(
                 catalog=catalog,
                 name=row["name"],
                 type=row["type"],
                 serial_number=serial,
-                status=row["status"],
+                status=import_status,
                 last_maintenance_date=row.get("last_maintenance_date"),
             )
             created += 1
@@ -463,16 +628,25 @@ def execute_import(
     for row in valid_rows:
         row = _coerce_row(row)
         serial = row["serial_number"]
+        employee_id = _assignment_employee_id(row, assignment_confirmations)
+        import_status = _resolve_import_status(row, assignment_confirmations, employee_id)
         existing = Asset.objects.filter(serial_number__iexact=serial).first()
         resolution = resolutions.get(serial, "add_new")
 
         if existing and resolution == "replace":
             existing.name = row["name"]
             existing.type = row["type"]
-            existing.status = row["status"]
+            existing.status = import_status
             existing.save(update_fields=["name", "type", "status"])
             if row.get("last_maintenance_date"):
                 _apply_maintenance_date(existing, row["last_maintenance_date"])
+            if import_status == Asset.AssetStatus.ASSIGNED:
+                _apply_import_assignment(existing, employee_id)
+            elif import_status == Asset.AssetStatus.AVAILABLE:
+                Assignment.objects.filter(
+                    asset=existing,
+                    date_returned__isnull=True,
+                ).update(date_returned=timezone.now())
             updated += 1
             continue
 
@@ -493,10 +667,12 @@ def execute_import(
             name=row["name"],
             type=row["type"],
             serial_number=serial,
-            status=row["status"],
+            status=import_status,
         )
         if row.get("last_maintenance_date"):
             _apply_maintenance_date(asset, row["last_maintenance_date"])
+        if import_status == Asset.AssetStatus.ASSIGNED:
+            _apply_import_assignment(asset, employee_id)
         created += 1
 
     return {

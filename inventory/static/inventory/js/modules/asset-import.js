@@ -9,6 +9,7 @@
         { key: 'type', selectId: 'import-map-type', required: true },
         { key: 'serial_number', selectId: 'import-map-serial', required: true },
         { key: 'status', selectId: 'import-map-status', required: false },
+        { key: 'employee', selectId: 'import-map-employee', required: false },
         { key: 'last_maintenance_date', selectId: 'import-map-maintenance', required: false }
     ];
 
@@ -21,7 +22,11 @@
         pendingFile: null,
         headers: [],
         columnMapping: {},
-        suggestedMapping: {}
+        suggestedMapping: {},
+        assignmentReviews: [],
+        employees: [],
+        assignmentConfirmations: {},
+        hasEmployeeColumn: false
     };
 
     var els = {};
@@ -51,6 +56,8 @@
         els.uploadError = document.getElementById('import-upload-error');
         els.columnList = document.getElementById('import-column-list');
         els.columnError = document.getElementById('import-column-error');
+        els.assignmentList = document.getElementById('import-assignment-list');
+        els.assignmentIntro = document.getElementById('import-assignment-intro');
         els.conflictList = document.getElementById('import-conflict-list');
         els.catalogNameWrap = document.getElementById('import-catalog-name-wrap');
         els.catalogNameInput = document.getElementById('import-catalog-name');
@@ -70,6 +77,8 @@
         els.doneBtn.hidden = stepId !== 'import-step-success';
 
         if (stepId === 'import-step-columns') {
+            els.nextBtn.textContent = 'Continue';
+        } else if (stepId === 'import-step-assignments') {
             els.nextBtn.textContent = 'Continue';
         } else if (stepId === 'import-step-conflicts') {
             els.nextBtn.textContent = 'Continue';
@@ -104,6 +113,10 @@
         state.headers = [];
         state.columnMapping = {};
         state.suggestedMapping = {};
+        state.assignmentReviews = [];
+        state.employees = [];
+        state.assignmentConfirmations = {};
+        state.hasEmployeeColumn = false;
         if (els.uploadError) els.uploadError.hidden = true;
         if (els.columnError) els.columnError.hidden = true;
         if (els.fileInput) els.fileInput.value = '';
@@ -153,13 +166,35 @@
         state.conflicts = result.data.conflicts || [];
         state.resolutions = {};
         state.columnMapping = result.data.column_mapping || {};
+        state.assignmentReviews = result.data.assignment_reviews || [];
+        state.employees = result.data.employees || [];
+        state.hasEmployeeColumn = Boolean(result.data.has_employee_column);
+        state.assignmentConfirmations = {};
         updateSummary(result.data);
+        proceedAfterValidation();
+    }
+
+    function proceedAfterValidation() {
         if (state.conflicts.length) {
             renderConflicts();
             showStep('import-step-conflicts');
-        } else {
-            showStep('import-step-destination');
+            return;
         }
+        if (state.assignmentReviews.length) {
+            renderAssignments();
+            showStep('import-step-assignments');
+            return;
+        }
+        showStep('import-step-destination');
+    }
+
+    function proceedAfterConflicts() {
+        if (state.assignmentReviews.length) {
+            renderAssignments();
+            showStep('import-step-assignments');
+            return;
+        }
+        showStep('import-step-destination');
     }
 
     function uploadFile(file, columnMapping) {
@@ -259,6 +294,71 @@
         uploadFile(state.pendingFile, mapping);
     }
 
+    function renderAssignments() {
+        if (!els.assignmentList) return;
+
+        if (els.assignmentIntro) {
+            els.assignmentIntro.textContent = state.hasEmployeeColumn
+                ? 'These assets are marked as assigned in your file. Confirm each asset is linked to the correct employee.'
+                : 'These assets are marked as assigned. Link each one to an employee currently in the system.';
+        }
+
+        els.assignmentList.innerHTML = state.assignmentReviews.map(function(review) {
+            var message = '';
+            if (review.source === 'csv' && review.csv_employee_name) {
+                message = 'File lists <strong>' + escapeHtml(review.csv_employee_name) + '</strong> for this asset.';
+                if (review.suggested_employee_name &&
+                    review.suggested_employee_name.toLowerCase() !== review.csv_employee_name.toLowerCase()) {
+                    message += ' Matched to <strong>' + escapeHtml(review.suggested_employee_name) + '</strong> in the system.';
+                } else if (!review.suggested_employee_name) {
+                    message += ' Select the matching employee below.';
+                }
+            } else if (review.source === 'system' && review.suggested_employee_name) {
+                message = 'Currently assigned to <strong>' + escapeHtml(review.suggested_employee_name) + '</strong> in the system. Confirm or change below.';
+            } else {
+                message = 'Select the employee this asset should be assigned to.';
+            }
+
+            var options = [];
+            if (!review.suggested_employee_id) {
+                options.push('<option value="">Select employee</option>');
+            }
+            options.push('<option value="available">Import as Available (no assignment)</option>');
+            state.employees.forEach(function(employee) {
+                var selected = String(review.suggested_employee_id) === String(employee.id) ? ' selected' : '';
+                options.push(
+                    '<option value="' + employee.id + '"' + selected + '>' +
+                    escapeHtml(employee.name) + ' · ' + escapeHtml(employee.email) +
+                    '</option>'
+                );
+            });
+
+            return '<div class="import-assignment-card" data-serial="' + escapeHtml(review.serial) + '">' +
+                '<h4>' + escapeHtml(review.asset_name) + ' · ' + escapeHtml(review.serial) + '</h4>' +
+                '<p>' + message + '</p>' +
+                '<select class="import-assignment-select" aria-label="Employee for ' + escapeHtml(review.asset_name) + '">' +
+                    options.join('') +
+                '</select>' +
+            '</div>';
+        }).join('');
+
+        els.assignmentList.querySelectorAll('.import-assignment-select').forEach(function(select) {
+            var card = select.closest('.import-assignment-card');
+            var serial = card.getAttribute('data-serial');
+            state.assignmentConfirmations[serial] = select.value;
+            select.addEventListener('change', function() {
+                state.assignmentConfirmations[serial] = select.value;
+            });
+        });
+    }
+
+    function allAssignmentsResolved() {
+        return state.assignmentReviews.every(function(review) {
+            var value = state.assignmentConfirmations[review.serial];
+            return value !== undefined && value !== null && value !== '';
+        });
+    }
+
     function updateSummary(data) {
         var summary = document.getElementById('import-parse-summary');
         if (!summary) return;
@@ -338,7 +438,8 @@
             rows: state.rows,
             mode: state.mode,
             catalog_name: state.catalogName,
-            resolutions: state.resolutions
+            resolutions: state.resolutions,
+            assignment_confirmations: state.assignmentConfirmations
         };
 
         fetch(els.modal.dataset.executeUrl, {
@@ -533,6 +634,17 @@
             } else if (active.id === 'import-step-conflicts') {
                 if (!allConflictsResolved()) {
                     toast('Please resolve all serial conflicts before continuing.', 'warning');
+                    return;
+                }
+                proceedAfterConflicts();
+            } else if (active.id === 'import-step-assignments') {
+                els.assignmentList.querySelectorAll('.import-assignment-card').forEach(function(card) {
+                    var serial = card.getAttribute('data-serial');
+                    var select = card.querySelector('.import-assignment-select');
+                    state.assignmentConfirmations[serial] = select ? select.value : '';
+                });
+                if (!allAssignmentsResolved()) {
+                    toast('Please confirm an employee for each assigned asset.', 'warning');
                     return;
                 }
                 showStep('import-step-destination');

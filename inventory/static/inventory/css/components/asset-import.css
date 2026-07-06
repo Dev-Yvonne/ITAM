@@ -446,6 +446,54 @@ body.import-modal-open {
     border-color: rgba(59, 130, 246, 0.25);
 }
 
+.import-assignment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.import-assignment-card {
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-md, 8px);
+    padding: 0.85rem;
+    background: rgba(248, 250, 252, 0.7);
+}
+
+[data-theme="dark"] .import-assignment-card {
+    background: rgba(15, 23, 42, 0.35);
+    border-color: var(--border-color, #334155);
+}
+
+.import-assignment-card h4 {
+    margin: 0 0 0.35rem;
+    font-size: 0.88rem;
+    color: var(--text-primary, #1e293b);
+}
+
+.import-assignment-card p {
+    margin: 0 0 0.65rem;
+    font-size: 0.78rem;
+    color: var(--text-secondary, #64748b);
+}
+
+.import-assignment-card select {
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border-radius: var(--radius-md, 8px);
+    border: 1px solid var(--border-color, #e2e8f0);
+    background: var(--bg-card, #ffffff);
+    color: var(--text-primary, #1e293b);
+    font-size: 0.82rem;
+}
+
+[data-theme="dark"] .import-assignment-card select {
+    background: var(--bg-card, #1e293b);
+    border-color: var(--border-color, #334155);
+}
+
 .import-column-detected {
     margin-bottom: 1rem;
 }
