@@ -409,71 +409,6 @@
     cursor: pointer;
 }
 
-/* Utilization Ring */
-.insight-ring-wrap {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 0.5rem;
-}
-
-.insight-ring {
-    --progress: 0%;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: conic-gradient(
-        var(--primary-500, #3b82f6) 0deg,
-        var(--primary-500, #3b82f6) calc(var(--progress) * 3.6),
-        var(--border-color, #e2e8f0) calc(var(--progress) * 3.6)
-    );
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.8s ease;
-}
-
-[data-theme="dark"] .insight-ring {
-    background: conic-gradient(
-        var(--primary-400, #60a5fa) 0deg,
-        var(--primary-400, #60a5fa) calc(var(--progress) * 3.6),
-        var(--border-color, #334155) calc(var(--progress) * 3.6)
-    );
-}
-
-.insight-ring-inner {
-    width: 62px;
-    height: 62px;
-    border-radius: 50%;
-    background: var(--bg-card, #ffffff);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    line-height: var(--line-height-tight, 1.1);
-}
-
-[data-theme="dark"] .insight-ring-inner {
-    background: var(--bg-card, #1e293b);
-}
-
-.insight-ring-value {
-    font-size: var(--font-size-base, 1rem);
-    font-weight: var(--font-weight-bold, 700);
-    color: var(--text-primary, #1e293b);
-}
-
-[data-theme="dark"] .insight-ring-value {
-    color: var(--text-primary, #f1f5f9);
-}
-
-.insight-ring-label {
-    font-size: var(--font-size-xs, 0.55rem);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted, #94a3b8);
-    font-weight: var(--font-weight-semibold, 600);
-}
-
 /* Insight Metrics */
 .insight-metric {
     display: flex;
@@ -959,20 +894,6 @@
     
     .overdue-grid {
         grid-template-columns: 1fr;
-    }
-    
-    .insight-ring {
-        width: 64px;
-        height: 64px;
-    }
-    
-    .insight-ring-inner {
-        width: 48px;
-        height: 48px;
-    }
-    
-    .insight-ring-value {
-        font-size: var(--font-size-sm, 0.85rem);
     }
     
     .insight-metric-value {

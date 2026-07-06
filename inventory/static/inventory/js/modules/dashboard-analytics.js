@@ -88,11 +88,8 @@
     }
 
     function updateInsights(data) {
-        var rate = data.utilization_rate || 0;
-        var ring = document.getElementById('utilization-ring');
         var utilization = document.getElementById('utilization-rate-value');
-        if (ring) ring.style.setProperty('--progress', rate + '%');
-        if (utilization) utilization.textContent = rate + '%';
+        if (utilization) utilization.textContent = (data.utilization_rate || 0) + '%';
 
         var employees = document.getElementById('employee-count-value');
         if (employees) employees.textContent = data.employee_count;

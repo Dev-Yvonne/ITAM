@@ -4,7 +4,7 @@
 {% block title %}Dashboard - {{ itam_product_name }}{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard.css' %}?v=9">
+    <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard.css' %}?v=10">
     <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard-analytics.css' %}?v=1">
 {% endblock %}
 
@@ -71,18 +71,15 @@
             </div>
             <div class="insight-spotlight" id="insight-spotlight">
                 <div class="insight-card insight-utilization">
-                    <div class="insight-ring-wrap">
-                        <div class="insight-ring" id="utilization-ring" style="--progress: {{ utilization_rate|default:0 }}%">
-                            <div class="insight-ring-inner">
-                                <span class="insight-ring-value" id="utilization-rate-value">{{ utilization_rate|default:0 }}%</span>
-                                <span class="insight-ring-label">Utilization</span>
-                            </div>
-                        </div>
+                    <div class="insight-metric">
+                        <span class="insight-metric-value" id="utilization-rate-value">{{ utilization_rate|default:0 }}%</span>
+                        <span class="insight-metric-unit">utilized</span>
                     </div>
                     <div class="insight-meta">
                         <h3>Asset Utilization</h3>
                         <p>Share of fleet currently assigned to employees</p>
                     </div>
+                    <i class="fas fa-chart-pie insight-card-icon"></i>
                 </div>
 
                 <a href="{% url 'employee_list' %}" class="insight-card insight-employees insight-card-link">
@@ -279,7 +276,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="{% static 'inventory/js/core/background-jobs.js' %}?v=1"></script>
     <script src="{% static 'inventory/js/core/chart-core.js' %}?v=1"></script>
-    <script src="{% static 'inventory/js/modules/dashboard-analytics.js' %}?v=2"></script>
+    <script src="{% static 'inventory/js/modules/dashboard-analytics.js' %}?v=3"></script>
     <script src="{% static 'inventory/js/modules/dashboard.js' %}?v=6"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
