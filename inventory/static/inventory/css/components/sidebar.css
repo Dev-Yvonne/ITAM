@@ -36,7 +36,6 @@
     min-height: 70px;
 }
 
-/* Brand Icon (Font Awesome) - Kept for compatibility */
 .brand-icon {
     font-size: 1.5rem;
     color: var(--primary-400, #60a5fa);
@@ -52,7 +51,6 @@
     color: #60a5fa;
 }
 
-/* Brand SVG Logo - New style */
 .brand-svg {
     width: 40px;
     height: 40px;
@@ -76,7 +74,6 @@
     color: #ffffff !important;
 }
 
-/* Ensure brand text is always white in dark mode */
 [data-theme="dark"] .sidebar-brand .brand-text {
     color: #ffffff !important;
 }
@@ -92,6 +89,7 @@
     padding: var(--spacing-3, 0.85rem);
     border-radius: var(--radius-lg, 12px);
     background: rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
 }
 
 [data-theme="dark"] .sidebar-employee-info {
@@ -115,6 +113,7 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
+    overflow: hidden;
 }
 
 .employee-name {
@@ -122,6 +121,9 @@
     font-weight: var(--font-weight-semibold, 600);
     font-size: var(--font-size-sm, 0.875rem);
     line-height: var(--line-height-tight, 1.2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 [data-theme="dark"] .employee-name {
@@ -141,14 +143,42 @@
 }
 
 /* ==========================================
-   SIDEBAR NAVIGATION
+   SIDEBAR NAVIGATION - FIXED SCROLLING
    ========================================== */
 .sidebar-nav {
     flex: 1;
     padding: var(--spacing-3, 0.75rem) var(--spacing-2, 0.5rem);
     overflow-y: auto;
+    overflow-x: hidden;
     list-style: none;
     margin: 0;
+    min-height: 0; /* Important for flex scrolling */
+}
+
+/* Custom scrollbar for sidebar nav */
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="dark"] .sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-item {
@@ -259,12 +289,32 @@
 }
 
 /* ==========================================
-   SIDEBAR BOTTOM
+   SIDEBAR BOTTOM - FIXED POSITION
    ========================================== */
 .sidebar-bottom {
     margin-top: auto;
     padding: var(--spacing-2, 0.5rem) var(--spacing-2, 0.5rem) var(--spacing-3, 0.75rem);
     flex-shrink: 0;
+    background: inherit;
+    position: relative;
+    z-index: 2;
+}
+
+/* Add subtle gradient at bottom to indicate scrollable content */
+.sidebar-bottom::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(to bottom, transparent, var(--bg-navbar, #1a2332));
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+[data-theme="dark"] .sidebar-bottom::before {
+    background: linear-gradient(to bottom, transparent, #0a0f1a);
 }
 
 .sidebar-divider {
@@ -407,7 +457,7 @@
 }
 
 /* ==========================================
-   SIDEBAR OVERLAY - Blurs only main content (not topbar)
+   SIDEBAR OVERLAY
    ========================================== */
 .sidebar-overlay {
     position: fixed;
@@ -436,7 +486,6 @@
     -webkit-backdrop-filter: blur(3px);
 }
 
-/* Dark mode overlay */
 [data-theme="dark"] .sidebar-overlay.active {
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(5px);
@@ -444,7 +493,7 @@
 }
 
 /* ==========================================
-   MAIN WRAPPER - Positioned below overlay
+   MAIN WRAPPER
    ========================================== */
 .main-wrapper {
     position: relative;
@@ -456,7 +505,7 @@
    ========================================== */
 .topbar {
     position: sticky;
-    z-index: 1002; /* Above overlay (1000) and sidebar (1001) */
+    z-index: 1002;
 }
 
 /* ==========================================
@@ -481,9 +530,213 @@
         z-index: 1000;
     }
     
-    /* Topbar stays above overlay */
     .topbar {
         z-index: 1002;
+    }
+    
+    /* Reduce padding on mobile to fit more items */
+    .sidebar-brand {
+        padding: var(--spacing-4, 1rem) var(--spacing-4, 1rem);
+        min-height: 60px;
+    }
+    
+    .sidebar-employee-info {
+        padding: var(--spacing-2, 0.6rem) var(--spacing-3, 0.75rem);
+        margin: 0 var(--spacing-2, 0.5rem) var(--spacing-2, 0.5rem);
+    }
+    
+    .employee-avatar-small {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .sidebar-nav {
+        padding: var(--spacing-2, 0.5rem) var(--spacing-2, 0.5rem);
+    }
+    
+    .sidebar-link {
+        padding: var(--spacing-2, 0.5rem) var(--spacing-2, 0.65rem);
+        font-size: var(--font-size-sm, 0.8rem);
+    }
+    
+    .sidebar-nav-bottom .sidebar-link {
+        padding: var(--spacing-2, 0.5rem) var(--spacing-2, 0.65rem);
+    }
+    
+    .sidebar-bottom {
+        padding: var(--spacing-2, 0.4rem) var(--spacing-2, 0.5rem) var(--spacing-2, 0.6rem);
+    }
+}
+
+/* ==========================================
+   RESPONSIVE - Small Mobile
+   ========================================== */
+@media (max-width: 480px) {
+    .sidebar {
+        width: 260px;
+    }
+    
+    .sidebar-brand {
+        padding: var(--spacing-3, 0.75rem) var(--spacing-3, 0.75rem);
+        min-height: 50px;
+    }
+    
+    .brand-text {
+        font-size: var(--font-size-base, 1rem);
+    }
+    
+    .brand-icon {
+        font-size: 1.2rem;
+        width: 32px;
+        height: 32px;
+    }
+    
+    .brand-svg {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .sidebar-employee-info {
+        padding: var(--spacing-2, 0.5rem) var(--spacing-2, 0.6rem);
+        margin: 0 var(--spacing-2, 0.4rem) var(--spacing-2, 0.4rem);
+    }
+    
+    .employee-avatar-small {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .employee-name {
+        font-size: var(--font-size-xs, 0.75rem);
+    }
+    
+    .employee-role-badge {
+        font-size: var(--font-size-xs, 0.6rem);
+    }
+    
+    .sidebar-nav {
+        padding: var(--spacing-2, 0.3rem) var(--spacing-2, 0.3rem);
+    }
+    
+    .sidebar-link {
+        padding: var(--spacing-1, 0.4rem) var(--spacing-2, 0.5rem);
+        font-size: var(--font-size-xs, 0.75rem);
+        gap: var(--spacing-2, 0.5rem);
+    }
+    
+    .sidebar-link .sidebar-icon {
+        font-size: var(--font-size-sm, 0.85rem);
+        width: 18px;
+        height: 18px;
+    }
+    
+    .sidebar-label {
+        font-size: var(--font-size-xs, 0.75rem);
+    }
+    
+    .sidebar-nav-bottom .sidebar-link {
+        padding: var(--spacing-1, 0.4rem) var(--spacing-2, 0.5rem);
+        font-size: var(--font-size-xs, 0.75rem);
+    }
+    
+    .sidebar-bottom {
+        padding: var(--spacing-2, 0.3rem) var(--spacing-2, 0.3rem) var(--spacing-2, 0.4rem);
+    }
+    
+    .sidebar-version {
+        font-size: var(--font-size-xs, 0.5rem);
+        padding-top: 0.2rem;
+    }
+    
+    .sidebar-divider {
+        margin: 0.1rem var(--spacing-1, 0.3rem) 0.2rem;
+    }
+}
+
+/* ==========================================
+   RESPONSIVE - Landscape Mobile
+   ========================================== */
+@media (max-height: 600px) and (orientation: landscape) {
+    .sidebar {
+        width: 220px;
+    }
+    
+    .sidebar-brand {
+        padding: var(--spacing-2, 0.5rem) var(--spacing-3, 0.75rem);
+        min-height: 45px;
+    }
+    
+    .brand-text {
+        font-size: var(--font-size-sm, 0.85rem);
+    }
+    
+    .brand-icon {
+        font-size: 1rem;
+        width: 28px;
+        height: 28px;
+    }
+    
+    .brand-svg {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .sidebar-employee-info {
+        padding: var(--spacing-1, 0.3rem) var(--spacing-2, 0.5rem);
+        margin: 0 var(--spacing-2, 0.4rem) var(--spacing-1, 0.3rem);
+    }
+    
+    .employee-avatar-small {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .employee-name {
+        font-size: var(--font-size-xs, 0.7rem);
+    }
+    
+    .employee-role-badge {
+        font-size: var(--font-size-xs, 0.55rem);
+    }
+    
+    .sidebar-nav {
+        padding: var(--spacing-1, 0.2rem) var(--spacing-1, 0.3rem);
+    }
+    
+    .sidebar-link {
+        padding: var(--spacing-1, 0.25rem) var(--spacing-1, 0.4rem);
+        font-size: var(--font-size-xs, 0.7rem);
+        gap: var(--spacing-2, 0.4rem);
+        border-radius: var(--radius-sm, 4px);
+    }
+    
+    .sidebar-link .sidebar-icon {
+        font-size: var(--font-size-sm, 0.75rem);
+        width: 16px;
+        height: 16px;
+    }
+    
+    .sidebar-label {
+        font-size: var(--font-size-xs, 0.7rem);
+    }
+    
+    .sidebar-bottom {
+        padding: var(--spacing-1, 0.2rem) var(--spacing-1, 0.3rem) var(--spacing-1, 0.3rem);
+    }
+    
+    .sidebar-nav-bottom .sidebar-link {
+        padding: var(--spacing-1, 0.25rem) var(--spacing-1, 0.4rem);
+        font-size: var(--font-size-xs, 0.7rem);
+    }
+    
+    .sidebar-version {
+        font-size: var(--font-size-xs, 0.45rem);
+        padding-top: 0.1rem;
+        margin-top: 0.05rem;
+    }
+    
+    .sidebar-divider {
+        margin: 0.05rem var(--spacing-1, 0.2rem) 0.1rem;
     }
 }
 
