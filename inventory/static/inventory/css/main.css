@@ -352,7 +352,10 @@ main {
 }
 
 .sidebar-nav-bottom .logout-form .logout-submit {
-    display: contents;
+    display: flex;
+    align-items: center;
+    gap: inherit;
+    width: 100%;
     border: none;
     background: none !important;
     padding: 0;
@@ -364,6 +367,7 @@ main {
     -webkit-appearance: none;
     box-shadow: none;
     min-height: 0;
+    text-align: left;
 }
 
 .sidebar-nav-bottom .logout-form.sidebar-logout:hover,
