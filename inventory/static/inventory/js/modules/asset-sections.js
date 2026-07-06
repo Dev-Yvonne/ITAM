@@ -40,6 +40,26 @@
         return bulkHead + columns + actionsHead;
     }
 
+    function tdName(value) {
+        return '<td class="col-name"><span class="asset-name-text">' + escapeHtml(value) + '</span></td>';
+    }
+
+    function tdType(value) {
+        return '<td class="col-type">' + escapeHtml(value) + '</td>';
+    }
+
+    function tdAssignee(value) {
+        return '<td class="col-assignee">' + escapeHtml(value) + '</td>';
+    }
+
+    function tdDetail(value) {
+        return '<td class="col-detail">' + escapeHtml(value) + '</td>';
+    }
+
+    function openTable() {
+        return '<div class="table-wrapper asset-section-table"><table class="asset-table asset-table-compact"><thead><tr>';
+    }
+
     function rowMenuCell(assetPk, label, status) {
         if (!window.AssetRowMenu) {
             return '';
@@ -77,15 +97,13 @@
         if (!rows.length) {
             return html + '<div class="asset-section-empty">No assets are currently assigned.</div></section>';
         }
-        html += '<div class="table-wrapper asset-section-table"><table><thead><tr>' +
-            tableHead('<th>Asset Name</th><th>Type</th><th>Assignee</th>') +
+        html += openTable() +
+            tableHead('<th class="col-name">Asset Name</th><th class="col-type">Type</th><th class="col-assignee">Assignee</th>') +
             '</tr></thead><tbody>';
         rows.forEach(function(row) {
             html += clickableRow(
                 row.asset_pk,
-                '<td><span class="asset-name-text">' + escapeHtml(row.name) + '</span></td>' +
-                    '<td>' + escapeHtml(row.type) + '</td>' +
-                    '<td>' + escapeHtml(row.assignee) + '</td>',
+                tdName(row.name) + tdType(row.type) + tdAssignee(row.assignee),
                 row.name,
                 'Assigned'
             );
@@ -98,14 +116,13 @@
         if (!rows.length) {
             return html + '<div class="asset-section-empty">No available assets right now.</div></section>';
         }
-        html += '<div class="table-wrapper asset-section-table"><table><thead><tr>' +
-            tableHead('<th>Asset Name</th><th>Type</th>') +
+        html += openTable() +
+            tableHead('<th class="col-name">Asset Name</th><th class="col-type">Type</th>') +
             '</tr></thead><tbody>';
         rows.forEach(function(row) {
             html += clickableRow(
                 row.asset_pk,
-                '<td><span class="asset-name-text">' + escapeHtml(row.name) + '</span></td>' +
-                    '<td>' + escapeHtml(row.type) + '</td>',
+                tdName(row.name) + tdType(row.type),
                 row.name,
                 'Available'
             );
@@ -118,17 +135,23 @@
         if (!rows.length) {
             return html + '<div class="asset-section-empty">No assets are currently under maintenance.</div></section>';
         }
-        html += '<div class="table-wrapper asset-section-table"><table><thead><tr>' +
-            tableHead('<th>Asset Name</th><th>Type</th><th>Repair Shop</th><th>Maintenance Worker Contact</th><th>Period Till Full Repair</th>') +
+        html += openTable() +
+            tableHead(
+                '<th class="col-name">Asset Name</th>' +
+                '<th class="col-type">Type</th>' +
+                '<th class="col-detail">Repair Shop</th>' +
+                '<th class="col-detail">Maintenance Worker Contact</th>' +
+                '<th class="col-detail">Period Till Full Repair</th>'
+            ) +
             '</tr></thead><tbody>';
         rows.forEach(function(row) {
             html += clickableRow(
                 row.asset_pk,
-                '<td><span class="asset-name-text">' + escapeHtml(row.name) + '</span></td>' +
-                    '<td>' + escapeHtml(row.type) + '</td>' +
-                    '<td>' + escapeHtml(row.repair_shop) + '</td>' +
-                    '<td>' + escapeHtml(row.worker_contact) + '</td>' +
-                    '<td>' + escapeHtml(row.repair_period) + '</td>',
+                tdName(row.name) +
+                    tdType(row.type) +
+                    tdDetail(row.repair_shop) +
+                    tdDetail(row.worker_contact) +
+                    tdDetail(row.repair_period),
                 row.name,
                 'Under Maintenance'
             );
@@ -141,14 +164,13 @@
         if (!rows.length) {
             return html + '<div class="asset-section-empty">No ' + title.toLowerCase() + ' found.</div></section>';
         }
-        html += '<div class="table-wrapper asset-section-table"><table><thead><tr>' +
-            tableHead('<th>Asset Name</th><th>Type</th>') +
+        html += openTable() +
+            tableHead('<th class="col-name">Asset Name</th><th class="col-type">Type</th>') +
             '</tr></thead><tbody>';
         rows.forEach(function(row) {
             html += clickableRow(
                 row.asset_pk,
-                '<td><span class="asset-name-text">' + escapeHtml(row.name) + '</span></td>' +
-                    '<td>' + escapeHtml(row.type) + '</td>',
+                tdName(row.name) + tdType(row.type),
                 row.name,
                 row.status
             );

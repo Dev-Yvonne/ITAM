@@ -5,7 +5,7 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventory/css/components/tables.css' %}?v=14">
-    <link rel="stylesheet" href="{% static 'inventory/css/components/asset-list-sections.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'inventory/css/components/asset-list-sections.css' %}?v=7">
     <link rel="stylesheet" href="{% static 'inventory/css/components/asset-import.css' %}?v=6">
 {% endblock %}
 
@@ -52,7 +52,7 @@
                     <span class="asset-section-count">{{ catalog.asset_count }} item{{ catalog.asset_count|pluralize }}</span>
                 </div>
                 <div class="table-wrapper asset-section-table">
-                    <table class="asset-table">
+                    <table class="asset-table asset-table-compact">
                         <thead>
                             <tr>
                                 {% if user_is_admin %}
@@ -60,10 +60,8 @@
                                     <input type="checkbox" class="asset-bulk-checkbox-all" data-bulk-select="true" aria-label="Select all assets in this table">
                                 </th>
                                 {% endif %}
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Last Maintenance</th>
-                                <th>Imported</th>
+                                <th class="col-name">Name</th>
+                                <th class="col-type">Type</th>
                                 <th scope="col" class="actions-col">Actions</th>
                             </tr>
                         </thead>
@@ -75,6 +73,8 @@
                                     data-catalog-name="{{ asset.name }}"
                                     data-catalog-type="{{ asset.type }}"
                                     data-catalog-status="{{ asset.status }}"
+                                    data-last-maintenance="{{ asset.last_maintenance_date|date:'M d, Y'|default:'' }}"
+                                    data-imported-at="{{ asset.imported_at|date:'M d, Y'|default:'' }}"
                                     tabindex="0"
                                     role="button"
                                     aria-label="View details for {{ asset.name }}">
@@ -87,15 +87,13 @@
                                         <td class="asset-bulk-select-col asset-bulk-select-empty" data-row-action="true" aria-hidden="true"></td>
                                         {% endif %}
                                     {% endif %}
-                                    <td><span class="asset-name-text">{{ asset.name }}</span></td>
-                                    <td>{{ asset.type }}</td>
-                                    <td class="date-cell">{{ asset.last_maintenance_date|default:"—" }}</td>
-                                    <td class="date-cell">{{ asset.imported_at|default:"—" }}</td>
+                                    <td class="col-name"><span class="asset-name-text">{{ asset.name }}</span></td>
+                                    <td class="col-type">{{ asset.type }}</td>
                                     {% include "inventory/includes/asset_row_actions.html" with asset_id=asset.linked_asset_id asset_name=asset.name asset_status=asset.status %}
                                 </tr>
                             {% empty %}
                                 <tr>
-                                    <td colspan="{% if user_is_admin %}6{% else %}5{% endif %}" class="empty-state">No assets in this directory.</td>
+                                    <td colspan="{% if user_is_admin %}4{% else %}3{% endif %}" class="empty-state">No assets in this directory.</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -114,7 +112,7 @@
             <span class="asset-section-count">{{ page_obj.paginator.count|default:assets|length }} item{{ page_obj.paginator.count|default:assets|length|pluralize }}</span>
         </div>
         <div class="table-wrapper asset-section-table">
-            <table class="asset-table">
+            <table class="asset-table asset-table-compact">
                 <thead>
                     <tr>
                         {% if user_is_admin %}
@@ -122,9 +120,9 @@
                             <input type="checkbox" class="asset-bulk-checkbox-all" data-bulk-select="true" aria-label="Select all assets in this table">
                         </th>
                         {% endif %}
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Assignee</th>
+                        <th class="col-name">Name</th>
+                        <th class="col-type">Type</th>
+                        <th class="col-assignee">Assignee</th>
                         <th scope="col" class="actions-col">Actions</th>
                     </tr>
                 </thead>
@@ -136,9 +134,9 @@
                                 <input type="checkbox" class="asset-bulk-checkbox" data-bulk-select="true" data-asset-id="{{ asset.pk }}" aria-label="Select {{ asset.name }}">
                             </td>
                             {% endif %}
-                            <td><span class="asset-name-text">{{ asset.name }}</span></td>
-                            <td>{{ asset.type }}</td>
-                            <td>
+                            <td class="col-name"><span class="asset-name-text">{{ asset.name }}</span></td>
+                            <td class="col-type">{{ asset.type }}</td>
+                            <td class="col-assignee">
                                 {% if asset.assigned_employee_name %}
                                     <div class="assignee-cell">
                                         <span class="assignee-name">{{ asset.assigned_employee_name }}</span>
@@ -371,8 +369,8 @@
     <script src="{% static 'inventory/js/modules/asset-bulk-select.js' %}?v=1"></script>
     <script src="{% static 'inventory/js/modules/asset-row-menu.js' %}?v=2"></script>
     <script src="{% static 'inventory/js/modules/asset-table-expand.js' %}?v=2"></script>
-    <script src="{% static 'inventory/js/modules/asset-sections.js' %}?v=9"></script>
-    <script src="{% static 'inventory/js/modules/assets.js' %}?v=25"></script>
+    <script src="{% static 'inventory/js/modules/asset-sections.js' %}?v=10"></script>
+    <script src="{% static 'inventory/js/modules/assets.js' %}?v=26"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (window.AssetBulkSelect && typeof window.AssetBulkSelect.init === 'function') {

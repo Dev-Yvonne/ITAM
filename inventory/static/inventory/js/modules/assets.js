@@ -173,9 +173,9 @@
         return (
             '<tr class="asset-table-row" data-asset-id="' + encodeURIComponent(asset.id) + '" tabindex="0" role="button" aria-label="View details for ' + escapeHtml(asset.name) + '">' +
                 bulkRowHtml(asset.id, asset.name) +
-                '<td><span class="asset-name-text">' + escapeHtml(asset.name) + '</span></td>' +
-                '<td>' + escapeHtml(asset.type) + '</td>' +
-                '<td>' + assignee + '</td>' +
+                '<td class="col-name"><span class="asset-name-text">' + escapeHtml(asset.name) + '</span></td>' +
+                '<td class="col-type">' + escapeHtml(asset.type) + '</td>' +
+                '<td class="col-assignee">' + assignee + '</td>' +
                 (window.AssetRowMenu
                     ? window.AssetRowMenu.cellHtml(asset.id, asset.name, {
                         canAssign: window.AssetRowMenu.canAssignAsset(asset)
@@ -325,11 +325,19 @@
                 escapeHtml(row.dataset.catalogStatus || '') + '</span>';
         }
         if (body) {
+            var maintenanceField = row.dataset.lastMaintenance
+                ? detailField('Last Maintenance', row.dataset.lastMaintenance)
+                : '';
+            var importedField = row.dataset.importedAt
+                ? detailField('Imported', row.dataset.importedAt)
+                : '';
             body.innerHTML =
                 '<div class="asset-detail-grid">' +
                     detailField('Type', row.dataset.catalogType) +
                     detailField('Serial Number', row.dataset.serialNumber, true) +
                     detailField('Status', row.dataset.catalogStatus) +
+                    maintenanceField +
+                    importedField +
                 '</div>' +
                 '<section class="asset-detail-section">' +
                     '<p class="asset-detail-empty">This catalog entry is not linked to a live inventory asset yet.</p>' +
