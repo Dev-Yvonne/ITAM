@@ -174,22 +174,38 @@ urlpatterns = [
     path('employee/asset/<int:pk>/return/', views.EmployeeReturnRequestView.as_view(), name='employee_return_request'),
     
     # ==========================================
-    # EMPLOYEE NOTIFICATIONS - FIXED
+    # EMPLOYEE NOTIFICATIONS (legacy redirect)
     # ==========================================
-    path('employee/notifications/', views.EmployeeNotificationsView.as_view(), name='employee_notifications'),
+    path(
+        "employee/notifications/",
+        RedirectView.as_view(pattern_name="employee_dashboard", permanent=False),
+        name="employee_notifications",
+    ),
     path('employee/notifications/<int:pk>/mark-read/', views.EmployeeMarkNotificationReadView.as_view(), name='employee_mark_notification_read'),
     path('employee/notifications/mark-all-read/', views.EmployeeMarkAllNotificationsReadView.as_view(), name='employee_mark_all_notifications_read'),
     
     # ==========================================
     # EMPLOYEE PROFILE & SETTINGS
     # ==========================================
-    path('employee/profile/', views.EmployeeProfileView.as_view(), name='employee_profile'),
+    path(
+        "employee/profile/",
+        RedirectView.as_view(pattern_name="employee_settings", permanent=False),
+        name="employee_profile",
+    ),
     path('employee/settings/', views.EmployeeSettingsView.as_view(), name='employee_settings'),
     path('employee/settings/password/', views.EmployeePasswordChangeView.as_view(), name='employee_password_change'),
     
     # ==========================================
-    # EMPLOYEE HISTORY & RETURNS
+    # EMPLOYEE HISTORY & RETURNS (legacy redirects)
     # ==========================================
-    path('employee/history/', views.EmployeeHistoryView.as_view(), name='employee_history'),
-    path('employee/returns/', views.EmployeeReturnsView.as_view(), name='employee_returns'),
+    path(
+        "employee/history/",
+        RedirectView.as_view(pattern_name="employee_dashboard", permanent=False),
+        name="employee_history",
+    ),
+    path(
+        "employee/returns/",
+        RedirectView.as_view(pattern_name="employee_dashboard", permanent=False),
+        name="employee_returns",
+    ),
 ]
