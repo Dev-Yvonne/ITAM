@@ -103,15 +103,15 @@
             <div class="profile-card-body">
                 <div class="stat-item">
                     <span class="stat-label">Assets Created</span>
-                    <span class="stat-value">{{ user.asset_count|default:"0" }}</span>
+                    <span class="stat-value">{{ account_stats.assets_created }}</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Assignments Made</span>
-                    <span class="stat-value">{{ user.assignment_count|default:"0" }}</span>
+                    <span class="stat-value">{{ account_stats.assignments_made }}</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Maintenance Logs</span>
-                    <span class="stat-value">{{ user.maintenance_count|default:"0" }}</span>
+                    <span class="stat-value">{{ account_stats.maintenance_logs }}</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Account Age</span>

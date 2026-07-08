@@ -27,6 +27,13 @@ class Asset(models.Model):
         default=AssetStatus.AVAILABLE,
     )
     date_created = models.DateTimeField(default=timezone.now)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assets_created",
+    )
 
     class Meta:
         ordering = ["name", "serial_number"]
@@ -124,6 +131,13 @@ class Assignment(models.Model):
     date_returned = models.DateTimeField(null=True, blank=True)
     confirmed_by_employee = models.BooleanField(default=False)
     confirmed_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assignments_created",
+    )
 
     class Meta:
         ordering = ["-date_assigned", "-id"]
@@ -192,6 +206,13 @@ class MaintenanceLog(models.Model):
     )
     date = models.DateField(default=timezone.now)
     resolved = models.BooleanField(default=False)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="maintenance_logs_created",
+    )
 
     class Meta:
         ordering = ["-date", "-id"]

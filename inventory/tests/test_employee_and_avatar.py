@@ -366,3 +366,63 @@ class ProfileAvatarUploadTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertIn("/login/", response.url)
+
+
+class ProfileAccountStatisticsTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="stats-user",
+            email="stats@example.com",
+            password="test-pass-12345",
+            is_staff=True,
+        )
+        self.employee = Employee.objects.create(
+            name="Stats Employee",
+            department=Employee.Department.TECHNICAL_CORE_PROGRAMME,
+            email="stats.employee@example.com",
+        )
+        self.client.force_login(self.user)
+
+    def test_profile_page_shows_user_activity_statistics(self):
+        asset = Asset.objects.create(
+            name="Stats Laptop",
+            type=Asset.AssetType.LAPTOP,
+            serial_number="STATS-001",
+            created_by=self.user,
+        )
+        Assignment.objects.create(
+            asset=asset,
+            employee=self.employee,
+            created_by=self.user,
+        )
+        MaintenanceLog.objects.create(
+            asset=asset,
+            issue_description="Keyboard replacement",
+            technician=self.user.username,
+            created_by=self.user,
+        )
+
+        response = self.client.get(reverse("profile"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["account_stats"]["assets_created"], 1)
+        self.assertEqual(response.context["account_stats"]["assignments_made"], 1)
+        self.assertEqual(response.context["account_stats"]["maintenance_logs"], 1)
+        self.assertContains(response, '<span class="stat-value">1</span>', count=3)
+
+    def test_profile_counts_legacy_maintenance_logs_by_technician_label(self):
+        asset = Asset.objects.create(
+            name="Legacy Laptop",
+            type=Asset.AssetType.LAPTOP,
+            serial_number="LEGACY-001",
+        )
+        MaintenanceLog.objects.create(
+            asset=asset,
+            issue_description="Legacy maintenance",
+            technician=self.user.username,
+        )
+
+        response = self.client.get(reverse("profile"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["account_stats"]["maintenance_logs"], 1)

@@ -203,6 +203,7 @@ class EmployeeReportIssueView(EmployeePortalJSONAccessMixin, View):
             technician=request.user.get_full_name() or request.user.username,
             date=timezone.localdate(),
             resolved=False,
+            created_by=request.user,
         )
 
         messages.success(request, "Issue reported successfully. We will look into it.")
@@ -229,6 +230,7 @@ class EmployeeMaintenanceRequestView(EmployeePortalJSONAccessMixin, View):
             technician=request.user.get_full_name() or request.user.username,
             date=timezone.localdate(),
             resolved=False,
+            created_by=request.user,
         )
 
         if request.content_type.startswith("application/json"):

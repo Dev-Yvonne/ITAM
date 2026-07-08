@@ -450,6 +450,9 @@ class AssetCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     
     def form_valid(self, form):
         response = super().form_valid(form)
+        if self.object.created_by_id is None:
+            self.object.created_by = self.request.user
+            self.object.save(update_fields=["created_by"])
         add_session_notification(
             self.request,
             notification_type="success",
@@ -640,6 +643,7 @@ class AssignAssetView(LoginRequiredMixin, UserPassesTestMixin, FormView):
 
             assignment = form.save(commit=False)
             assignment.asset = asset
+            assignment.created_by = self.request.user
             assignment.save()
 
             asset.status = Asset.AssetStatus.ASSIGNED
@@ -750,6 +754,7 @@ class CompleteMaintenanceView(LoginRequiredMixin, UserPassesTestMixin, View):
                 technician=technician,
                 date=timezone.localdate(),
                 resolved=True,
+                created_by=request.user,
             )
 
             asset.status = Asset.AssetStatus.AVAILABLE
@@ -795,6 +800,7 @@ class MaintenanceLogCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateVi
 
     def form_valid(self, form):
         form.instance.asset = self.asset
+        form.instance.created_by = self.request.user
         response = super().form_valid(form)
         if not form.instance.resolved:
             self.asset.status = Asset.AssetStatus.UNDER_MAINTENANCE
@@ -1042,6 +1048,9 @@ class AssetAPIListView(LoginRequiredMixin, View):
             return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
 
         asset = form.save()
+        if asset.created_by_id is None:
+            asset.created_by = request.user
+            asset.save(update_fields=["created_by"])
         return JsonResponse(serialize_asset(asset), status=201)
 
 
@@ -1147,6 +1156,7 @@ class AssetAssignAPIView(LoginRequiredMixin, View):
                 asset=asset,
                 employee=employee,
                 expected_return_date=expected_return_date,
+                created_by=request.user,
             )
             asset.status = Asset.AssetStatus.ASSIGNED
             asset.save(update_fields=["status"])

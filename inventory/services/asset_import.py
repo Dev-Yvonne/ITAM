@@ -512,7 +512,7 @@ def _unique_serial(serial: str, *, exclude_pk: int | None = None) -> str:
     return candidate
 
 
-def _apply_maintenance_date(asset: Asset, maintenance_date):
+def _apply_maintenance_date(asset: Asset, maintenance_date, *, user=None):
     if not maintenance_date:
         return
     MaintenanceLog.objects.create(
@@ -521,10 +521,11 @@ def _apply_maintenance_date(asset: Asset, maintenance_date):
         technician="CSV Import",
         date=maintenance_date,
         resolved=True,
+        created_by=user,
     )
 
 
-def _apply_import_assignment(asset: Asset, employee_id: int | None) -> None:
+def _apply_import_assignment(asset: Asset, employee_id: int | None, *, user=None) -> None:
     if not employee_id:
         return
 
@@ -537,7 +538,7 @@ def _apply_import_assignment(asset: Asset, employee_id: int | None) -> None:
         date_returned__isnull=True,
     ).update(date_returned=timezone.now())
 
-    Assignment.objects.create(asset=asset, employee=employee)
+    Assignment.objects.create(asset=asset, employee=employee, created_by=user)
     asset.status = Asset.AssetStatus.ASSIGNED
     asset.save(update_fields=["status"])
 
@@ -645,9 +646,9 @@ def execute_import(
             existing.status = import_status
             existing.save(update_fields=["name", "type", "status"])
             if row.get("last_maintenance_date"):
-                _apply_maintenance_date(existing, row["last_maintenance_date"])
+                _apply_maintenance_date(existing, row["last_maintenance_date"], user=user)
             if import_status == Asset.AssetStatus.ASSIGNED:
-                _apply_import_assignment(existing, employee_id)
+                _apply_import_assignment(existing, employee_id, user=user)
             elif import_status == Asset.AssetStatus.AVAILABLE:
                 Assignment.objects.filter(
                     asset=existing,
@@ -674,11 +675,12 @@ def execute_import(
             type=row["type"],
             serial_number=serial,
             status=import_status,
+            created_by=user,
         )
         if row.get("last_maintenance_date"):
-            _apply_maintenance_date(asset, row["last_maintenance_date"])
+            _apply_maintenance_date(asset, row["last_maintenance_date"], user=user)
         if import_status == Asset.AssetStatus.ASSIGNED:
-            _apply_import_assignment(asset, employee_id)
+            _apply_import_assignment(asset, employee_id, user=user)
         created += 1
 
     return {

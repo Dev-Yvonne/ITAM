@@ -13,6 +13,7 @@ from .services.avatars import (
     save_user_avatar,
     validate_avatar_upload,
 )
+from .services.profile_stats import get_user_account_statistics
 from .services.notifications import (
     add_session_notification,
     get_display_notifications,
@@ -122,6 +123,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context["is_superuser"] = self.request.user.is_superuser
         avatar_urls = get_user_avatar_urls(self.request.user)
         context["user_avatar_url"] = avatar_urls["large"]
+        context["account_stats"] = get_user_account_statistics(self.request.user)
         return context
 
 
