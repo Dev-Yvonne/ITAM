@@ -35,16 +35,17 @@ class AuthLoginView(LoginView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page"] = "login"
-        context["remember_me"] = bool(self.request.POST.get("remember"))
+        if self.request.method == "POST":
+            context["remember_me"] = bool(self.request.POST.get("remember"))
+        else:
+            context["remember_me"] = True
         return context
 
     def form_valid(self, form):
-        remember_me = self.request.POST.get("remember")
         login(self.request, form.get_user())
-        if remember_me:
-            self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
-        else:
-            self.request.session.set_expiry(0)
+        # Always use a persistent server-side session. Browser-only sessions
+        # (set_expiry(0)) are dropped by many browsers after brief inactivity.
+        self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
         self.request.session.modified = True
         return redirect(self.get_success_url())
 

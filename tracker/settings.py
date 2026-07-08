@@ -152,7 +152,14 @@ LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
-SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=60 * 60 * 24 * 14)
+_raw_session_cookie_age = env.int("SESSION_COOKIE_AGE", default=60 * 60 * 24 * 14)
+if _raw_session_cookie_age < 3600:
+    logger.warning(
+        "SESSION_COOKIE_AGE=%s is below 3600 seconds; using 1-hour minimum.",
+        _raw_session_cookie_age,
+    )
+    _raw_session_cookie_age = 3600
+SESSION_COOKIE_AGE = _raw_session_cookie_age
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_HTTPONLY = True

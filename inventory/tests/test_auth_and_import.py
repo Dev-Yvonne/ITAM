@@ -84,7 +84,7 @@ class AuthRoutingTests(TestCase):
             settings.SESSION_COOKIE_AGE,
         )
 
-    def test_login_without_remember_me_uses_browser_session(self):
+    def test_login_without_remember_me_still_uses_persistent_session(self):
         user = get_user_model().objects.create_user(
             username="browser-session-user",
             email="browser-session-user@example.com",
@@ -100,7 +100,11 @@ class AuthRoutingTests(TestCase):
         )
 
         self.assertRedirects(response, reverse("dashboard"))
-        self.assertTrue(self.client.session.get_expire_at_browser_close())
+        self.assertFalse(self.client.session.get_expire_at_browser_close())
+        self.assertEqual(
+            self.client.session.get_expiry_age(),
+            settings.SESSION_COOKIE_AGE,
+        )
 
 
 
