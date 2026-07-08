@@ -320,7 +320,7 @@
             return;
         }
         
-        fetch('/employee/notifications/mark-read/' + notificationId + '/', {
+        fetch('/employee/notifications/' + notificationId + '/mark-read/', {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCSRFToken(),

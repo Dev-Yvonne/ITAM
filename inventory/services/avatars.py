@@ -117,17 +117,28 @@ def _delete_local_avatar(storage_key: str) -> None:
         logger.warning("Failed to delete local avatar %s", path, exc_info=True)
 
 
+def _infer_avatar_storage_backend(profile: UserProfile) -> str:
+    if profile.avatar_storage_backend:
+        return profile.avatar_storage_backend
+    if profile.avatar_url.startswith("http"):
+        return UserProfile.AvatarStorageBackend.SUPABASE
+    return UserProfile.AvatarStorageBackend.LOCAL
+
+
 def delete_existing_avatar(profile: UserProfile) -> None:
     if not profile.avatar_storage_key and profile.avatar_url:
         profile.avatar_storage_key = supabase_storage.storage_key_from_avatar_url(
             profile.avatar_url
         )
 
-    if profile.avatar_storage_key:
-        if supabase_storage.is_configured() and profile.avatar_url.startswith("http"):
-            supabase_storage.delete_avatar(profile.avatar_storage_key)
-        else:
-            _delete_local_avatar(profile.avatar_storage_key)
+    if not profile.avatar_storage_key:
+        return
+
+    backend = _infer_avatar_storage_backend(profile)
+    if backend == UserProfile.AvatarStorageBackend.SUPABASE:
+        supabase_storage.delete_avatar(profile.avatar_storage_key)
+    else:
+        _delete_local_avatar(profile.avatar_storage_key)
 
 
 def save_user_avatar(user, uploaded_file) -> str:
@@ -142,10 +153,20 @@ def save_user_avatar(user, uploaded_file) -> str:
             )
         avatar_url = supabase_storage.upload_avatar(user.id, uploaded_file)
         storage_key = supabase_storage.storage_key_from_avatar_url(avatar_url)
+        backend = UserProfile.AvatarStorageBackend.SUPABASE
     else:
         avatar_url, storage_key = _save_avatar_locally(user.id, uploaded_file)
+        backend = UserProfile.AvatarStorageBackend.LOCAL
 
     profile.avatar_url = avatar_url
     profile.avatar_storage_key = storage_key
-    profile.save(update_fields=["avatar_url", "avatar_storage_key", "updated_at"])
+    profile.avatar_storage_backend = backend
+    profile.save(
+        update_fields=[
+            "avatar_url",
+            "avatar_storage_key",
+            "avatar_storage_backend",
+            "updated_at",
+        ]
+    )
     return get_user_avatar_url(user, size=128)

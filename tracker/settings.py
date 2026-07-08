@@ -71,6 +71,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "inventory.context_processors.itam_version_context",
                 "inventory.context_processors.notification_context",
+                "inventory.context_processors.avatar_context",
             ],
         },
     },

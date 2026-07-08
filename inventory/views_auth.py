@@ -3,14 +3,13 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView
 from django.shortcuts import redirect, render
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.views import View
-from django.views.generic import CreateView, FormView
+from django.views.generic import FormView
 
-from .access import get_employee_for_user, user_has_admin_access
+from .access import get_post_auth_redirect_url
 from .forms import (
     EmailOrUsernameAuthenticationForm,
     ForgotPasswordEmailForm,
@@ -31,11 +30,7 @@ class AuthLoginView(LoginView):
     redirect_authenticated_user = True
 
     def get_success_url(self):
-        if user_has_admin_access(self.request.user):
-            return reverse("dashboard")
-        if get_employee_for_user(self.request.user):
-            return reverse("employee_dashboard")
-        return reverse("dashboard")
+        return get_post_auth_redirect_url(self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -55,29 +50,8 @@ class AuthLoginView(LoginView):
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect("dashboard")
+            return redirect(get_post_auth_redirect_url(request.user))
         return super().dispatch(request, *args, **kwargs)
-
-
-class SignUpView(CreateView):
-    form_class = UserCreationForm
-    template_name = "inventory/auth.html"
-    success_url = reverse_lazy("dashboard")
-
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return redirect("dashboard")
-        return super().dispatch(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        login(self.request, self.object)
-        return response
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["page"] = "signup"
-        return context
 
 
 class AuthLogoutView(View):
@@ -89,7 +63,7 @@ class AuthLogoutView(View):
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect("dashboard")
+            return redirect(get_post_auth_redirect_url(request.user))
         return redirect("login")
 
 
@@ -111,7 +85,7 @@ class PasswordResetStepView(FormView):
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect("dashboard")
+            return redirect(get_post_auth_redirect_url(request.user))
 
         if self.requires_email and not request.session.get(
             PASSWORD_RESET_EMAIL_SESSION_KEY

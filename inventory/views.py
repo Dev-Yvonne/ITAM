@@ -5,20 +5,16 @@ import logging
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Max, OuterRef, Q, Subquery
 from django.db.models.deletion import ProtectedError
-from django.db.utils import DatabaseError, OperationalError, ProgrammingError
 from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views import View
-from django.views.decorators.csrf import csrf_protect
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -28,9 +24,9 @@ from django.views.generic import (
     TemplateView,
     UpdateView,
 )
-from django.utils.decorators import method_decorator
 
-from .access import get_employee_for_user, user_has_admin_access
+from .access import user_has_admin_access
+from .http import parse_request_data
 from .forms import (
     AssetForm,
     AssignmentForm,
@@ -56,6 +52,7 @@ from .services.metrics import (
     get_overdue_assets_queryset,
     get_service_overdue_cutoff,
 )
+from .services.employee_notifications import create_employee_notification
 from .services.notifications import add_session_notification
 from .views_auth import (
     AuthLoginView,
@@ -63,7 +60,19 @@ from .views_auth import (
     ForgotPasswordEmailView,
     ForgotPasswordSetView,
     ForgotPasswordVerifyView,
-    SignUpView,
+)
+from .views_employee import (
+    EmployeeAssetDetailView,
+    EmployeeAssetsView,
+    EmployeeConfirmAssetView,
+    EmployeeDashboardView,
+    EmployeeMaintenanceRequestView,
+    EmployeeMarkAllNotificationsReadView,
+    EmployeeMarkNotificationReadView,
+    EmployeePasswordChangeView,
+    EmployeeReportIssueView,
+    EmployeeReturnRequestView,
+    EmployeeSettingsView,
 )
 from .views_extras import (
     NotificationAPIView,
@@ -170,15 +179,6 @@ TYPE_TO_MODEL = {
     "router": Asset.AssetType.ROUTER,
     "monitor": Asset.AssetType.MONITOR,
 }
-
-
-def parse_request_data(request) -> dict | None:
-    if request.content_type.startswith("application/json") and request.body:
-        try:
-            return json.loads(request.body.decode("utf-8"))
-        except json.JSONDecodeError:
-            return None
-    return request.POST.dict()
 
 
 def normalize_asset_payload(payload: dict) -> dict:
@@ -1381,512 +1381,3 @@ class EmployeeAPIDetailView(LoginRequiredMixin, View):
                 status=400,
             )
         return JsonResponse({"deleted": True})
-
-
-# ============================================
-# SETTINGS VIEW
-# ============================================
-
-# ============================================
-# EMPLOYEE PORTAL VIEWS
-# ============================================
-
-def serialize_employee_notification(notification):
-    return {
-        "id": notification.id,
-        "type": notification.type,
-        "title": notification.title,
-        "message": notification.message,
-        "link": notification.link,
-        "read": notification.read,
-        "created_label": "Just now",
-    }
-
-
-def create_employee_notification(
-    employee,
-    *,
-    notification_type,
-    title,
-    message,
-    link="",
-):
-    try:
-        return EmployeeNotification.objects.create(
-            employee=employee,
-            type=notification_type,
-            title=title,
-            message=message,
-            link=link,
-        )
-    except (DatabaseError, OperationalError, ProgrammingError):
-        logger.exception(
-            "Unable to create employee notification for employee_id=%s",
-            getattr(employee, "pk", None),
-        )
-        return None
-
-
-def get_employee_notifications(employee, limit=5):
-    try:
-        queryset = employee.notifications.all()
-        if limit is not None:
-            return list(queryset[:limit])
-        return queryset
-    except (DatabaseError, OperationalError, ProgrammingError):
-        logger.exception(
-            "Unable to load employee notifications for employee_id=%s",
-            getattr(employee, "pk", None),
-        )
-        return []
-
-
-def get_employee_unread_notification_count(employee):
-    try:
-        return employee.notifications.filter(read=False).count()
-    except (DatabaseError, OperationalError, ProgrammingError):
-        logger.exception(
-            "Unable to count employee notifications for employee_id=%s",
-            getattr(employee, "pk", None),
-        )
-        return 0
-
-
-class EmployeePortalAccessMixin(LoginRequiredMixin):
-    employee_access_denied_message = "You do not have employee access."
-
-    def dispatch(self, request, *args, **kwargs):
-        self.employee = get_employee_for_user(request.user)
-        if self.employee is None and request.user.is_authenticated:
-            messages.error(request, self.employee_access_denied_message)
-            return redirect("dashboard")
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        notifications = get_employee_notifications(self.employee)
-        assignments = Assignment.objects.filter(employee=self.employee).select_related("asset")
-
-        context.update(
-            {
-                "employee": self.employee,
-                "employee_notifications": notifications,
-                "recent_notifications": notifications,
-                "unread_notifications": get_employee_unread_notification_count(
-                    self.employee
-                ),
-                "employee_total_assets": assignments.count(),
-                "employee_confirmed_assets": assignments.filter(
-                    confirmed_by_employee=True
-                ).count(),
-                "employee_pending_assets": assignments.filter(
-                    date_returned__isnull=True,
-                    confirmed_by_employee=False,
-                ).count(),
-                "employee_returned_assets": assignments.filter(
-                    date_returned__isnull=False
-                ).count(),
-            }
-        )
-        return context
-
-
-class EmployeePortalJSONAccessMixin(LoginRequiredMixin):
-    def dispatch(self, request, *args, **kwargs):
-        self.employee = get_employee_for_user(request.user)
-        if self.employee is None and request.user.is_authenticated:
-            return JsonResponse(
-                {"success": False, "message": "Unauthorized"},
-                status=403,
-            )
-        return super().dispatch(request, *args, **kwargs)
-
-
-class EmployeeDashboardView(EmployeePortalAccessMixin, TemplateView):
-    """Employee dashboard showing assigned assets and notifications"""
-    template_name = 'inventory/employee/dashboard.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        employee = self.employee
-        current_hour = timezone.localtime().hour
-        if current_hour < 12:
-            greeting = "Good Morning"
-        elif current_hour < 17:
-            greeting = "Good Afternoon"
-        else:
-            greeting = "Good Evening"
-        
-        # Get active assignments
-        active_assignments = Assignment.objects.filter(
-            employee=employee,
-            date_returned__isnull=True
-        ).select_related('asset')
-        
-        # Get pending confirmations
-        pending_confirmations = active_assignments.filter(
-            confirmed_by_employee=False
-        )
-        
-        # Get due assets (optional - assets that are overdue for return)
-        due_assets = active_assignments.filter(
-            date_assigned__lte=timezone.now() - datetime.timedelta(days=30)
-        )
-
-        assignment_history = Assignment.objects.filter(
-            employee=employee
-        ).select_related("asset").order_by("-date_assigned")
-        
-        context.update({
-            'greeting': greeting,
-            'active_assets': active_assignments.count(),
-            'active_assignments': active_assignments,
-            'returnable_assignments': active_assignments,
-            'assignment_history': assignment_history,
-            'pending_confirmations': pending_confirmations,
-            'pending_assets': pending_confirmations.count(),
-            'due_assets': due_assets.count(),
-            'total_assets': active_assignments.count(),
-            'confirmed_assets': active_assignments.filter(confirmed_by_employee=True).count(),
-        })
-        return context
-
-
-class EmployeeAssetsView(EmployeePortalAccessMixin, ListView):
-    """List all assets assigned to the logged-in employee"""
-    template_name = 'inventory/employee/assets.html'
-    context_object_name = 'assignments'
-    paginate_by = 10
-    
-    def get_queryset(self):
-        employee = self.employee
-        return Assignment.objects.filter(
-            employee=employee
-        ).select_related('asset').order_by('-date_assigned')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        assignments = self.get_queryset()
-        
-        context.update({
-            'total_assets': assignments.count(),
-            'active_assets': assignments.filter(date_returned__isnull=True).count(),
-            'pending_assets': assignments.filter(
-                date_returned__isnull=True,
-                confirmed_by_employee=False
-            ).count(),
-            'returned_assets': assignments.filter(date_returned__isnull=False).count(),
-        })
-        return context
-
-
-class EmployeeAssetDetailView(EmployeePortalAccessMixin, DetailView):
-    """Detail view for a single asset assignment"""
-    template_name = 'inventory/employee/asset_detail.html'
-    context_object_name = 'assignment'
-    
-    def get_queryset(self):
-        employee = self.employee
-        return Assignment.objects.filter(
-            employee=employee
-        ).select_related('asset')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        assignment = self.get_object()
-        context['asset'] = assignment.asset
-        
-        # Set status display
-        if assignment.confirmed_by_employee:
-            context['status_display'] = 'Confirmed'
-            context['status_class'] = 'success'
-        elif assignment.date_returned:
-            context['status_display'] = 'Returned'
-            context['status_class'] = 'secondary'
-        else:
-            context['status_display'] = 'Pending Confirmation'
-            context['status_class'] = 'warning'
-        
-        return context
-
-
-class EmployeeConfirmAssetView(EmployeePortalJSONAccessMixin, View):
-    """Employee confirms receipt of assigned asset"""
-
-    def post(self, request, pk):
-        employee = self.employee
-        assignment = get_object_or_404(
-            Assignment.objects.filter(employee=employee),
-            pk=pk,
-            date_returned__isnull=True
-        )
-        
-        if assignment.confirmed_by_employee:
-            return JsonResponse({'success': False, 'message': 'Asset already confirmed'}, status=400)
-        
-        assignment.confirmed_by_employee = True
-        assignment.confirmed_at = timezone.now()
-        assignment.save(update_fields=['confirmed_by_employee', 'confirmed_at'])
-        
-        return JsonResponse({'success': True, 'message': 'Asset confirmed successfully'})
-
-
-class EmployeeReportIssueView(EmployeePortalJSONAccessMixin, View):
-    """Employee reports an issue with an asset"""
-
-    def post(self, request, pk):
-        employee = self.employee
-        assignment = get_object_or_404(
-            Assignment.objects.filter(employee=employee),
-            pk=pk
-        )
-        
-        issue_type = request.POST.get('issue_type')
-        issue_description = request.POST.get('issue_description')
-        urgency = request.POST.get('urgency', 'medium')
-        
-        # Create a maintenance log entry
-        MaintenanceLog.objects.create(
-            asset=assignment.asset,
-            issue_description=f"[Reported by Employee] {issue_type}: {issue_description}",
-            technician=request.user.get_full_name() or request.user.username,
-            date=timezone.localdate(),
-            resolved=False,
-        )
-        
-        messages.success(request, 'Issue reported successfully. We will look into it.')
-        return redirect('employee_asset_detail', pk=assignment.pk)
-
-
-class EmployeeMaintenanceRequestView(EmployeePortalJSONAccessMixin, View):
-    """Employee requests maintenance for an asset"""
-
-    def post(self, request, pk):
-        employee = self.employee
-        assignment = get_object_or_404(
-            Assignment.objects.filter(employee=employee),
-            pk=pk
-        )
-
-        payload = parse_request_data(request) or {}
-        maintenance_type = payload.get("maintenance_type") or "General"
-        description = payload.get("description") or "Maintenance requested via employee portal"
-
-        MaintenanceLog.objects.create(
-            asset=assignment.asset,
-            issue_description=f"[Maintenance Request] {maintenance_type}: {description}",
-            technician=request.user.get_full_name() or request.user.username,
-            date=timezone.localdate(),
-            resolved=False,
-        )
-
-        if request.content_type.startswith("application/json"):
-            return JsonResponse(
-                {
-                    "success": True,
-                    "message": "Maintenance request submitted successfully.",
-                }
-            )
-
-        messages.success(request, "Maintenance request submitted successfully.")
-        return redirect("employee_asset_detail", pk=assignment.pk)
-
-
-class EmployeeReturnRequestView(EmployeePortalJSONAccessMixin, View):
-    """Employee requests to return an asset"""
-
-    def post(self, request, pk):
-        employee = self.employee
-        assignment = get_object_or_404(
-            Assignment.objects.filter(employee=employee),
-            pk=pk,
-            date_returned__isnull=True
-        )
-        
-        # Mark as returned
-        assignment.date_returned = timezone.now()
-        assignment.save()
-        
-        # Update asset status
-        asset = assignment.asset
-        asset.status = Asset.AssetStatus.AVAILABLE
-        asset.save(update_fields=['status'])
-        
-        messages.success(request, 'Asset returned successfully.')
-        return JsonResponse({'success': True, 'message': 'Asset returned successfully'})
-
-
-class EmployeeNotificationsView(EmployeePortalAccessMixin, ListView):
-    """List all notifications for the logged-in employee"""
-    template_name = 'inventory/employee/notifications.html'
-    context_object_name = 'notifications'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        return get_employee_notifications(self.employee, limit=None)
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['unread_count'] = get_employee_unread_notification_count(self.employee)
-        return context
-
-
-class EmployeeMarkNotificationReadView(EmployeePortalJSONAccessMixin, View):
-    """Mark a single notification as read"""
-    
-    def post(self, request, pk):
-        try:
-            notification = get_object_or_404(
-                EmployeeNotification,
-                pk=pk,
-                employee=self.employee,
-            )
-            notification.read = True
-            notification.save(update_fields=["read"])
-        except (DatabaseError, OperationalError, ProgrammingError):
-            logger.exception(
-                "Unable to mark employee notification read for employee_id=%s",
-                self.employee.pk,
-            )
-            return JsonResponse(
-                {"success": False, "message": "Notifications are temporarily unavailable."},
-                status=503,
-            )
-        return JsonResponse(
-            {
-                "success": True,
-                "unread_count": get_employee_unread_notification_count(self.employee),
-            }
-        )
-
-
-class EmployeeMarkAllNotificationsReadView(EmployeePortalJSONAccessMixin, View):
-    """Mark all notifications as read"""
-    
-    def post(self, request):
-        try:
-            self.employee.notifications.filter(read=False).update(read=True)
-        except (DatabaseError, OperationalError, ProgrammingError):
-            logger.exception(
-                "Unable to mark all employee notifications read for employee_id=%s",
-                self.employee.pk,
-            )
-            return JsonResponse(
-                {"success": False, "message": "Notifications are temporarily unavailable."},
-                status=503,
-            )
-        return JsonResponse({'success': True, "unread_count": 0})
-
-
-class EmployeeProfileView(EmployeePortalAccessMixin, TemplateView):
-    """Employee profile page"""
-    template_name = 'inventory/employee/profile.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        employee = self.employee
-        
-        # Get asset stats
-        assignments = Assignment.objects.filter(employee=employee)
-        context.update({
-            'total_assets': assignments.count(),
-            'confirmed_assets': assignments.filter(confirmed_by_employee=True).count(),
-            'pending_assets': assignments.filter(
-                date_returned__isnull=True,
-                confirmed_by_employee=False
-            ).count(),
-            'returned_assets': assignments.filter(date_returned__isnull=False).count(),
-        })
-        return context
-
-
-class EmployeeSettingsView(EmployeePortalAccessMixin, TemplateView):
-    """Employee settings page"""
-    template_name = 'inventory/employee/settings.html'
-
-
-class EmployeePasswordChangeView(EmployeePortalJSONAccessMixin, View):
-    """Allow a linked employee to update their own account password."""
-
-    def post(self, request):
-        try:
-            payload = json.loads(request.body.decode("utf-8")) if request.body else {}
-        except json.JSONDecodeError:
-            return JsonResponse(
-                {"success": False, "message": "Invalid request data."},
-                status=400,
-            )
-
-        new_password = payload.get("new_password", "")
-        confirm_password = payload.get("confirm_password", "")
-
-        if not new_password or not confirm_password:
-            return JsonResponse(
-                {"success": False, "message": "Enter and confirm your new password."},
-                status=400,
-            )
-
-        if new_password != confirm_password:
-            return JsonResponse(
-                {"success": False, "message": "Passwords do not match."},
-                status=400,
-            )
-
-        try:
-            validate_password(new_password, user=request.user)
-        except Exception as error:
-            messages_list = getattr(error, "messages", [str(error)])
-            return JsonResponse(
-                {"success": False, "message": " ".join(messages_list)},
-                status=400,
-            )
-
-        request.user.set_password(new_password)
-        request.user.save(update_fields=["password"])
-        update_session_auth_hash(request, request.user)
-        notification = create_employee_notification(
-            self.employee,
-            notification_type=EmployeeNotification.NotificationType.SUCCESS,
-            title="Password Changed",
-            message="Your password was changed successfully.",
-        )
-        unread_count = get_employee_unread_notification_count(self.employee)
-
-        return JsonResponse(
-            {
-                "success": True,
-                "message": "Password changed successfully.",
-                "notification": (
-                    serialize_employee_notification(notification)
-                    if notification is not None
-                    else None
-                ),
-                "unread_count": unread_count,
-            }
-        )
-
-
-class EmployeeHistoryView(EmployeePortalAccessMixin, ListView):
-    """Employee assignment history"""
-    template_name = 'inventory/employee/history.html'
-    context_object_name = 'history'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        employee = self.employee
-        return Assignment.objects.filter(
-            employee=employee
-        ).select_related('asset').order_by('-date_assigned')
-
-
-class EmployeeReturnsView(EmployeePortalAccessMixin, ListView):
-    """List assets available for return"""
-    template_name = 'inventory/employee/returns.html'
-    context_object_name = 'active_assignments'
-    
-    def get_queryset(self):
-        employee = self.employee
-        return Assignment.objects.filter(
-            employee=employee,
-            date_returned__isnull=True
-        ).select_related('asset')

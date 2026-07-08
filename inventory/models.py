@@ -348,6 +348,10 @@ class BackgroundJob(models.Model):
 
 
 class UserProfile(models.Model):
+    class AvatarStorageBackend(models.TextChoices):
+        LOCAL = "local", "Local"
+        SUPABASE = "supabase", "Supabase"
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -355,6 +359,11 @@ class UserProfile(models.Model):
     )
     avatar_url = models.URLField(max_length=500, blank=True)
     avatar_storage_key = models.CharField(max_length=255, blank=True)
+    avatar_storage_backend = models.CharField(
+        max_length=20,
+        choices=AvatarStorageBackend.choices,
+        blank=True,
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
