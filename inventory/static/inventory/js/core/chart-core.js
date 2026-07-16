@@ -15,7 +15,7 @@
         '#6366f1', '#84cc16'
     ];
     var colorMap = {
-        'Available': '#22c55e',
+        'Available': '#1e40af',
         'Assigned': '#3b82f6',
         'Under Maintenance': '#f59e0b',
         'Maintenance': '#f59e0b',
@@ -73,8 +73,8 @@
     }
 
     /**
-     * Draw doughnut segments as round-cap strokes so adjacent ends overlap
-     * clockwise, plus a thin framing ring outside the arcs.
+     * Draw doughnut segments as round-cap strokes with clockwise overlap,
+     * framed by a tight outer border ring against the arc outer edge.
      */
     function overlappingRingPlugin(id, colors) {
         return {
@@ -104,32 +104,65 @@
 
                 var midRadius = (first.outerRadius + first.innerRadius) / 2;
                 var lineWidth = Math.max(first.outerRadius - first.innerRadius, 1);
+                // Clockwise tip length: enough for a round cap to cover the next start.
+                var tip = Math.min(0.28, (lineWidth * 0.55) / Math.max(midRadius, 1));
+
+                var segments = meta.data.map(function(arc, index) {
+                    var props = arc.getProps(
+                        ['x', 'y', 'startAngle', 'endAngle', 'outerRadius', 'innerRadius'],
+                        true
+                    );
+                    return {
+                        index: index,
+                        props: props,
+                        span: props.endAngle - props.startAngle,
+                        color: colors[index % colors.length]
+                    };
+                }).filter(function(segment) {
+                    return segment.span > 0;
+                });
+
+                function strokeArc(segment, fromAngle, toAngle) {
+                    if (!(toAngle > fromAngle)) {
+                        return;
+                    }
+                    c.beginPath();
+                    c.strokeStyle = segment.color;
+                    c.arc(segment.props.x, segment.props.y, midRadius, fromAngle, toAngle);
+                    c.stroke();
+                }
 
                 c.save();
                 c.lineCap = 'round';
                 c.lineJoin = 'round';
                 c.lineWidth = lineWidth;
 
-                meta.data.forEach(function(arc, index) {
-                    var props = arc.getProps(
-                        ['x', 'y', 'startAngle', 'endAngle', 'outerRadius', 'innerRadius'],
-                        true
+                // Base pass: full segments in data order.
+                segments.forEach(function(segment) {
+                    strokeArc(
+                        segment,
+                        segment.props.startAngle,
+                        segment.props.endAngle
                     );
-                    var span = props.endAngle - props.startAngle;
-                    if (!(span > 0)) {
-                        return;
-                    }
-                    c.beginPath();
-                    c.strokeStyle = colors[index % colors.length];
-                    c.arc(props.x, props.y, midRadius, props.startAngle, props.endAngle);
-                    c.stroke();
                 });
 
+                // Second pass: redraw only the clockwise trailing tip of every
+                // segment so each joint overlaps in the same clockwise direction.
+                // Assigned's tip covers Available's start; Available's tip covers
+                // Assigned's start.
+                segments.forEach(function(segment) {
+                    var end = segment.props.endAngle;
+                    var start = Math.max(segment.props.startAngle, end - tip);
+                    strokeArc(segment, start, end + tip * 0.35);
+                });
+
+                // Tight border: ring sits flush on the outer edge of the strokes.
+                var ringWidth = 1.25;
                 c.beginPath();
                 c.lineCap = 'butt';
-                c.lineWidth = 1.75;
-                c.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.7)' : 'rgba(100, 116, 139, 0.55)';
-                c.arc(first.x, first.y, first.outerRadius + 7, 0, Math.PI * 2);
+                c.lineWidth = ringWidth;
+                c.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.8)' : 'rgba(100, 116, 139, 0.7)';
+                c.arc(first.x, first.y, first.outerRadius + ringWidth / 2, 0, Math.PI * 2);
                 c.stroke();
                 c.restore();
             }
@@ -187,7 +220,7 @@
                 rotation: -90,
                 circumference: 360,
                 layout: {
-                    padding: 12
+                    padding: 8
                 },
                 elements: {
                     arc: {
