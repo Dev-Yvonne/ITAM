@@ -391,15 +391,17 @@
 
 .time-display {
     display: block;
+    width: max-content;
+    max-width: 100%;
     margin: 0;
     font-size: clamp(5.75rem, 15vw, 9rem);
     font-weight: 200;
     color: var(--welcome-fg);
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.06em;
+    letter-spacing: -0.04em;
     /* Negative tracking shrinks the layout box; pad so last glyph ink is not clipped. */
-    padding-inline-end: 0.08em;
-    line-height: 0.9;
+    padding-inline: 0.02em 0.12em;
+    line-height: 0.95;
     overflow: visible;
     font-family: "SF Pro Display", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
@@ -1094,8 +1096,10 @@
 
     .welcome-time {
         align-items: flex-start;
-        min-width: 0;
+        min-width: min-content;
+        max-width: 100%;
         padding: 0;
+        overflow: visible;
     }
 
     .date-display {
@@ -1105,11 +1109,13 @@
 
     .time-display {
         font-size: clamp(2.4rem, 14vw, 3.5rem);
-        max-width: none;
+        width: max-content;
+        max-width: 100%;
         overflow: visible;
-        letter-spacing: -0.04em;
-        padding-inline-end: 0.12em;
-        line-height: 0.95;
+        letter-spacing: -0.02em;
+        padding-inline: 0.04em 0.18em;
+        line-height: 1;
+        box-sizing: content-box;
     }
 
     .greeting-title {
