@@ -14,6 +14,10 @@
         '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
         '#6366f1', '#84cc16'
     ];
+    var blueShadeBase = [
+        '#1e3a8a', '#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa',
+        '#0ea5e9', '#0284c7', '#0369a1', '#38bdf8', '#93c5fd'
+    ];
     var colorMap = {
         'Available': '#1e40af',
         'Assigned': '#3b82f6',
@@ -38,6 +42,54 @@
             colors.push(chartColors[i % chartColors.length]);
         }
         return colors;
+    }
+
+    function hslToHex(h, s, l) {
+        s /= 100;
+        l /= 100;
+        var c = (1 - Math.abs(2 * l - 1)) * s;
+        var x = c * (1 - Math.abs((h / 60) % 2 - 1));
+        var m = l - c / 2;
+        var r = 0;
+        var g = 0;
+        var b = 0;
+        if (h < 60) { r = c; g = x; }
+        else if (h < 120) { r = x; g = c; }
+        else if (h < 180) { g = c; b = x; }
+        else if (h < 240) { g = x; b = c; }
+        else if (h < 300) { r = x; b = c; }
+        else { r = c; b = x; }
+        function toHex(v) {
+            var hex = Math.round((v + m) * 255).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        }
+        return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+
+    /**
+     * Distinct blue shades for categorical bar charts.
+     * Scales past the base palette so new asset types keep getting unique blues.
+     */
+    function getBlueShades(count) {
+        var shades = [];
+        var i;
+        if (count <= 0) {
+            return shades;
+        }
+        if (count <= blueShadeBase.length) {
+            for (i = 0; i < count; i++) {
+                shades.push(blueShadeBase[i]);
+            }
+            return shades;
+        }
+        for (i = 0; i < count; i++) {
+            var t = count === 1 ? 0.45 : i / (count - 1);
+            var hue = 222 - (t * 28);
+            var saturation = 82 - (t * 22);
+            var lightness = 30 + (t * 42);
+            shades.push(hslToHex(hue, saturation, lightness));
+        }
+        return shades;
     }
 
     function statusColors(labels) {
@@ -260,7 +312,7 @@
         if (!ctx || typeof Chart === 'undefined') return;
 
         var isDark = getTheme() === 'dark';
-        var colors = color ? [color] : getChartColors(data.length);
+        var colors = color ? [color] : getBlueShades(data.length);
         var backgroundColors = color
             ? data.map(function() { return color + 'd9'; })
             : colors.map(function(c) { return c + '80'; });
@@ -447,6 +499,7 @@
         chartColors: chartColors,
         getColors: getColors,
         getChartColors: getChartColors,
+        getBlueShades: getBlueShades,
         statusColors: statusColors,
         createDoughnut: createDoughnut,
         createBar: createBar,
