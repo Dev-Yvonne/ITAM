@@ -5,7 +5,7 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard.css' %}?v=43">
-    <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard-analytics.css' %}?v=13">
+    <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard-analytics.css' %}?v=14">
 {% endblock %}
 
 {% block content %}
@@ -257,13 +257,17 @@
                             <canvas id="dashMonthlyChart"></canvas>
                         </div>
                     </div>
-                    <div class="bento-card bento-wide">
+                    <div class="bento-card bento-wide bento-card--maintenance">
                         <div class="bento-card-head">
                             <h3>Maintenance Activity</h3>
-                            <span class="bento-hint">Last 6 months</span>
+                            <span class="bento-hint" id="dashMaintenanceHint">Last 6 months</span>
                         </div>
-                        <div class="bento-chart-wrap">
-                            <canvas id="dashMaintenanceChart"></canvas>
+                        <div class="bento-chart-wrap" id="dashMaintenanceWrap">
+                            <canvas id="dashMaintenanceChart" aria-label="Maintenance events by month"></canvas>
+                            <div class="bento-chart-empty" id="dashMaintenanceEmpty" hidden>
+                                <i class="fas fa-tools" aria-hidden="true"></i>
+                                <p>No maintenance events in this period</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -383,8 +387,8 @@
 {% block extra_js %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="{% static 'inventory/js/core/background-jobs.js' %}?v=3"></script>
-    <script src="{% static 'inventory/js/core/chart-core.js' %}?v=15"></script>
-    <script src="{% static 'inventory/js/modules/dashboard-analytics.js' %}?v=13"></script>
+    <script src="{% static 'inventory/js/core/chart-core.js' %}?v=17"></script>
+    <script src="{% static 'inventory/js/modules/dashboard-analytics.js' %}?v=14"></script>
     <script src="{% static 'inventory/js/modules/dashboard.js' %}?v=17"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

@@ -307,15 +307,27 @@
         });
     }
 
-    function createBar(id, data, labels, horizontal, color) {
+    function createBar(id, data, labels, horizontal, color, options) {
         var ctx = document.getElementById(id);
         if (!ctx || typeof Chart === 'undefined') return;
 
+        if (chartInstances[id] && typeof chartInstances[id].destroy === 'function') {
+            chartInstances[id].destroy();
+            delete chartInstances[id];
+        }
+
+        options = options || {};
         var isDark = getTheme() === 'dark';
         var colors = color ? [color] : getBlueShades(data.length);
-        var backgroundColors = color
-            ? data.map(function() { return color + 'd9'; })
-            : colors.map(function(c) { return c + '80'; });
+        var backgroundColors;
+        var borderColors;
+        if (color) {
+            backgroundColors = data.map(function() { return color + (isDark ? 'cc' : 'd9'); });
+            borderColors = color;
+        } else {
+            backgroundColors = colors.map(function(c) { return c + '80'; });
+            borderColors = colors;
+        }
         var maxValue = 0;
         for (var i = 0; i < data.length; i++) {
             var value = Number(data[i]);
@@ -323,8 +335,11 @@
                 maxValue = value;
             }
         }
-        // Keep one full tick above the tallest bar so values never clip the chart edge.
-        var valueMax = maxValue + 1;
+        // Keep headroom above the tallest bar; floor for sparse series so the chart doesn't look clipped.
+        var minHeadroom = typeof options.minMax === 'number' ? options.minMax : 0;
+        var valueMax = Math.max(maxValue + 1, minHeadroom);
+        var unitLabel = options.unit || '';
+        var barThickness = typeof options.maxBarThickness === 'number' ? options.maxBarThickness : 50;
 
         chartInstances[id] = new Chart(ctx, {
             type: 'bar',
@@ -333,40 +348,77 @@
                 datasets: [{
                     data: data,
                     backgroundColor: backgroundColors,
-                    borderColor: color ? color : colors,
+                    borderColor: borderColors,
                     borderWidth: color ? 0 : 1.5,
-                    borderRadius: 6,
-                    maxBarThickness: 50
+                    borderRadius: 8,
+                    maxBarThickness: barThickness,
+                    categoryPercentage: options.categoryPercentage || 0.72,
+                    barPercentage: options.barPercentage || 0.78
                 }]
             },
             options: {
                 indexAxis: horizontal ? 'y' : 'x',
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: isDark ? 'rgba(15, 23, 42, 0.94)' : 'rgba(15, 23, 42, 0.9)',
+                        titleFont: { size: 11, weight: '600' },
+                        bodyFont: { size: 11 },
+                        padding: 10,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                var n = context.parsed[horizontal ? 'x' : 'y'];
+                                if (unitLabel) {
+                                    return n + ' ' + unitLabel;
+                                }
+                                return String(n);
+                            }
+                        }
+                    }
+                },
                 scales: (function() {
-                    var gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+                    var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15, 23, 42, 0.06)';
                     var valueScale = {
                         beginAtZero: true,
                         max: valueMax,
-                        grid: { color: gridColor, drawBorder: false },
+                        grid: { color: gridColor, drawBorder: false, drawTicks: false },
+                        border: { display: false },
                         ticks: {
                             color: getColors().text,
                             font: { size: 10 },
                             stepSize: 1,
-                            precision: 0
+                            precision: 0,
+                            padding: 6
                         }
                     };
                     var categoryScale = {
                         grid: { display: false },
-                        ticks: { color: getColors().text, font: { size: 10 }, maxRotation: 0 }
+                        border: { display: false },
+                        ticks: {
+                            color: getColors().text,
+                            font: { size: 10, weight: '500' },
+                            maxRotation: 0,
+                            autoSkip: true,
+                            padding: 4
+                        }
                     };
                     var scales = {};
                     scales[horizontal ? 'x' : 'y'] = valueScale;
                     scales[horizontal ? 'y' : 'x'] = categoryScale;
                     return scales;
                 })(),
-                animation: { duration: 800 }
+                animation: {
+                    duration: 850,
+                    easing: 'easeOutQuart'
+                }
             }
         });
     }

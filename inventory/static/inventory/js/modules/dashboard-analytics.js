@@ -18,6 +18,54 @@
         };
     }
 
+    /** Shorten "Feb 2026" → "Feb", keeping the year when it changes across the series. */
+    function shortMonthLabels(labels) {
+        var years = {};
+        var parsed = (labels || []).map(function(label) {
+            var parts = String(label || '').trim().split(/\s+/);
+            var month = parts[0] || label;
+            var year = parts[1] || '';
+            if (year) years[year] = true;
+            return { month: month, year: year };
+        });
+        var multiYear = Object.keys(years).length > 1;
+        return parsed.map(function(item, index) {
+            if (!item.year) return item.month;
+            if (multiYear) {
+                var prevYear = index > 0 ? parsed[index - 1].year : '';
+                if (item.year !== prevYear) {
+                    return item.month + ' \'' + String(item.year).slice(-2);
+                }
+            }
+            return item.month;
+        });
+    }
+
+    function sumSeries(values) {
+        return (values || []).reduce(function(total, value) {
+            var n = Number(value);
+            return total + (isNaN(n) ? 0 : n);
+        }, 0);
+    }
+
+    function updateMaintenanceMeta(values) {
+        var hint = document.getElementById('dashMaintenanceHint');
+        var empty = document.getElementById('dashMaintenanceEmpty');
+        var wrap = document.getElementById('dashMaintenanceWrap');
+        var total = sumSeries(values);
+        if (hint) {
+            hint.textContent = total === 1
+                ? 'Last 6 months · 1 event'
+                : 'Last 6 months · ' + total + ' events';
+        }
+        if (empty) {
+            empty.hidden = total > 0;
+        }
+        if (wrap) {
+            wrap.classList.toggle('is-empty', total === 0);
+        }
+    }
+
     function renderDeptLegend(labels, values) {
         var mount = document.getElementById('dashDeptLegend');
         if (!mount || !window.ChartCore) return;
@@ -209,12 +257,23 @@
 
             if (analytics.maintenance_by_month && analytics.maintenance_by_month.length) {
                 var maintenance = monthSeries(analytics.maintenance_by_month);
+                updateMaintenanceMeta(maintenance.values);
                 ChartCore.createBar(
                     'dashMaintenanceChart',
                     maintenance.values,
-                    maintenance.labels,
-                    false
+                    shortMonthLabels(maintenance.labels),
+                    false,
+                    '#f59e0b',
+                    {
+                        unit: 'events',
+                        minMax: 4,
+                        maxBarThickness: 42,
+                        categoryPercentage: 0.7,
+                        barPercentage: 0.82
+                    }
                 );
+            } else {
+                updateMaintenanceMeta([]);
             }
 
             if (analytics.department_counts && Object.keys(analytics.department_counts).length) {
