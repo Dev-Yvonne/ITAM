@@ -49,30 +49,53 @@
     contain: paint;
 }
 
+.welcome-sky-atmosphere,
+.welcome-sky-beams,
 .welcome-sky-glow,
 .welcome-sky-rays,
 .welcome-sky-orb,
+.welcome-sky-orb-corona,
 .welcome-sky-stars {
     position: absolute;
     inset: 0;
     display: block;
 }
 
+.welcome-sky-clouds {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 2;
+}
+
 .welcome-sky-orb {
-    width: 7.5rem;
-    height: 7.5rem;
+    width: 5.5rem;
+    height: 5.5rem;
     inset: auto;
     border-radius: 50%;
     opacity: 0;
-    filter: blur(0.5px);
-    transition: opacity 0.5s ease, transform 0.8s ease;
-    /* Keep decorative orbs from expanding scrollable overflow. */
-    max-width: 40%;
-    max-height: 80%;
+    filter: blur(0.25px);
+    transition: opacity 0.8s ease, transform 1s ease;
+    max-width: 36%;
+    max-height: 72%;
+    z-index: 3;
+}
+
+.welcome-sky-orb-corona {
+    opacity: 0;
+    inset: auto;
+    width: 14rem;
+    height: 14rem;
+    border-radius: 50%;
+    filter: blur(18px);
+    transition: opacity 0.8s ease;
+    z-index: 2;
+    pointer-events: none;
 }
 
 .welcome-sky-stars {
     opacity: 0;
+    z-index: 1;
     background-image:
         radial-gradient(1.5px 1.5px at 12% 22%, rgba(255, 255, 255, 0.95), transparent),
         radial-gradient(1px 1px at 28% 48%, rgba(255, 255, 255, 0.75), transparent),
@@ -88,122 +111,346 @@
         radial-gradient(1.5px 1.5px at 50% 58%, rgba(255, 255, 255, 0.75), transparent);
 }
 
+.welcome-sky-atmosphere {
+    opacity: 0.85;
+    transition: opacity 0.6s ease;
+}
+
+.welcome-sky-beams,
 .welcome-sky-rays {
     opacity: 0;
     background-repeat: no-repeat;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.6s ease;
 }
 
-/* Morning — warm orange, sunrise rays from the east (right) */
+.welcome-sky-beams {
+    z-index: 1;
+}
+
+.welcome-sky-rays {
+    z-index: 1;
+    mix-blend-mode: soft-light;
+}
+
+.welcome-sky-glow {
+    z-index: 0;
+}
+
+/* Drifting clouds — spawn to horizon fade in 5–10s */
+.welcome-sky-cloud {
+    position: absolute;
+    left: -35%;
+    top: var(--cloud-top, 22%);
+    width: var(--cloud-width, 7rem);
+    height: calc(var(--cloud-width, 7rem) * 0.42);
+    transform: scale(var(--cloud-scale, 1));
+    opacity: 0;
+    border-radius: 50%;
+    filter: blur(2px);
+    animation: welcomeCloudDrift var(--cloud-duration, 7s) linear forwards;
+    will-change: transform, opacity;
+}
+
+.welcome-sky-cloud::before,
+.welcome-sky-cloud::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: inherit;
+}
+
+.welcome-sky-cloud::before {
+    width: 58%;
+    height: 95%;
+    left: 8%;
+    top: 8%;
+}
+
+.welcome-sky-cloud::after {
+    width: 48%;
+    height: 78%;
+    right: 6%;
+    top: 18%;
+}
+
+@keyframes welcomeCloudDrift {
+    0% {
+        opacity: 0;
+        transform: translateX(0) scale(var(--cloud-scale, 1));
+    }
+    10% {
+        opacity: var(--cloud-opacity, 0.55);
+    }
+    72% {
+        opacity: calc(var(--cloud-opacity, 0.55) * 0.65);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(165vw) scale(var(--cloud-scale, 1));
+    }
+}
+
+@keyframes welcomeBeamPulse {
+    0%, 100% { opacity: 0.92; }
+    50% { opacity: 1; }
+}
+
+@keyframes welcomeStarTwinkle {
+    0%, 100% { opacity: 0.75; }
+    50% { opacity: 1; }
+}
+
+/* Morning — warm sunrise, sun on the east (right) */
 .dashboard-welcome[data-sky="morning"] {
-    background: linear-gradient(115deg, #fff7ed 0%, #ffedd5 42%, #fdba74 100%);
+    background: linear-gradient(168deg, #fffbeb 0%, #ffedd5 38%, #fdba74 72%, #fb923c 100%);
+}
+
+.dashboard-welcome[data-sky="morning"] .welcome-sky-atmosphere {
+    background:
+        linear-gradient(180deg, rgba(255, 247, 237, 0.35) 0%, transparent 45%),
+        linear-gradient(90deg, transparent 40%, rgba(251, 146, 60, 0.18) 100%);
 }
 
 .dashboard-welcome[data-sky="morning"] .welcome-sky-glow {
     background:
-        radial-gradient(ellipse 55% 80% at 100% 50%, rgba(251, 146, 60, 0.55), transparent 70%),
-        radial-gradient(ellipse 40% 60% at 85% 20%, rgba(254, 243, 199, 0.7), transparent 65%);
+        radial-gradient(ellipse 90% 120% at 108% 48%, rgba(251, 146, 60, 0.62), transparent 68%),
+        radial-gradient(ellipse 55% 70% at 92% 18%, rgba(254, 243, 199, 0.55), transparent 70%);
+}
+
+.dashboard-welcome[data-sky="morning"] .welcome-sky-beams {
+    opacity: 1;
+    animation: welcomeBeamPulse 9s ease-in-out infinite;
+    background:
+        repeating-conic-gradient(from 188deg at 108% 50%,
+            transparent 0deg,
+            rgba(255, 210, 120, 0.14) 1.5deg,
+            transparent 7deg),
+        linear-gradient(248deg,
+            transparent 18%,
+            rgba(255, 200, 100, 0.22) 42%,
+            rgba(255, 237, 180, 0.12) 58%,
+            transparent 78%);
 }
 
 .dashboard-welcome[data-sky="morning"] .welcome-sky-rays {
     opacity: 1;
     background:
-        conic-gradient(from 200deg at 108% 50%,
+        conic-gradient(from 196deg at 108% 50%,
             transparent 0deg,
-            rgba(255, 237, 180, 0.55) 8deg,
-            transparent 16deg,
-            rgba(255, 200, 120, 0.45) 24deg,
-            transparent 34deg,
-            rgba(255, 247, 210, 0.5) 42deg,
-            transparent 52deg,
-            rgba(255, 186, 90, 0.4) 60deg,
-            transparent 72deg);
+            rgba(255, 237, 180, 0.65) 5deg,
+            transparent 11deg,
+            rgba(255, 186, 90, 0.5) 18deg,
+            transparent 26deg,
+            rgba(255, 247, 210, 0.55) 33deg,
+            transparent 42deg,
+            rgba(255, 160, 70, 0.45) 50deg,
+            transparent 60deg);
+}
+
+.dashboard-welcome[data-sky="morning"] .welcome-sky-orb-corona {
+    opacity: 1;
+    right: -2.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: radial-gradient(circle,
+        rgba(255, 220, 140, 0.55) 0%,
+        rgba(251, 146, 60, 0.28) 38%,
+        transparent 72%);
 }
 
 .dashboard-welcome[data-sky="morning"] .welcome-sky-orb {
     opacity: 1;
-    right: 0.35rem;
+    right: 0.15rem;
     top: 50%;
     transform: translateY(-50%);
-    background: radial-gradient(circle at 35% 35%, #fff7ed 0%, #fbbf24 40%, #f97316 78%, transparent 82%);
-    box-shadow: 0 0 40px rgba(249, 115, 22, 0.45);
+    width: 4.25rem;
+    height: 4.25rem;
+    background:
+        radial-gradient(circle at 50% 50%,
+            rgba(255, 255, 255, 0.12) 0%,
+            rgba(255, 220, 150, 0.06) 42%,
+            transparent 58%);
+    border: 1.5px solid rgba(255, 200, 110, 0.55);
+    box-shadow:
+        0 0 28px rgba(255, 200, 100, 0.35),
+        inset 0 0 12px rgba(255, 255, 255, 0.2);
 }
 
-/* Noon — pale yellow, blue/white rays from top center */
+.dashboard-welcome[data-sky="morning"] .welcome-sky-cloud {
+    background: rgba(255, 255, 255, 0.88);
+}
+
+/* Noon — pale sky, white-yellow sun, white/blue rays from top */
 .dashboard-welcome[data-sky="noon"] {
-    background: linear-gradient(180deg, #fefce8 0%, #fef9c3 55%, #fef3c7 100%);
+    background: linear-gradient(180deg, #fefce8 0%, #fef9c3 48%, #e0f2fe 100%);
+}
+
+.dashboard-welcome[data-sky="noon"] .welcome-sky-atmosphere {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, transparent 38%),
+        radial-gradient(ellipse 120% 80% at 50% -10%, rgba(186, 230, 253, 0.22), transparent 65%);
 }
 
 .dashboard-welcome[data-sky="noon"] .welcome-sky-glow {
     background:
-        radial-gradient(ellipse 70% 55% at 50% -5%, rgba(254, 249, 195, 0.95), transparent 70%),
-        radial-gradient(ellipse 45% 40% at 50% 0%, rgba(186, 230, 253, 0.45), transparent 70%);
+        radial-gradient(ellipse 95% 75% at 50% -8%, rgba(254, 252, 232, 0.95), transparent 72%),
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(186, 230, 253, 0.42), transparent 70%);
+}
+
+.dashboard-welcome[data-sky="noon"] .welcome-sky-beams {
+    opacity: 1;
+    animation: welcomeBeamPulse 9s ease-in-out infinite;
+    background:
+        repeating-conic-gradient(from -90deg at 50% -6%,
+            transparent 0deg,
+            rgba(255, 255, 255, 0.22) 1.2deg,
+            transparent 6deg,
+            rgba(147, 197, 253, 0.16) 7.5deg,
+            transparent 13deg),
+        linear-gradient(180deg,
+            rgba(255, 255, 255, 0.35) 0%,
+            rgba(186, 230, 253, 0.14) 28%,
+            transparent 62%);
 }
 
 .dashboard-welcome[data-sky="noon"] .welcome-sky-rays {
     opacity: 1;
     background:
-        conic-gradient(from -30deg at 50% -8%,
+        conic-gradient(from -28deg at 50% -6%,
             transparent 0deg,
-            rgba(255, 255, 255, 0.75) 6deg,
-            transparent 14deg,
-            rgba(186, 230, 253, 0.5) 22deg,
-            transparent 30deg,
-            rgba(255, 255, 255, 0.65) 38deg,
-            transparent 46deg,
-            rgba(147, 197, 253, 0.4) 54deg,
-            transparent 64deg,
-            rgba(255, 255, 255, 0.55) 72deg,
-            transparent 82deg);
+            rgba(255, 255, 255, 0.85) 4deg,
+            transparent 10deg,
+            rgba(186, 230, 253, 0.55) 16deg,
+            transparent 24deg,
+            rgba(255, 255, 255, 0.7) 30deg,
+            transparent 38deg,
+            rgba(147, 197, 253, 0.45) 46deg,
+            transparent 56deg,
+            rgba(255, 255, 255, 0.6) 64deg,
+            transparent 74deg);
+}
+
+.dashboard-welcome[data-sky="noon"] .welcome-sky-orb-corona {
+    opacity: 1;
+    left: 50%;
+    top: -1.75rem;
+    transform: translateX(-50%);
+    width: 11rem;
+    height: 11rem;
+    background: radial-gradient(circle,
+        rgba(255, 255, 255, 0.7) 0%,
+        rgba(254, 249, 195, 0.35) 32%,
+        rgba(186, 230, 253, 0.12) 55%,
+        transparent 72%);
 }
 
 .dashboard-welcome[data-sky="noon"] .welcome-sky-orb {
-    opacity: 0.9;
+    opacity: 1;
     left: 50%;
-    top: 0.35rem;
+    top: 0.1rem;
     transform: translateX(-50%);
-    width: 5.25rem;
-    height: 5.25rem;
-    background: radial-gradient(circle at 40% 40%, #ffffff 0%, #fde68a 45%, #fbbf24 78%, transparent 82%);
-    box-shadow: 0 0 36px rgba(253, 224, 71, 0.5);
+    width: 3.75rem;
+    height: 3.75rem;
+    background:
+        radial-gradient(circle at 50% 50%,
+            rgba(255, 255, 255, 0.18) 0%,
+            rgba(255, 255, 255, 0.05) 45%,
+            transparent 62%);
+    border: 1.5px solid rgba(255, 255, 255, 0.72);
+    box-shadow:
+        0 0 32px rgba(255, 255, 255, 0.55),
+        0 0 64px rgba(254, 249, 195, 0.35),
+        inset 0 0 14px rgba(255, 255, 255, 0.35);
 }
 
-/* Sunset / late afternoon — orange, rays from the west (left) */
+.dashboard-welcome[data-sky="noon"] .welcome-sky-cloud {
+    background: rgba(255, 255, 255, 0.92);
+}
+
+/* Sunset — bright orange sun on the west (left), sharp contrast rays */
 .dashboard-welcome[data-sky="sunset"] {
-    background: linear-gradient(250deg, #fb923c 0%, #fdba74 38%, #ffedd5 100%);
+    background: linear-gradient(215deg, #7c2d12 0%, #ea580c 22%, #fdba74 55%, #ffedd5 100%);
+}
+
+.dashboard-welcome[data-sky="sunset"] .welcome-sky-atmosphere {
+    background:
+        linear-gradient(90deg, rgba(234, 88, 12, 0.28) 0%, transparent 55%),
+        linear-gradient(180deg, rgba(255, 237, 213, 0.2) 70%, transparent 100%);
 }
 
 .dashboard-welcome[data-sky="sunset"] .welcome-sky-glow {
     background:
-        radial-gradient(ellipse 60% 90% at 0% 55%, rgba(234, 88, 12, 0.55), transparent 70%),
-        radial-gradient(ellipse 45% 55% at 15% 80%, rgba(251, 113, 133, 0.28), transparent 70%);
+        radial-gradient(ellipse 100% 110% at -8% 52%, rgba(234, 88, 12, 0.72), transparent 68%),
+        radial-gradient(ellipse 50% 60% at 12% 78%, rgba(251, 113, 133, 0.32), transparent 70%);
+}
+
+.dashboard-welcome[data-sky="sunset"] .welcome-sky-beams {
+    opacity: 1;
+    background:
+        repeating-conic-gradient(from 8deg at -8% 55%,
+            transparent 0deg,
+            rgba(255, 120, 40, 0.22) 1deg,
+            transparent 5deg),
+        linear-gradient(72deg,
+            rgba(255, 100, 20, 0.45) 0%,
+            rgba(255, 180, 80, 0.22) 32%,
+            transparent 68%);
+    animation: welcomeBeamPulse 6s ease-in-out infinite;
 }
 
 .dashboard-welcome[data-sky="sunset"] .welcome-sky-rays {
     opacity: 1;
+    mix-blend-mode: screen;
     background:
-        conic-gradient(from 20deg at -8% 55%,
+        conic-gradient(from 14deg at -8% 55%,
             transparent 0deg,
-            rgba(255, 237, 180, 0.55) 8deg,
-            transparent 16deg,
-            rgba(255, 170, 100, 0.45) 24deg,
+            rgba(255, 200, 100, 0.75) 4deg,
+            transparent 9deg,
+            rgba(255, 120, 40, 0.65) 14deg,
+            transparent 20deg,
+            rgba(255, 237, 180, 0.7) 26deg,
             transparent 34deg,
-            rgba(255, 228, 180, 0.5) 42deg,
-            transparent 52deg,
-            rgba(255, 140, 80, 0.4) 60deg,
-            transparent 72deg);
+            rgba(255, 80, 20, 0.6) 40deg,
+            transparent 50deg);
+}
+
+.dashboard-welcome[data-sky="sunset"] .welcome-sky-orb-corona {
+    opacity: 1;
+    left: -2.75rem;
+    bottom: 0.15rem;
+    top: auto;
+    width: 13rem;
+    height: 13rem;
+    background: radial-gradient(circle,
+        rgba(255, 140, 50, 0.65) 0%,
+        rgba(234, 88, 12, 0.35) 35%,
+        transparent 70%);
 }
 
 .dashboard-welcome[data-sky="sunset"] .welcome-sky-orb {
     opacity: 1;
-    left: 0.35rem;
-    bottom: 0.35rem;
+    left: 0.1rem;
+    bottom: 0.2rem;
     top: auto;
-    background: radial-gradient(circle at 40% 35%, #ffedd5 0%, #fb923c 42%, #ea580c 78%, transparent 82%);
-    box-shadow: 0 0 42px rgba(234, 88, 12, 0.45);
+    width: 4.5rem;
+    height: 4.5rem;
+    background:
+        radial-gradient(circle at 50% 50%,
+            rgba(255, 220, 170, 0.15) 0%,
+            rgba(251, 146, 60, 0.06) 42%,
+            transparent 60%);
+    border: 1.5px solid rgba(255, 160, 80, 0.7);
+    box-shadow:
+        0 0 36px rgba(255, 100, 30, 0.55),
+        0 0 72px rgba(234, 88, 12, 0.35),
+        inset 0 0 16px rgba(255, 200, 120, 0.25);
 }
 
-/* Night — black sky, inverted text, stars, moon in the west */
+.dashboard-welcome[data-sky="sunset"] .welcome-sky-cloud {
+    background: rgba(255, 230, 210, 0.85);
+}
+
+/* Night — moon with craters, stars, subtle clouds */
 .dashboard-welcome[data-sky="night"] {
     --welcome-fg: #f5f5f5;
     --welcome-muted: #a3a3a3;
@@ -212,13 +459,19 @@
     --welcome-badge-border: rgba(255, 255, 255, 0.16);
     --welcome-btn-secondary-bg: rgba(255, 255, 255, 0.1);
     --welcome-btn-secondary-fg: #f5f5f5;
-    /* Shorthand clears prior gradient themes cleanly */
     background: #05070d;
+}
+
+.dashboard-welcome[data-sky="night"] .welcome-sky-atmosphere {
+    background:
+        radial-gradient(ellipse 80% 60% at 50% 100%, rgba(30, 58, 138, 0.35), transparent 70%),
+        radial-gradient(ellipse 50% 40% at 20% 30%, rgba(99, 102, 241, 0.12), transparent 70%);
 }
 
 .dashboard-welcome[data-sky="night"] .welcome-sky-glow {
     background:
-        radial-gradient(ellipse 50% 70% at 12% 40%, rgba(99, 102, 241, 0.18), transparent 70%),
+        radial-gradient(ellipse 55% 75% at var(--moon-x, 8%) var(--moon-y, 22%),
+            rgba(186, 210, 255, 0.22), transparent 70%),
         radial-gradient(ellipse 40% 50% at 80% 70%, rgba(30, 58, 138, 0.25), transparent 70%);
 }
 
@@ -227,22 +480,53 @@
     animation: welcomeStarTwinkle 4.5s ease-in-out infinite;
 }
 
+.dashboard-welcome[data-sky="night"] .welcome-sky-orb-corona {
+    opacity: 1;
+    left: var(--moon-x, 8%);
+    top: var(--moon-y, 22%);
+    width: 6.5rem;
+    height: 6.5rem;
+    transform: translate(-28%, -28%);
+    background: radial-gradient(circle,
+        rgba(186, 210, 255, 0.28) 0%,
+        rgba(99, 102, 241, 0.1) 45%,
+        transparent 72%);
+    filter: blur(14px);
+}
+
 .dashboard-welcome[data-sky="night"] .welcome-sky-orb {
     opacity: 1;
     left: var(--moon-x, 8%);
     top: var(--moon-y, 22%);
-    width: 3.4rem;
-    height: 3.4rem;
+    width: 3.6rem;
+    height: 3.6rem;
     background:
-        radial-gradient(circle at 32% 32%, #f8fafc 0%, #e2e8f0 38%, #94a3b8 72%, transparent 74%);
+        radial-gradient(circle at 68% 32%, rgba(100, 116, 139, 0.45) 0%, transparent 14%),
+        radial-gradient(circle at 42% 68%, rgba(100, 116, 139, 0.35) 0%, transparent 11%),
+        radial-gradient(circle at 58% 48%, rgba(148, 163, 184, 0.25) 0%, transparent 9%),
+        radial-gradient(circle at 34% 38%, #f8fafc 0%, #e2e8f0 30%, #cbd5e1 58%, #94a3b8 78%, transparent 82%);
+    border: 1px solid rgba(226, 232, 240, 0.35);
     box-shadow:
-        0 0 24px rgba(226, 232, 240, 0.35),
-        inset -10px -4px 0 -2px #05070d;
+        0 0 28px rgba(186, 210, 255, 0.3),
+        0 0 56px rgba(99, 102, 241, 0.12),
+        inset -11px -5px 0 -2px #05070d,
+        inset 4px 4px 8px rgba(255, 255, 255, 0.08);
 }
 
-@keyframes welcomeStarTwinkle {
-    0%, 100% { opacity: 0.75; }
-    50% { opacity: 1; }
+.dashboard-welcome[data-sky="night"] .welcome-sky-cloud {
+    background: rgba(71, 85, 105, 0.55);
+    filter: blur(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .welcome-sky-beams {
+        animation: none;
+    }
+
+    .welcome-sky-cloud {
+        animation: none;
+        display: none;
+    }
 }
 
 .welcome-body {

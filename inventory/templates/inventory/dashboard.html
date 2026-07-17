@@ -4,8 +4,8 @@
 {% block title %}Dashboard - {{ itam_product_name }}{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard.css' %}?v=32">
-    <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard-analytics.css' %}?v=11">
+    <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard.css' %}?v=33">
+    <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard-analytics.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
@@ -14,9 +14,13 @@
         <!-- Welcome -->
         <header class="dashboard-welcome" id="dashboardWelcome" aria-labelledby="dashboard-welcome-heading" data-sky="morning">
             <div class="welcome-sky" aria-hidden="true">
-                <span class="welcome-sky-glow"></span>
+                <span class="welcome-sky-atmosphere"></span>
+                <span class="welcome-sky-beams"></span>
                 <span class="welcome-sky-rays"></span>
+                <span class="welcome-sky-glow"></span>
+                <span class="welcome-sky-orb-corona"></span>
                 <span class="welcome-sky-orb"></span>
+                <div class="welcome-sky-clouds" id="welcomeSkyClouds"></div>
                 <span class="welcome-sky-stars"></span>
             </div>
             <div class="welcome-body">
@@ -327,7 +331,7 @@
     <script src="{% static 'inventory/js/core/background-jobs.js' %}?v=3"></script>
     <script src="{% static 'inventory/js/core/chart-core.js' %}?v=13"></script>
     <script src="{% static 'inventory/js/modules/dashboard-analytics.js' %}?v=11"></script>
-    <script src="{% static 'inventory/js/modules/dashboard.js' %}?v=12"></script>
+    <script src="{% static 'inventory/js/modules/dashboard.js' %}?v=13"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (window.Dashboard && typeof window.Dashboard.init === 'function') {

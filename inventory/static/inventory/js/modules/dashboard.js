@@ -132,6 +132,60 @@
         }
     }
 
+    // ============================================
+    // Ambient sky clouds
+    // ============================================
+    var skyCloudTimer = null;
+    var skyCloudMax = 7;
+
+    function spawnSkyCloud() {
+        var container = document.getElementById('welcomeSkyClouds');
+        if (!container || container.children.length >= skyCloudMax) {
+            return;
+        }
+
+        var cloud = document.createElement('span');
+        cloud.className = 'welcome-sky-cloud';
+        var width = 72 + (Math.random() * 96);
+        var duration = 5 + (Math.random() * 5);
+        var top = 4 + (Math.random() * 52);
+        var opacity = 0.32 + (Math.random() * 0.38);
+        var scale = 0.55 + (Math.random() * 0.75);
+        var startOffset = Math.random() * 18;
+
+        cloud.style.setProperty('--cloud-duration', duration.toFixed(2) + 's');
+        cloud.style.setProperty('--cloud-top', top.toFixed(1) + '%');
+        cloud.style.setProperty('--cloud-width', width.toFixed(0) + 'px');
+        cloud.style.setProperty('--cloud-opacity', opacity.toFixed(2));
+        cloud.style.setProperty('--cloud-scale', scale.toFixed(2));
+        cloud.style.left = (-35 - startOffset) + '%';
+
+        cloud.addEventListener('animationend', function() {
+            if (cloud.parentNode) {
+                cloud.parentNode.removeChild(cloud);
+            }
+        });
+
+        container.appendChild(cloud);
+    }
+
+    function initSkyClouds() {
+        var container = document.getElementById('welcomeSkyClouds');
+        if (!container || skyCloudTimer) {
+            return;
+        }
+
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return;
+        }
+
+        var i;
+        for (i = 0; i < 3; i += 1) {
+            setTimeout(spawnSkyCloud, i * 900);
+        }
+
+        skyCloudTimer = setInterval(spawnSkyCloud, 1600);
+    }
 
     // ============================================
     // Live Time and Date
@@ -472,6 +526,7 @@
         
         updateGreeting();
         updateClock();
+        initSkyClouds();
         
         // Update clock every second
         setInterval(updateClock, 1000);
