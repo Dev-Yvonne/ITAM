@@ -5,6 +5,8 @@
     'use strict';
 
     var tabsReady = false;
+    var tabsElRef = null;
+    var gliderObserver = null;
     var growthSwitcherReady = false;
     var weeklyGrowth = null;
     var selectedMonthKey = null;
@@ -283,10 +285,39 @@
         }
     }
 
+    function syncActiveTabGlider(animate) {
+        if (!tabsElRef) {
+            tabsElRef = document.querySelector('.dash-chart-tabs');
+        }
+        if (!tabsElRef) return;
+        var activeTab = tabsElRef.querySelector('.dash-tab.active');
+        syncTabGlider(tabsElRef, activeTab, animate === false ? false : true);
+    }
+
+    function scheduleGliderSync() {
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                syncActiveTabGlider(false);
+            });
+        });
+    }
+
+    function attachGliderObserver(tabsEl) {
+        if (gliderObserver || !tabsEl || !window.ResizeObserver) return;
+        gliderObserver = new ResizeObserver(function() {
+            syncActiveTabGlider(false);
+        });
+        gliderObserver.observe(tabsEl);
+        tabsEl.querySelectorAll('.dash-tab').forEach(function(tab) {
+            gliderObserver.observe(tab);
+        });
+    }
+
     function setupTabs() {
         if (tabsReady) return;
         tabsReady = true;
         var tabsEl = document.querySelector('.dash-chart-tabs');
+        tabsElRef = tabsEl;
         var tabs = document.querySelectorAll('.dash-tab');
         var panels = document.querySelectorAll('.bento-panel');
         var activeTab = tabsEl ? tabsEl.querySelector('.dash-tab.active') : null;
@@ -298,6 +329,13 @@
         }
 
         syncTabGlider(tabsEl, activeTab, false);
+        scheduleGliderSync();
+        attachGliderObserver(tabsEl);
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(function() {
+                syncActiveTabGlider(false);
+            });
+        }
 
         tabs.forEach(function(tab) {
             tab.addEventListener('click', function() {
@@ -317,8 +355,7 @@
         });
 
         window.addEventListener('resize', function() {
-            var current = tabsEl ? tabsEl.querySelector('.dash-tab.active') : null;
-            syncTabGlider(tabsEl, current, false);
+            syncActiveTabGlider(false);
         });
     }
 
@@ -327,6 +364,9 @@
         var bento = document.getElementById('analytics-bento');
         if (el) el.classList.toggle('hidden', !loading);
         if (bento) bento.classList.toggle('loaded', !loading);
+        if (!loading) {
+            scheduleGliderSync();
+        }
     }
 
     function applyData(data) {
