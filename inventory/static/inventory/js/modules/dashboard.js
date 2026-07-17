@@ -30,7 +30,7 @@
     };
     
     // ============================================
-    // Greeting + sky period
+    // Greeting + continuous day/night sky cycle
     // ============================================
     function isLateNightHour(hour) {
         return hour === 23 || hour === 0 || hour === 1 || hour === 2;
@@ -38,6 +38,27 @@
 
     function isEarlyCoffeeHour(hour) {
         return hour >= 5 && hour <= 8;
+    }
+
+    function getDecimalHour(now) {
+        now = now || new Date();
+        return now.getHours() + (now.getMinutes() / 60) + (now.getSeconds() / 3600);
+    }
+
+    function getSkyPeriod(now) {
+        var decimal = getDecimalHour(now);
+
+        if (decimal >= 5.5 && decimal < 11) {
+            return 'morning';
+        }
+        if (decimal >= 11 && decimal < 15) {
+            return 'noon';
+        }
+        // Keep evening greeting through the dusk window until full night at 20:00.
+        if (decimal >= 15 && decimal < 20) {
+            return 'sunset';
+        }
+        return 'night';
     }
 
     function getStandardGreeting(now) {
@@ -52,23 +73,6 @@
             return 'Good Evening';
         }
         return 'Good Night';
-    }
-
-    function getSkyPeriod(now) {
-        var hour = (now || new Date()).getHours();
-        var minute = (now || new Date()).getMinutes();
-        var decimal = hour + (minute / 60);
-
-        if (decimal >= 5 && decimal < 11) {
-            return 'morning';
-        }
-        if (decimal >= 11 && decimal < 15) {
-            return 'noon';
-        }
-        if (decimal >= 15 && decimal < 20) {
-            return 'sunset';
-        }
-        return 'night';
     }
 
     function getGreeting(now) {
@@ -95,41 +99,405 @@
         updateGreeting();
     }
 
-    function updateMoonPosition(now) {
+    function clamp01(value) {
+        return Math.min(1, Math.max(0, value));
+    }
+
+    function lerp(a, b, t) {
+        return a + ((b - a) * t);
+    }
+
+    function parseHexColor(hex) {
+        var value = String(hex || '').replace('#', '');
+        if (value.length === 3) {
+            value = value[0] + value[0] + value[1] + value[1] + value[2] + value[2];
+        }
+        return {
+            r: parseInt(value.slice(0, 2), 16),
+            g: parseInt(value.slice(2, 4), 16),
+            b: parseInt(value.slice(4, 6), 16)
+        };
+    }
+
+    function toHexColor(r, g, b) {
+        function part(n) {
+            var hex = Math.round(Math.min(255, Math.max(0, n))).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        }
+        return '#' + part(r) + part(g) + part(b);
+    }
+
+    function lerpColor(a, b, t) {
+        var ca = parseHexColor(a);
+        var cb = parseHexColor(b);
+        return toHexColor(
+            lerp(ca.r, cb.r, t),
+            lerp(ca.g, cb.g, t),
+            lerp(ca.b, cb.b, t)
+        );
+    }
+
+    function easeInOut(t) {
+        return t < 0.5 ? (2 * t * t) : (1 - (Math.pow((-2 * t) + 2, 2) / 2));
+    }
+
+    /*
+     * Continuous 24h sky keyframes (local time).
+     * Evening: 17:30 orange sunset → 18:30 sun sets left → 19:00 moon rises dim → 20:00 deep night.
+     * Morning: reverse of evening around 05:30–06:30.
+     */
+    var skyKeyframes = [
+        {
+            t: 0,
+            period: 'night',
+            sky: ['#05070d', '#070b16', '#0b1220', '#0f172a'],
+            angle: 180,
+            sun: { x: -12, y: 78, opacity: 0, warmth: 1, size: 5 },
+            moon: { x: 18, y: 28, opacity: 1, bright: 1, size: 3.6 },
+            stars: 1,
+            beams: 0,
+            nightUi: 1,
+            cloud: 0.45
+        },
+        {
+            t: 4.5,
+            period: 'night',
+            sky: ['#05070d', '#08101c', '#0c1526', '#111827'],
+            angle: 180,
+            sun: { x: -12, y: 78, opacity: 0, warmth: 1, size: 5 },
+            moon: { x: 34, y: 48, opacity: 0.92, bright: 0.9, size: 3.5 },
+            stars: 1,
+            beams: 0,
+            nightUi: 1,
+            cloud: 0.4
+        },
+        {
+            t: 5.5,
+            period: 'night',
+            sky: ['#101828', '#1e3a5f', '#3b5f8a', '#7a90b0'],
+            angle: 100,
+            sun: { x: 108, y: 62, opacity: 0, warmth: 0.85, size: 5 },
+            moon: { x: 42, y: 62, opacity: 0.35, bright: 0.35, size: 3.2 },
+            stars: 0.35,
+            beams: 0,
+            nightUi: 0.55,
+            cloud: 0.55
+        },
+        {
+            t: 6.0,
+            period: 'morning',
+            sky: ['#ffb066', '#ffd3a1', '#a5cff0', '#8fc3ee'],
+            angle: 95,
+            sun: { x: 104, y: 52, opacity: 0.85, warmth: 0.75, size: 5 },
+            moon: { x: 48, y: 78, opacity: 0, bright: 0, size: 3 },
+            stars: 0,
+            beams: 0.55,
+            nightUi: 0.1,
+            cloud: 0.85
+        },
+        {
+            t: 6.5,
+            period: 'morning',
+            sky: ['#8fc3ee', '#a9d4f4', '#cfe7f9', '#ffe0ae'],
+            angle: 102,
+            sun: { x: 100.5, y: 46, opacity: 1, warmth: 0.55, size: 5 },
+            moon: { x: 50, y: 90, opacity: 0, bright: 0, size: 3 },
+            stars: 0,
+            beams: 0.7,
+            nightUi: 0,
+            cloud: 0.92
+        },
+        {
+            t: 11,
+            period: 'noon',
+            sky: ['#5fb2ec', '#83c5f2', '#b6e0f9', '#d7effc'],
+            angle: 180,
+            sun: { x: 50, y: -4, opacity: 1, warmth: 0.08, size: 5 },
+            moon: { x: 50, y: 90, opacity: 0, bright: 0, size: 3 },
+            stars: 0,
+            beams: 0.55,
+            nightUi: 0,
+            cloud: 0.95
+        },
+        {
+            t: 15,
+            period: 'noon',
+            sky: ['#6bb8ef', '#93cdf5', '#c2e5fb', '#f0d9b0'],
+            angle: 120,
+            sun: { x: 18, y: 18, opacity: 1, warmth: 0.28, size: 5 },
+            moon: { x: 50, y: 90, opacity: 0, bright: 0, size: 3 },
+            stars: 0,
+            beams: 0.5,
+            nightUi: 0,
+            cloud: 0.9
+        },
+        {
+            t: 17.5,
+            period: 'sunset',
+            sky: ['#ff9a3c', '#ffb066', '#ffd3a1', '#7cbceb'],
+            angle: 88,
+            sun: { x: 2, y: 40, opacity: 1, warmth: 1, size: 5.2 },
+            moon: { x: -8, y: 78, opacity: 0, bright: 0, size: 3.2 },
+            stars: 0,
+            beams: 0.85,
+            nightUi: 0.05,
+            cloud: 0.88
+        },
+        {
+            t: 18.5,
+            period: 'night',
+            sky: ['#1a2744', '#243b63', '#3d5a80', '#5b7aa0'],
+            angle: 88,
+            sun: { x: -10, y: 62, opacity: 0, warmth: 1, size: 4.5 },
+            moon: { x: -4, y: 70, opacity: 0.15, bright: 0.15, size: 3.2 },
+            stars: 0.08,
+            beams: 0,
+            nightUi: 0.45,
+            cloud: 0.55
+        },
+        {
+            t: 19,
+            period: 'night',
+            sky: ['#0d1424', '#152038', '#1e3358', '#2a4068'],
+            angle: 180,
+            sun: { x: -12, y: 78, opacity: 0, warmth: 1, size: 4 },
+            moon: { x: 8, y: 36, opacity: 0.7, bright: 0.55, size: 3.4 },
+            stars: 0.45,
+            beams: 0,
+            nightUi: 0.85,
+            cloud: 0.48
+        },
+        {
+            t: 20,
+            period: 'night',
+            sky: ['#05070d', '#070b16', '#0b1220', '#0f172a'],
+            angle: 180,
+            sun: { x: -12, y: 78, opacity: 0, warmth: 1, size: 4 },
+            moon: { x: 12, y: 22, opacity: 1, bright: 1, size: 3.6 },
+            stars: 1,
+            beams: 0,
+            nightUi: 1,
+            cloud: 0.45
+        },
+        {
+            t: 24,
+            period: 'night',
+            sky: ['#05070d', '#070b16', '#0b1220', '#0f172a'],
+            angle: 180,
+            sun: { x: -12, y: 78, opacity: 0, warmth: 1, size: 5 },
+            moon: { x: 18, y: 28, opacity: 1, bright: 1, size: 3.6 },
+            stars: 1,
+            beams: 0,
+            nightUi: 1,
+            cloud: 0.45
+        }
+    ];
+
+    function sampleSkyFrame(decimalHour) {
+        var frames = skyKeyframes;
+        var t = ((decimalHour % 24) + 24) % 24;
+        var i;
+        for (i = 0; i < frames.length - 1; i += 1) {
+            if (t >= frames[i].t && t <= frames[i + 1].t) {
+                var span = frames[i + 1].t - frames[i].t;
+                var progress = span <= 0 ? 0 : (t - frames[i].t) / span;
+                return mixSkyFrames(frames[i], frames[i + 1], easeInOut(clamp01(progress)));
+            }
+        }
+        return frames[0];
+    }
+
+    function mixBody(a, b, t) {
+        return {
+            x: lerp(a.x, b.x, t),
+            y: lerp(a.y, b.y, t),
+            opacity: lerp(a.opacity, b.opacity, t),
+            warmth: a.warmth === undefined ? undefined : lerp(a.warmth, b.warmth, t),
+            bright: a.bright === undefined ? undefined : lerp(a.bright, b.bright, t),
+            size: lerp(a.size, b.size, t)
+        };
+    }
+
+    function mixSkyFrames(a, b, t) {
+        return {
+            period: t < 0.5 ? a.period : b.period,
+            sky: [
+                lerpColor(a.sky[0], b.sky[0], t),
+                lerpColor(a.sky[1], b.sky[1], t),
+                lerpColor(a.sky[2], b.sky[2], t),
+                lerpColor(a.sky[3], b.sky[3], t)
+            ],
+            angle: lerp(a.angle, b.angle, t),
+            sun: mixBody(a.sun, b.sun, t),
+            moon: mixBody(a.moon, b.moon, t),
+            stars: lerp(a.stars, b.stars, t),
+            beams: lerp(a.beams, b.beams, t),
+            nightUi: lerp(a.nightUi, b.nightUi, t),
+            cloud: lerp(a.cloud, b.cloud, t)
+        };
+    }
+
+    function sunBackground(warmth) {
+        var core = lerpColor('#ffffff', '#ffe9c2', warmth);
+        var mid = lerpColor('#fffdf2', '#ffc26e', warmth);
+        var rim = lerpColor('#fff4c2', '#ff9433', warmth);
+        var edge = lerpColor('#ffe895', '#ff7712', warmth);
+        return 'radial-gradient(circle at 42% 40%, ' +
+            core + ' 0%, ' + mid + ' 36%, ' + rim + ' 66%, ' + edge +
+            ' 86%, rgba(255, 140, 50, 0.35) 94%, transparent 100%)';
+    }
+
+    function sunShadow(warmth) {
+        var glow = lerpColor('#ffffff', '#ff8c32', warmth);
+        return '0 0 ' + (22 + (warmth * 8)).toFixed(0) + 'px ' + glow +
+            'aa, 0 0 ' + (52 + (warmth * 12)).toFixed(0) + 'px ' + glow + '66';
+    }
+
+    function moonBackground(bright) {
+        var face = lerpColor('#94a3b8', '#f8fafc', bright);
+        var mid = lerpColor('#64748b', '#e2e8f0', bright);
+        return 'radial-gradient(circle at 68% 32%, rgba(100, 116, 139, ' +
+            (0.25 + (0.2 * bright)).toFixed(2) + ') 0%, transparent 14%),' +
+            'radial-gradient(circle at 42% 68%, rgba(100, 116, 139, ' +
+            (0.2 + (0.15 * bright)).toFixed(2) + ') 0%, transparent 11%),' +
+            'radial-gradient(circle at 34% 38%, ' + face + ' 0%, ' + mid +
+            ' 42%, #94a3b8 78%, transparent 82%)';
+    }
+
+    function moonShadow(bright) {
+        return '0 0 ' + (18 + (bright * 14)).toFixed(0) + 'px rgba(186, 210, 255, ' +
+            (0.12 + (bright * 0.28)).toFixed(2) + '),' +
+            '0 0 ' + (40 + (bright * 20)).toFixed(0) + 'px rgba(99, 102, 241, ' +
+            (0.05 + (bright * 0.12)).toFixed(2) + '),' +
+            'inset -11px -5px 0 -2px #05070d, inset 4px 4px 8px rgba(255, 255, 255, 0.08)';
+    }
+
+    function applyContinuousSky(now) {
         var welcome = document.getElementById('dashboardWelcome');
-        if (!welcome || welcome.getAttribute('data-sky') !== 'night') {
+        if (!welcome) {
             return;
         }
 
-        // Night window: 20:00 -> 05:00 (9 hours). Moon starts west/high and sets before morning.
-        var hour = now.getHours();
-        var minute = now.getMinutes();
-        var minutesIntoNight;
-        if (hour >= 20) {
-            minutesIntoNight = ((hour - 20) * 60) + minute;
-        } else {
-            minutesIntoNight = ((hour + 4) * 60) + minute;
+        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var decimal = getDecimalHour(now);
+        var frame = sampleSkyFrame(decimal);
+        var night = frame.nightUi;
+
+        welcome.setAttribute('data-sky-cycle', 'live');
+        welcome.setAttribute('data-sky', frame.period);
+        welcome.classList.toggle('is-night-sky', night > 0.55);
+
+        welcome.style.setProperty('--sky-c1', frame.sky[0]);
+        welcome.style.setProperty('--sky-c2', frame.sky[1]);
+        welcome.style.setProperty('--sky-c3', frame.sky[2]);
+        welcome.style.setProperty('--sky-c4', frame.sky[3]);
+        welcome.style.setProperty('--sky-angle', frame.angle.toFixed(2) + 'deg');
+        welcome.style.setProperty('--stars-opacity', frame.stars.toFixed(3));
+        welcome.style.setProperty('--beams-opacity', frame.beams.toFixed(3));
+        welcome.style.setProperty('--night-ui', night.toFixed(3));
+        welcome.style.setProperty(
+            '--cloud-fill',
+            'rgba(255, 255, 255, ' + frame.cloud.toFixed(3) + ')'
+        );
+        welcome.style.setProperty(
+            '--welcome-fade',
+            night > 0.55 ? 'var(--bg-secondary, #1e293b)' : 'var(--bg-secondary, #f8fafc)'
+        );
+
+        welcome.style.setProperty('--welcome-fg', lerpColor('#111111', '#f5f5f5', night));
+        welcome.style.setProperty('--welcome-muted', lerpColor('#525252', '#a3a3a3', night));
+        welcome.style.setProperty(
+            '--welcome-badge-bg',
+            night > 0.5 ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.55)'
+        );
+        welcome.style.setProperty(
+            '--welcome-badge-border',
+            night > 0.5 ? 'rgba(255, 255, 255, 0.16)' : 'rgba(0, 0, 0, 0.1)'
+        );
+
+        var sun = document.getElementById('welcomeSkySun');
+        var moon = document.getElementById('welcomeSkyMoon');
+        var corona = document.getElementById('welcomeSkyCorona');
+        var transition = reduced ? 'none' : 'left 1.1s linear, top 1.1s linear, opacity 1.1s linear, width 1.1s linear, height 1.1s linear, box-shadow 1.1s linear, background 1.1s linear';
+
+        if (sun) {
+            sun.style.transition = transition;
+            sun.style.left = frame.sun.x.toFixed(2) + '%';
+            sun.style.top = frame.sun.y.toFixed(2) + '%';
+            sun.style.opacity = frame.sun.opacity.toFixed(3);
+            sun.style.width = frame.sun.size.toFixed(2) + 'rem';
+            sun.style.height = frame.sun.size.toFixed(2) + 'rem';
+            sun.style.background = sunBackground(frame.sun.warmth || 0);
+            sun.style.boxShadow = sunShadow(frame.sun.warmth || 0);
+            sun.style.border = 'none';
+            sun.style.filter = 'none';
         }
-        var progress = Math.min(1, Math.max(0, minutesIntoNight / (9 * 60)));
-        var moonX = 8 + (progress * 28);
-        var moonY = 18 + (progress * 58);
-        welcome.style.setProperty('--moon-x', moonX.toFixed(2) + '%');
-        welcome.style.setProperty('--moon-y', moonY.toFixed(2) + '%');
+
+        if (moon) {
+            moon.style.transition = transition;
+            moon.style.left = frame.moon.x.toFixed(2) + '%';
+            moon.style.top = frame.moon.y.toFixed(2) + '%';
+            moon.style.opacity = frame.moon.opacity.toFixed(3);
+            moon.style.width = frame.moon.size.toFixed(2) + 'rem';
+            moon.style.height = frame.moon.size.toFixed(2) + 'rem';
+            moon.style.background = moonBackground(frame.moon.bright || 0);
+            moon.style.boxShadow = moonShadow(frame.moon.bright || 0);
+            moon.style.border = '1px solid rgba(226, 232, 240, ' +
+                (0.15 + ((frame.moon.bright || 0) * 0.25)).toFixed(2) + ')';
+        }
+
+        if (corona) {
+            var body = frame.sun.opacity >= frame.moon.opacity ? frame.sun : frame.moon;
+            var coronaSize = (body.size * 2.4).toFixed(2) + 'rem';
+            corona.style.transition = transition;
+            corona.style.left = body.x.toFixed(2) + '%';
+            corona.style.top = body.y.toFixed(2) + '%';
+            corona.style.width = coronaSize;
+            corona.style.height = coronaSize;
+            corona.style.opacity = Math.max(frame.sun.opacity, frame.moon.opacity * 0.85).toFixed(3);
+            if (frame.sun.opacity >= frame.moon.opacity) {
+                corona.style.background = 'radial-gradient(circle, rgba(255, 180, 90, ' +
+                    (0.35 + ((frame.sun.warmth || 0) * 0.4)).toFixed(2) +
+                    ') 0%, rgba(255, 220, 150, 0.18) 42%, transparent 72%)';
+            } else {
+                corona.style.background = 'radial-gradient(circle, rgba(186, 210, 255, ' +
+                    (0.12 + ((frame.moon.bright || 0) * 0.2)).toFixed(2) +
+                    ') 0%, rgba(99, 102, 241, 0.08) 45%, transparent 72%)';
+            }
+        }
+
+        welcome.style.setProperty(
+            '--sun-mask',
+            'radial-gradient(circle at ' + frame.sun.x.toFixed(2) + '% ' +
+                frame.sun.y.toFixed(2) + '%, transparent 0 3.1rem, #000 4.6rem)'
+        );
+
+        var glowBody = frame.sun.opacity >= frame.moon.opacity ? frame.sun : frame.moon;
+        welcome.style.setProperty('--glow-x', glowBody.x.toFixed(2) + '%');
+        welcome.style.setProperty('--glow-y', glowBody.y.toFixed(2) + '%');
+    }
+
+    function previewSkyAt(decimalHour) {
+        var welcome = document.getElementById('dashboardWelcome');
+        if (!welcome) {
+            return null;
+        }
+        var hours = Math.floor(decimalHour);
+        var minutes = Math.round((decimalHour - hours) * 60);
+        var fake = new Date();
+        fake.setHours(hours, minutes, 0, 0);
+        applyContinuousSky(fake);
+        return sampleSkyFrame(decimalHour);
     }
 
     function updateGreeting() {
         var now = new Date();
         var greetingElement = document.getElementById('greetingMessage');
-        var welcome = document.getElementById('dashboardWelcome');
-        var period = getSkyPeriod(now);
 
         if (greetingElement) {
             greetingElement.textContent = getGreeting(now);
         }
-        if (welcome) {
-            welcome.setAttribute('data-sky', period);
-            updateMoonPosition(now);
-        }
+        applyContinuousSky(now);
     }
 
     // ============================================
@@ -688,7 +1056,8 @@
         getGreeting: getGreeting,
         setGreetingActivity: setGreetingActivity,
         animateStats: animateStats,
-        resetStats: resetStats
+        resetStats: resetStats,
+        previewSkyAt: previewSkyAt
     };
     
     console.log('Dashboard module loaded.');
