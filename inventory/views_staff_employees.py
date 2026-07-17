@@ -1,12 +1,9 @@
-from django.contrib import messages
-from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import DeleteView, DetailView, ListView, RedirectView, UpdateView
 
 from .access import AdminRequiredMixin
-from .forms import EmployeeCreateForm, EmployeeForm
+from .forms import EmployeeForm
 from .models import Employee
-from .services.notifications import add_session_notification
 
 
 class EmployeeListView(AdminRequiredMixin, ListView):
@@ -34,30 +31,13 @@ class EmployeeDetailView(AdminRequiredMixin, DetailView):
         return context
 
 
-class EmployeeCreateView(AdminRequiredMixin, CreateView):
-    model = Employee
-    form_class = EmployeeCreateForm
-    template_name = "inventory/employee_form.html"
-    success_url = reverse_lazy("employee_list")
+class EmployeeAddRedirectView(RedirectView):
+    """Legacy /employees/add/ URL opens the employees list with the add modal."""
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.pop("instance", None)
-        return kwargs
+    permanent = False
 
-    def form_valid(self, form):
-        self.object = form.save()
-        add_session_notification(
-            self.request,
-            notification_type="success",
-            title="New Employee Added",
-            message=f'Employee "{self.object.name}" has been added to the system.',
-            link=reverse("employee_list"),
-            source="employee_creation",
-        )
-
-        messages.success(self.request, "Employee created successfully.")
-        return redirect(self.get_success_url())
+    def get_redirect_url(self, *args, **kwargs):
+        return reverse("employee_list") + "?addEmployee=1"
 
 
 class EmployeeUpdateView(AdminRequiredMixin, UpdateView):

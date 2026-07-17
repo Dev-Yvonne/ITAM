@@ -1,6 +1,7 @@
-/* Add Asset Modal */
+/* Shared create modals (asset + employee) */
 
-.add-asset-modal {
+.add-asset-modal,
+.add-employee-modal {
     position: fixed;
     inset: 0;
     z-index: 1200;
@@ -14,20 +15,23 @@
     transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-.add-asset-modal.open {
+.add-asset-modal.open,
+.add-employee-modal.open {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
 }
 
-.add-asset-modal-backdrop {
+.add-asset-modal-backdrop,
+.add-employee-modal-backdrop {
     position: absolute;
     inset: 0;
     background: rgba(15, 23, 42, 0.45);
     backdrop-filter: blur(2px);
 }
 
-.add-asset-modal-panel {
+.add-asset-modal-panel,
+.add-employee-modal-panel {
     position: relative;
     width: min(480px, 100%);
     max-height: min(90vh, 640px);
@@ -42,16 +46,23 @@
     transition: transform 0.22s ease;
 }
 
-.add-asset-modal.open .add-asset-modal-panel {
+.add-employee-modal-panel {
+    width: min(520px, 100%);
+}
+
+.add-asset-modal.open .add-asset-modal-panel,
+.add-employee-modal.open .add-employee-modal-panel {
     transform: translateY(0) scale(1);
 }
 
-[data-theme="dark"] .add-asset-modal-panel {
+[data-theme="dark"] .add-asset-modal-panel,
+[data-theme="dark"] .add-employee-modal-panel {
     background: var(--bg-card, #1e293b);
     border-color: var(--border-color, #334155);
 }
 
-.add-asset-modal-header {
+.add-asset-modal-header,
+.add-employee-modal-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -60,29 +71,34 @@
     border-bottom: 1px solid var(--border-color, #e2e8f0);
 }
 
-[data-theme="dark"] .add-asset-modal-header {
+[data-theme="dark"] .add-asset-modal-header,
+[data-theme="dark"] .add-employee-modal-header {
     border-color: var(--border-color, #334155);
 }
 
-.add-asset-modal-header h2 {
+.add-asset-modal-header h2,
+.add-employee-modal-header h2 {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--text-primary, #1e293b);
 }
 
-[data-theme="dark"] .add-asset-modal-header h2 {
+[data-theme="dark"] .add-asset-modal-header h2,
+[data-theme="dark"] .add-employee-modal-header h2 {
     color: var(--text-primary, #f1f5f9);
 }
 
-.add-asset-modal-subtitle {
+.add-asset-modal-subtitle,
+.add-employee-modal-subtitle {
     margin: 0.25rem 0 0;
     font-size: 0.8rem;
     line-height: 1.4;
     color: var(--text-secondary, #64748b);
 }
 
-.add-asset-modal-close {
+.add-asset-modal-close,
+.add-employee-modal-close {
     flex-shrink: 0;
     width: 2rem;
     height: 2rem;
@@ -97,17 +113,20 @@
     transition: background 0.15s ease, color 0.15s ease;
 }
 
-.add-asset-modal-close:hover {
+.add-asset-modal-close:hover,
+.add-employee-modal-close:hover {
     background: var(--bg-secondary, #f1f5f9);
     color: var(--text-primary, #1e293b);
 }
 
-[data-theme="dark"] .add-asset-modal-close:hover {
+[data-theme="dark"] .add-asset-modal-close:hover,
+[data-theme="dark"] .add-employee-modal-close:hover {
     background: rgba(148, 163, 184, 0.12);
     color: var(--text-primary, #f1f5f9);
 }
 
-.add-asset-form {
+.add-asset-form,
+.add-employee-form {
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -118,7 +137,8 @@
     border-radius: 0 !important;
 }
 
-.add-asset-modal-body {
+.add-asset-modal-body,
+.add-employee-modal-body {
     padding: 1rem 1.25rem;
     overflow-y: auto;
     display: flex;
@@ -126,11 +146,13 @@
     gap: 1rem;
 }
 
-.add-asset-modal-body .form-group {
+.add-asset-modal-body .form-group,
+.add-employee-modal-body .form-group {
     margin: 0;
 }
 
-.add-asset-input {
+.add-asset-input,
+.add-employee-input {
     width: 100%;
     padding: 0.625rem 0.75rem;
     font-size: 0.875rem;
@@ -140,15 +162,18 @@
     border: 1px solid var(--border-color, #e2e8f0);
     border-radius: var(--radius-md, 8px);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    box-sizing: border-box;
 }
 
-[data-theme="dark"] .add-asset-input {
+[data-theme="dark"] .add-asset-input,
+[data-theme="dark"] .add-employee-input {
     color: var(--text-primary, #f1f5f9);
     background: var(--bg-secondary, #0f172a);
     border-color: var(--border-color, #334155);
 }
 
-.add-asset-input:focus {
+.add-asset-input:focus,
+.add-employee-input:focus {
     outline: none;
     border-color: var(--primary-500, #3b82f6);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
@@ -170,35 +195,42 @@
     white-space: nowrap;
 }
 
-.add-asset-modal-body .help-text {
+.add-asset-modal-body .help-text,
+.add-employee-modal-body .help-text {
     margin: 0.25rem 0 0;
     font-size: 0.75rem;
     color: var(--text-muted, #94a3b8);
 }
 
-.add-asset-modal-body .required-asterisk {
+.add-asset-modal-body .required-asterisk,
+.add-employee-modal-body .required-asterisk {
     color: var(--danger-500, #ef4444);
 }
 
 .add-asset-error,
-.add-asset-modal-body .field-errors {
+.add-employee-error,
+.add-asset-modal-body .field-errors,
+.add-employee-modal-body .field-errors {
     font-size: 0.8rem;
     color: var(--danger-600, #dc2626);
 }
 
-.add-asset-error {
+.add-asset-error,
+.add-employee-error {
     padding: 0.625rem 0.75rem;
     background: rgba(239, 68, 68, 0.08);
     border: 1px solid rgba(239, 68, 68, 0.25);
     border-radius: var(--radius-md, 8px);
 }
 
-.add-asset-modal-body .form-group.has-error .add-asset-input {
+.add-asset-modal-body .form-group.has-error .add-asset-input,
+.add-employee-modal-body .form-group.has-error .add-employee-input {
     border-color: var(--danger-500, #ef4444);
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
-.add-asset-modal-footer {
+.add-asset-modal-footer,
+.add-employee-modal-footer {
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
@@ -206,11 +238,13 @@
     border-top: 1px solid var(--border-color, #e2e8f0);
 }
 
-[data-theme="dark"] .add-asset-modal-footer {
+[data-theme="dark"] .add-asset-modal-footer,
+[data-theme="dark"] .add-employee-modal-footer {
     border-color: var(--border-color, #334155);
 }
 
-body.add-asset-modal-open {
+body.add-asset-modal-open,
+body.add-employee-modal-open {
     overflow: hidden;
 }
 
@@ -219,11 +253,13 @@ body.add-asset-modal-open {
         flex-direction: column;
     }
 
-    .add-asset-modal-footer {
+    .add-asset-modal-footer,
+    .add-employee-modal-footer {
         flex-direction: column-reverse;
     }
 
-    .add-asset-modal-footer .btn {
+    .add-asset-modal-footer .btn,
+    .add-employee-modal-footer .btn {
         width: 100%;
     }
 }

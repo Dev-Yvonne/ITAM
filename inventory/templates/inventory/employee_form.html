@@ -1,26 +1,20 @@
 {% extends 'inventory/base.html' %}
 {% load static %}
 
-{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Employee{% endblock %}
+{% block title %}Edit Employee{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventory/css/components/forms.css' %}">
+    <link rel="stylesheet" href="{% static 'inventory/css/components/forms.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
     <div class="form-header">
-        <h1>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Employee</h1>
-        <p class="form-subtitle">
-            {% if form.instance.pk %}
-                Update the employee details below.
-            {% else %}
-                Enter the employee details to add them to the system.
-            {% endif %}
-        </p>
+        <h1>Edit Employee</h1>
+        <p class="form-subtitle">Update the employee details below.</p>
     </div>
 
     <div class="form-container">
-        <form method="post" novalidate>
+        <form method="post" novalidate class="{% if form.errors %}validation-attempted{% endif %}">
             {% csrf_token %}
             
             {% if form.non_field_errors %}
@@ -64,5 +58,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'inventory/js/modules/forms.js' %}"></script>
+    <script src="{% static 'inventory/js/modules/forms.js' %}?v=13"></script>
 {% endblock %}

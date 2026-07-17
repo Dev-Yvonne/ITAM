@@ -43,7 +43,7 @@
     
     <link rel="stylesheet" href="{% static 'inventory/css/main.css' %}?v=37">
     {% if user.is_authenticated and user.is_staff or user.is_superuser %}
-    <link rel="stylesheet" href="{% static 'inventory/css/components/asset-add-modal.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'inventory/css/components/asset-add-modal.css' %}?v=2">
     {% endif %}
     
     {% block extra_css %}{% endblock %}
@@ -91,6 +91,7 @@
 
     {% if user.is_authenticated and user.is_staff or user.is_superuser %}
         {% include 'inventory/includes/add_asset_modal.html' %}
+        {% include 'inventory/includes/add_employee_modal.html' %}
     {% endif %}
     
     <!-- ===== CORE JAVASCRIPT ===== -->
@@ -108,7 +109,8 @@
     <script src="{% static 'inventory/js/modules/reports.js' %}?v=13"></script>
     {% if user.is_authenticated and user.is_staff or user.is_superuser %}
     <script src="{% static 'inventory/js/core/background-jobs.js' %}?v=3"></script>
-    <script src="{% static 'inventory/js/modules/asset-add-modal.js' %}?v=2"></script>
+    <script src="{% static 'inventory/js/modules/asset-add-modal.js' %}?v=3"></script>
+    <script src="{% static 'inventory/js/modules/employee-add-modal.js' %}?v=1"></script>
     {% endif %}
     
     <!-- ===== EMPLOYEE MODULES ===== -->

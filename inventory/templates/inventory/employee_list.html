@@ -11,7 +11,7 @@
     <div class="page-header">
         <h1>Employees</h1>
         <div class="actions">
-            <a href="{% url 'employee_add' %}" class="btn btn-primary">Add Employee</a>
+            <button type="button" class="btn btn-primary" data-open-add-employee>Add Employee</button>
         </div>
     </div>
 
@@ -39,7 +39,7 @@
                             <div class="empty-state-content">
                                 <h3>No employees found</h3>
                                 <p>Start by adding your first employee.</p>
-                                <a href="{% url 'employee_add' %}" class="btn btn-primary">Add Employee</a>
+                                <button type="button" class="btn btn-primary" data-open-add-employee>Add Employee</button>
                             </div>
                         </td>
                     </tr>

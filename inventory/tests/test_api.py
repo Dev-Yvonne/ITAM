@@ -357,6 +357,13 @@ class FrontendAPIBridgeTests(TestCase):
         self.assertEqual(employee.user.username, "created.employee")
         self.assertTrue(employee.user.check_password("StrongPass123!"))
         self.assertEqual(response.json()["name"], "created.employee")
+        from inventory.models import AdminNotification
+        self.assertTrue(
+            AdminNotification.objects.filter(
+                user=self.admin,
+                title="New Employee Added",
+            ).exists()
+        )
 
     def test_employee_api_rejects_unknown_department(self):
         self.client.force_login(self.admin)

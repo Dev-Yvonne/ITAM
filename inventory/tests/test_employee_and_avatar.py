@@ -67,7 +67,7 @@ class EmployeePortalTests(TestCase):
         self.client.force_login(admin_user)
 
         response = self.client.post(
-            reverse("employee_add"),
+            reverse("api_employee_list"),
             data={
                 "username": "created.employee",
                 "email": "created.employee@example.com",
@@ -75,9 +75,10 @@ class EmployeePortalTests(TestCase):
                 "password": "StrongPass123!",
                 "confirm_password": "StrongPass123!",
             },
+            content_type="application/json",
         )
 
-        self.assertRedirects(response, reverse("employee_list"))
+        self.assertEqual(response.status_code, 201)
         employee = Employee.objects.get(email="created.employee@example.com")
         self.assertEqual(employee.name, "created.employee")
         self.assertEqual(employee.user.username, "created.employee")
@@ -85,6 +86,35 @@ class EmployeePortalTests(TestCase):
         from inventory.models import AdminNotification
         notifications = AdminNotification.objects.filter(user=admin_user)
         self.assertEqual(notifications[0].title, "New Employee Added")
+
+    def test_legacy_employee_add_url_redirects_to_list_with_modal(self):
+        admin_user = get_user_model().objects.create_user(
+            username="employee-redirect-admin",
+            email="employee-redirect-admin@example.com",
+            password="test-pass-12345",
+            is_staff=True,
+        )
+        self.client.force_login(admin_user)
+
+        response = self.client.get(reverse("employee_add_redirect"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("employee_list") + "?addEmployee=1")
+
+    def test_admin_pages_include_add_employee_modal(self):
+        admin_user = get_user_model().objects.create_user(
+            username="employee-modal-admin",
+            email="employee-modal-admin@example.com",
+            password="test-pass-12345",
+            is_staff=True,
+        )
+        self.client.force_login(admin_user)
+
+        response = self.client.get(reverse("employee_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="add-employee-modal"')
+        self.assertContains(response, "data-open-add-employee")
 
     def test_linked_employee_can_open_portal_dashboard(self):
         self.client.force_login(self.employee_user)

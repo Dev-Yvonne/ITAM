@@ -1,0 +1,79 @@
+{% load static %}
+<div id="add-employee-modal" class="add-employee-modal" aria-hidden="true" role="dialog" aria-modal="true"
+     aria-labelledby="add-employee-title" data-create-url="{% url 'api_employee_list' %}">
+    <div class="add-employee-modal-backdrop" data-add-employee-close></div>
+    <div class="add-employee-modal-panel">
+        <header class="add-employee-modal-header">
+            <div>
+                <h2 id="add-employee-title">Add New Employee</h2>
+                <p class="add-employee-modal-subtitle">Create a login account and add the employee to the directory.</p>
+            </div>
+            <button type="button" class="add-employee-modal-close" aria-label="Close add employee dialog" data-add-employee-close>
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+
+        <form id="add-employee-form" class="add-employee-form" novalidate>
+            <div class="add-employee-modal-body">
+                <div id="add-employee-form-error" class="add-employee-error" hidden></div>
+
+                <div class="form-group">
+                    <label for="add-employee-username" class="form-label">
+                        Username <span class="required-asterisk">*</span>
+                    </label>
+                    <input type="text" id="add-employee-username" name="username" class="add-employee-input" required
+                           maxlength="150" autocomplete="off" placeholder="e.g. jane.doe">
+                    <p class="help-text">Used for login. Also becomes the employee display name.</p>
+                    <div class="field-errors" data-field-error="username" hidden></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="add-employee-email" class="form-label">
+                        Email <span class="required-asterisk">*</span>
+                    </label>
+                    <input type="email" id="add-employee-email" name="email" class="add-employee-input" required
+                           autocomplete="off" placeholder="e.g. jane.doe@example.com">
+                    <div class="field-errors" data-field-error="email" hidden></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="add-employee-department" class="form-label">
+                        Department <span class="required-asterisk">*</span>
+                    </label>
+                    <select id="add-employee-department" name="department" class="add-employee-input" required>
+                        <option value="">Select a department</option>
+                        <option value="Technical & Core Programme Directorates">Technical & Core Programme Directorates</option>
+                        <option value="Capacity Building & Innovation Directorates">Capacity Building & Innovation Directorates</option>
+                        <option value="Institutional Support & Advisory Operations">Institutional Support & Advisory Operations</option>
+                    </select>
+                    <div class="field-errors" data-field-error="department" hidden></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="add-employee-password" class="form-label">
+                        Password <span class="required-asterisk">*</span>
+                    </label>
+                    <input type="password" id="add-employee-password" name="password" class="add-employee-input" required
+                           autocomplete="new-password" placeholder="Create a password">
+                    <div class="field-errors" data-field-error="password" hidden></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="add-employee-confirm-password" class="form-label">
+                        Confirm password <span class="required-asterisk">*</span>
+                    </label>
+                    <input type="password" id="add-employee-confirm-password" name="confirm_password" class="add-employee-input" required
+                           autocomplete="new-password" placeholder="Re-enter password">
+                    <div class="field-errors" data-field-error="confirm_password" hidden></div>
+                </div>
+            </div>
+
+            <footer class="add-employee-modal-footer">
+                <button type="button" class="btn btn-secondary" data-add-employee-close>Cancel</button>
+                <button type="submit" class="btn btn-primary" id="add-employee-submit-btn">
+                    <i class="fas fa-user-plus" aria-hidden="true"></i> Save Employee
+                </button>
+            </footer>
+        </form>
+    </div>
+</div>

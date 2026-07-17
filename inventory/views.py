@@ -72,7 +72,7 @@ from .views_maintenance import (
     MaintenanceLogUpdateView,
 )
 from .views_staff_employees import (
-    EmployeeCreateView,
+    EmployeeAddRedirectView,
     EmployeeDeleteView,
     EmployeeDetailView,
     EmployeeListView,
@@ -98,12 +98,12 @@ __all__ = [
     "BackgroundJobDownloadView",
     "CompleteMaintenanceView",
     "DashboardView",
+    "EmployeeAddRedirectView",
     "EmployeeAPIDetailView",
     "EmployeeAPIListView",
     "EmployeeAssetDetailView",
     "EmployeeAssetsView",
     "EmployeeConfirmAssetView",
-    "EmployeeCreateView",
     "EmployeeDashboardView",
     "EmployeeDeleteView",
     "EmployeeDetailView",

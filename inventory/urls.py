@@ -150,7 +150,11 @@ urlpatterns = [
     
     # Employee URLs
     path("employees/", views.EmployeeListView.as_view(), name="employee_list"),
-    path("employees/add/", views.EmployeeCreateView.as_view(), name="employee_add"),
+    path(
+        "employees/add/",
+        views.EmployeeAddRedirectView.as_view(),
+        name="employee_add_redirect",
+    ),
     path(
         "employees/<int:pk>/edit/",
         views.EmployeeUpdateView.as_view(),
