@@ -4,7 +4,7 @@
 {% block title %}Dashboard - {{ itam_product_name }}{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard.css' %}?v=36">
+    <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard.css' %}?v=38">
     <link rel="stylesheet" href="{% static 'inventory/css/layouts/dashboard-analytics.css' %}?v=12">
 {% endblock %}
 
@@ -21,6 +21,7 @@
                 <span class="welcome-sky-orb-corona"></span>
                 <span class="welcome-sky-orb"></span>
                 <div class="welcome-sky-clouds" id="welcomeSkyClouds"></div>
+                <span class="welcome-sky-asperatus"></span>
                 <span class="welcome-sky-stars"></span>
             </div>
             <div class="welcome-body">
@@ -59,7 +60,7 @@
             <div class="dash-section-head">
                 <div>
                     <h2 class="dash-section-title" id="fleet-overview-heading">Fleet overview</h2>
-                    <p class="dash-section-sub">Asset counts by status — open a card to jump to that list</p>
+                    <p class="dash-section-sub">Asset counts by status — tap a card to open that list</p>
                 </div>
             </div>
             <ul class="dashboard-stats{% if async_dashboard %} async-loading{% endif %}" id="dashboard-stats"{% if async_dashboard %} aria-busy="true" aria-label="Loading fleet overview"{% endif %}>
@@ -67,12 +68,12 @@
                     {% for _ in "1234" %}
                         <li class="dashboard-stats-item">
                             <div class="stat-card stat-skeleton-card" aria-hidden="true">
-                                <div class="stat-skeleton-head">
+                                <span class="dash-skeleton-bone dash-skeleton-stat-icon-badge"></span>
+                                <div class="stat-card-content">
                                     <span class="dash-skeleton-bone dash-skeleton-stat-label"></span>
-                                    <span class="dash-skeleton-bone dash-skeleton-stat-icon"></span>
+                                    <span class="dash-skeleton-bone dash-skeleton-stat-number"></span>
+                                    <span class="dash-skeleton-bone dash-skeleton-stat-trend"></span>
                                 </div>
-                                <span class="dash-skeleton-bone dash-skeleton-stat-number"></span>
-                                <span class="dash-skeleton-bone dash-skeleton-stat-trend"></span>
                             </div>
                         </li>
                     {% endfor %}
@@ -87,12 +88,15 @@
                                 data-loader-message="Loading Assets..."
                                 aria-labelledby="{{ stat.css_class }}-label {{ stat.css_class }}-value"
                             >
-                                <header class="stat-card-head">
+                                <span class="stat-icon-badge" aria-hidden="true">
+                                    <i class="fas {{ stat.icon }} stat-icon"></i>
+                                </span>
+                                <div class="stat-card-content">
                                     <span class="stat-label" id="{{ stat.css_class }}-label">{{ stat.label }}</span>
-                                    <i class="fas {{ stat.icon }} stat-icon" aria-hidden="true"></i>
-                                </header>
-                                <p class="stat-number" id="{{ stat.css_class }}-value"{% if stat.animate_count %} data-count="{{ stat.data_count }}"{% endif %}>{{ stat.value }}</p>
-                                <p class="stat-trend">{{ stat.trend }}</p>
+                                    <p class="stat-number" id="{{ stat.css_class }}-value"{% if stat.animate_count %} data-count="{{ stat.data_count }}"{% endif %}>{{ stat.value }}</p>
+                                    <p class="stat-trend">{{ stat.trend }}</p>
+                                </div>
+                                <i class="fas fa-chevron-right stat-card-chevron" aria-hidden="true"></i>
                             </a>
                         </li>
                     {% endfor %}
@@ -371,7 +375,7 @@
     <script src="{% static 'inventory/js/core/background-jobs.js' %}?v=3"></script>
     <script src="{% static 'inventory/js/core/chart-core.js' %}?v=13"></script>
     <script src="{% static 'inventory/js/modules/dashboard-analytics.js' %}?v=12"></script>
-    <script src="{% static 'inventory/js/modules/dashboard.js' %}?v=15"></script>
+    <script src="{% static 'inventory/js/modules/dashboard.js' %}?v=16"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (window.Dashboard && typeof window.Dashboard.init === 'function') {
