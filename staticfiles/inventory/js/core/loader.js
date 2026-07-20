@@ -87,7 +87,7 @@
     }
     
     // ============================================
-    // Animate Dots
+    // Animate Dots - Bouncing effect
     // ============================================
     function animateDots() {
         if (!state.dotsEl) return;
@@ -142,9 +142,11 @@
     }
     
     // ============================================
-    // Show Loader - Immediate
+    // Show Loader - FIXED (removed early return)
     // ============================================
     function show(message) {
+        console.log('Loader show called with message:', message || CONFIG.DEFAULT_MESSAGE);
+        
         // Skip on auth pages
         if (isAuthPage()) {
             console.log('Loader: Skipped on auth page');
@@ -192,6 +194,8 @@
     // Hide Loader
     // ============================================
     function hide() {
+        console.log('Loader hide called');
+        
         if (!state.overlay || !state.isActive) {
             state.isActive = false;
             return;
@@ -245,72 +249,77 @@
     }
     
     // ============================================
-    // Global Click Handler - CATCH ALL NAVIGATION
+    // Show Loader on Navigation Links
     // ============================================
-    function setupGlobalClickHandler() {
-        document.addEventListener('click', function(e) {
-            // Find the closest anchor tag
-            var link = e.target.closest('a[href]');
-            if (!link) return;
-            
-            var href = link.getAttribute('href');
-            
-            // Skip invalid links
-            if (!href || href === '#' || href === '' || href.startsWith('javascript:')) {
+    function showOnNavigation(selector) {
+        if (isAuthPage()) {
+            return;
+        }
+        
+        var links = document.querySelectorAll(selector || 'a[data-loader="true"], .sidebar-link, .hamburger-menu, a[href^="/"]');
+        
+        links.forEach(function(link) {
+            // Skip if already has listener
+            if (link.dataset.loaderAttached === 'true') {
                 return;
             }
+            link.dataset.loaderAttached = 'true';
             
-            // Skip external links
-            if (href.startsWith('http') && !href.includes(window.location.hostname)) {
-                return;
-            }
-            
-            // Skip download links
-            if (href.includes('download') || link.hasAttribute('download')) {
-                return;
-            }
-            
-            // Skip if target is _blank
-            if (link.target === '_blank') {
-                return;
-            }
-            
-            // Skip auth pages
-            if (href.includes('/login') || href.includes('/logout') || href.includes('/signup') || href.includes('/auth/')) {
-                return;
-            }
-            
-            // Skip if it's a form submit or button inside form
-            if (e.target.closest('button[type="submit"]') || e.target.closest('input[type="submit"]')) {
-                return;
-            }
-            
-            // Show loader immediately
-            var message = link.getAttribute('data-loader-message') || CONFIG.DEFAULT_MESSAGE;
-            show(message);
+            link.addEventListener('click', function(e) {
+                var href = this.getAttribute('href');
+                
+                // Skip if no href or it's a hash link
+                if (!href || href === '#' || href === '' || href.startsWith('javascript:')) {
+                    return;
+                }
+                
+                // Skip external links
+                if (href.startsWith('http') && !href.includes(window.location.hostname)) {
+                    return;
+                }
+                
+                // Skip download links
+                if (href.includes('download') || this.hasAttribute('download')) {
+                    return;
+                }
+                
+                // Skip if target is _blank
+                if (this.target === '_blank') {
+                    return;
+                }
+                
+                // Show loader immediately
+                var message = this.getAttribute('data-loader-message') || CONFIG.DEFAULT_MESSAGE;
+                show(message);
+            });
         });
+        
+        console.log('Loader attached to navigation links');
     }
     
     // ============================================
     // Show Loader on Form Submissions
     // ============================================
-    function setupFormHandler() {
-        document.addEventListener('submit', function(e) {
-            var form = e.target;
-            
-            // Skip if form has no data-loader attribute
-            if (!form.hasAttribute('data-loader')) {
+    function showOnSubmit(selector) {
+        if (isAuthPage()) {
+            return;
+        }
+        
+        var forms = document.querySelectorAll(selector || 'form[data-loader="true"]');
+        
+        forms.forEach(function(form) {
+            if (form.dataset.loaderAttached === 'true') {
                 return;
             }
+            form.dataset.loaderAttached = 'true';
             
-            // Skip auth forms
-            if (form.action && (form.action.includes('/login') || form.action.includes('/logout') || form.action.includes('/signup'))) {
-                return;
-            }
-            
-            var message = form.getAttribute('data-loader-message') || CONFIG.DEFAULT_MESSAGE;
-            show(message);
+            form.addEventListener('submit', function() {
+                var message = this.getAttribute('data-loader-message') || CONFIG.DEFAULT_MESSAGE;
+                show(message);
+            });
         });
+        
+        console.log('Loader attached to forms');
     }
     
     // ============================================
@@ -332,6 +341,8 @@
         updateMessage: updateMessage,
         isActive: isActive,
         forceHide: forceHide,
+        showOnNavigation: showOnNavigation,
+        showOnSubmit: showOnSubmit,
         cleanup: cleanup
     };
     
@@ -350,11 +361,17 @@
         // Hide loader initially
         forceHide();
         
-        // Setup global click handler for ALL navigation
-        setupGlobalClickHandler();
+        // Auto-attach to all navigation links with data-loader="true"
+        showOnNavigation('a[data-loader="true"]');
         
-        // Setup form handler
-        setupFormHandler();
+        // Auto-attach to sidebar links
+        showOnNavigation('.sidebar-link');
+        
+        // Auto-attach to employee sidebar links
+        showOnNavigation('.sidebar-employee .sidebar-link');
+        
+        // Auto-attach to forms
+        showOnSubmit('form[data-loader="true"]');
         
         // Handle page navigation events - hide loader on page load
         document.addEventListener('turbo:load', function() {
@@ -375,7 +392,7 @@
             cleanup();
         });
         
-        console.log('Loader module initialized - Global click handler attached');
+        console.log('Loader module initialized - Auto-attached to all navigation links');
     }
     
     if (document.readyState === 'loading') {

@@ -42,7 +42,7 @@
     }
     
     // ============================================
-    // Initialize Greeting
+    // Initialize Greeting - FIXED
     // ============================================
     function initGreeting() {
         var greetingElement = document.getElementById('greetingMessage');
@@ -56,25 +56,28 @@
         var now = new Date();
         var hour = now.getHours();
         var greeting = '';
-        var icon = '';
+        var iconClass = '';
         
         if (hour >= 5 && hour < 12) {
             greeting = 'Good Morning';
-            icon = 'fa-sun';
+            iconClass = 'fas fa-sun greeting-icon';
         } else if (hour >= 12 && hour < 17) {
             greeting = 'Good Afternoon';
-            icon = 'fa-cloud-sun';
+            iconClass = 'fas fa-cloud-sun greeting-icon';
         } else if (hour >= 17 && hour < 21) {
             greeting = 'Good Evening';
-            icon = 'fa-moon';
+            iconClass = 'fas fa-moon greeting-icon';
         } else {
             greeting = 'Good Night';
-            icon = 'fa-moon';
+            iconClass = 'fas fa-moon greeting-icon';
         }
         
         greetingElement.textContent = greeting;
+        
         if (iconElement) {
-            iconElement.className = 'fas ' + icon + ' greeting-icon';
+            // Remove all existing classes and set the new one
+            iconElement.className = iconClass;
+            console.log('Greeting icon set to:', iconClass);
         }
         
         console.log('Greeting set to:', greeting, 'at hour:', hour);
@@ -130,7 +133,7 @@
     }
     
     // ============================================
-    // Initialize Typewriter
+    // Initialize Typewriter - One time only
     // ============================================
     function initTypewriter() {
         var element = document.getElementById('typewriterText');
@@ -156,28 +159,41 @@
         var charIndex = 0;
         var isDeleting = false;
         var speed = 100;
-        var isFirstRun = true;
+        var isComplete = false;
         
         function type() {
+            // Stop if complete
+            if (isComplete) {
+                return;
+            }
+            
             var currentMessage = messages[messageIndex];
             
             if (isDeleting) {
                 element.textContent = currentMessage.substring(0, charIndex - 1);
                 charIndex--;
                 speed = 50;
+                
+                if (charIndex === 0) {
+                    isDeleting = false;
+                    messageIndex = (messageIndex + 1) % messages.length;
+                    // Stop after showing all messages once
+                    if (messageIndex === 0) {
+                        isComplete = true;
+                        return;
+                    }
+                    setTimeout(type, 500);
+                    return;
+                }
             } else {
                 element.textContent = currentMessage.substring(0, charIndex + 1);
                 charIndex++;
                 speed = 100;
-            }
-            
-            if (!isDeleting && charIndex === currentMessage.length) {
-                isDeleting = true;
-                speed = 2000; // Pause at end
-            } else if (isDeleting && charIndex === 0) {
-                isDeleting = false;
-                messageIndex = (messageIndex + 1) % messages.length;
-                speed = 500; // Pause before next
+                
+                if (charIndex === currentMessage.length) {
+                    isDeleting = true;
+                    speed = 2000;
+                }
             }
             
             typewriterTimeout = setTimeout(type, speed);
@@ -186,7 +202,7 @@
         // Start typing after a short delay
         setTimeout(type, 500);
         
-        console.log('Typewriter initialized');
+        console.log('Typewriter initialized - One time only');
     }
     
     // ============================================
@@ -247,6 +263,7 @@
             clearTimeout(typewriterTimeout);
             typewriterTimeout = null;
         }
+        console.log('Cleanup completed');
     }
     
     // ============================================

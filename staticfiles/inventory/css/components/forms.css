@@ -16,8 +16,8 @@
 /* ==========================================
    FORM
    ========================================== */
-/* Card-style forms only — exclude compact/navigation forms */
-form:not(.logout-form):not(.filter-form) {
+/* Card-style forms only — exclude compact/navigation/auth forms */
+form:not(.logout-form):not(.filter-form):not(.auth-form):not(.add-asset-form):not(.add-employee-form) {
     background: var(--bg-card, #ffffff);
     padding: var(--spacing-5, 1.25rem);
     border-radius: var(--radius-lg, 12px);
@@ -28,7 +28,7 @@ form:not(.logout-form):not(.filter-form) {
     z-index: 10;
 }
 
-[data-theme="dark"] form:not(.logout-form):not(.filter-form) {
+[data-theme="dark"] form:not(.logout-form):not(.filter-form):not(.auth-form):not(.add-asset-form):not(.add-employee-form) {
     background: var(--bg-card, #1e293b);
     border-color: var(--border-color, #334155);
 }
@@ -449,7 +449,7 @@ form.validation-attempted .form-group.has-error .deferred-required-asterisk {
         grid-column: span 1;
     }
 
-    form {
+    form:not(.logout-form):not(.filter-form):not(.auth-form):not(.add-asset-form):not(.add-employee-form) {
         padding: var(--spacing-4, 1rem);
         border-radius: var(--radius-md, 8px);
     }
@@ -507,7 +507,7 @@ form.validation-attempted .form-group.has-error .deferred-required-asterisk {
 }
 
 @media (max-width: 480px) {
-    form {
+    form:not(.logout-form):not(.filter-form):not(.auth-form):not(.add-asset-form):not(.add-employee-form) {
         padding: var(--spacing-3, 0.75rem);
         border-radius: var(--radius-sm, 6px);
     }
@@ -610,7 +610,7 @@ form,
         gap: var(--spacing-3) !important;
     }
 
-    form:not(.logout-form):not(.filter-form) {
+    form:not(.logout-form):not(.filter-form):not(.auth-form):not(.add-asset-form):not(.add-employee-form) {
         padding: var(--spacing-4) !important;
     }
 }
@@ -620,7 +620,7 @@ form,
         gap: var(--spacing-2) !important;
     }
 
-    form {
+    form:not(.logout-form):not(.filter-form):not(.auth-form):not(.add-asset-form):not(.add-employee-form) {
         padding: var(--spacing-3) !important;
     }
 
@@ -634,7 +634,7 @@ form,
         gap: var(--spacing-1) !important;
     }
 
-    form:not(.logout-form):not(.filter-form) {
+    form:not(.logout-form):not(.filter-form):not(.auth-form):not(.add-asset-form):not(.add-employee-form) {
         padding: var(--spacing-3) !important;
         border-radius: var(--radius-md) !important;
     }
@@ -667,7 +667,7 @@ form,
 }
 
 @media (max-width: 360px) {
-    form {
+    form:not(.logout-form):not(.filter-form):not(.auth-form):not(.add-asset-form):not(.add-employee-form) {
         padding: var(--spacing-2) !important;
         border-radius: var(--radius-sm) !important;
     }

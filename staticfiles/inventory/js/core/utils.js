@@ -86,12 +86,19 @@ function extractApiError(data, fallback) {
     if (typeof data.error === 'string' && data.error) {
         return data.error;
     }
-    if (data.errors && typeof data.errors === 'object') {
+    if data.errors && typeof data.errors === 'object') {
         var firstKey = Object.keys(data.errors)[0];
         if (firstKey) {
             var value = data.errors[firstKey];
             if (Array.isArray(value) && value.length) {
-                return String(value[0]);
+                var firstError = value[0];
+                if (typeof firstError === 'string') {
+                    return firstError;
+                }
+                if (firstError && typeof firstError.message === 'string') {
+                    return firstError.message;
+                }
+                return String(firstError);
             }
             if (typeof value === 'string') {
                 return value;

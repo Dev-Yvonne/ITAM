@@ -74,7 +74,7 @@
                 'departmentChart',
                 Object.values(data.departmentData),
                 Object.keys(data.departmentData),
-                null,
+                ChartCore.getBlueShades(Object.keys(data.departmentData).length),
                 ''
             );
         }

@@ -9,7 +9,7 @@
 }
 
 /* ==========================================
-   HEADER
+   HEADER - ENHANCED DARK THEME
    ========================================== */
 .reports-header {
     display: flex;
@@ -65,7 +65,7 @@
 }
 
 /* ==========================================
-   SUMMARY GRID
+   SUMMARY GRID - ENHANCED DARK THEME
    ========================================== */
 .summary-grid {
     display: grid;
@@ -106,6 +106,10 @@
     border-color: var(--border-color, #334155);
 }
 
+[data-theme="dark"] .summary-card:hover {
+    box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.3));
+}
+
 .summary-card.total::before { background: var(--gray-500, #64748b); }
 .summary-card.assigned::before { background: var(--primary-500, #3b82f6); }
 .summary-card.available::before { background: var(--success-500, #22c55e); }
@@ -132,11 +136,11 @@
 .summary-icon.utilization { background: var(--danger-50, #fce4ec); color: var(--danger-700, #dc2626); }
 
 [data-theme="dark"] .summary-icon.total { background: rgba(71, 85, 105, 0.3); color: var(--gray-400, #94a3b8); }
-[data-theme="dark"] .summary-icon.assigned { background: rgba(59, 130, 246, 0.2); color: var(--primary-400, #60a5fa); }
-[data-theme="dark"] .summary-icon.available { background: rgba(16, 185, 129, 0.2); color: var(--success-400, #34d399); }
-[data-theme="dark"] .summary-icon.maintenance { background: rgba(245, 158, 11, 0.2); color: var(--warning-400, #fbbf24); }
-[data-theme="dark"] .summary-icon.employees { background: rgba(124, 58, 237, 0.2); color: var(--purple-400, #a78bfa); }
-[data-theme="dark"] .summary-icon.utilization { background: rgba(220, 38, 38, 0.2); color: var(--danger-400, #f87171); }
+[data-theme="dark"] .summary-icon.assigned { background: rgba(59, 130, 246, 0.25); color: var(--primary-400, #60a5fa); }
+[data-theme="dark"] .summary-icon.available { background: rgba(16, 185, 129, 0.25); color: var(--success-400, #34d399); }
+[data-theme="dark"] .summary-icon.maintenance { background: rgba(245, 158, 11, 0.25); color: var(--warning-400, #fbbf24); }
+[data-theme="dark"] .summary-icon.employees { background: rgba(124, 58, 237, 0.25); color: var(--purple-400, #a78bfa); }
+[data-theme="dark"] .summary-icon.utilization { background: rgba(220, 38, 38, 0.25); color: var(--danger-400, #f87171); }
 
 .summary-content {
     display: flex;
@@ -168,7 +172,7 @@
 }
 
 /* ==========================================
-   CHARTS GRID
+   CHARTS GRID - ENHANCED DARK THEME
    ========================================== */
 .charts-grid {
     display: grid;
@@ -192,6 +196,10 @@
 [data-theme="dark"] .chart-card {
     background: var(--bg-card, #1e293b);
     border-color: var(--border-color, #334155);
+}
+
+[data-theme="dark"] .chart-card:hover {
+    box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.3));
 }
 
 .chart-header {
@@ -252,6 +260,11 @@
     color: var(--primary-500, #3b82f6);
 }
 
+[data-theme="dark"] .chart-toggle:hover {
+    border-color: var(--primary-400, #60a5fa);
+    color: var(--primary-400, #60a5fa);
+}
+
 .chart-toggle.active {
     background: var(--primary-500, #3b82f6);
     border-color: var(--primary-500, #3b82f6);
@@ -291,7 +304,58 @@
 }
 
 /* ==========================================
-   ADDITIONAL STATS
+   CHART TEXT VISIBILITY - DARK MODE FIX
+   ========================================== */
+/* Chart.js labels in dark mode */
+[data-theme="dark"] .chartjs-text,
+[data-theme="dark"] .chartjs-legend-text,
+[data-theme="dark"] .chart-legend-text,
+[data-theme="dark"] .chart-label,
+[data-theme="dark"] .chartjs-label,
+[data-theme="dark"] .chartjs-tooltip-label,
+[data-theme="dark"] .chartjs-tooltip-title,
+[data-theme="dark"] .chartjs-datalabel {
+    color: #e2e8f0 !important;
+    fill: #e2e8f0 !important;
+}
+
+/* Chart tooltips in dark mode */
+[data-theme="dark"] .chartjs-tooltip,
+[data-theme="dark"] .chartjs-tooltip-body,
+[data-theme="dark"] .chartjs-tooltip-header {
+    background: rgba(15, 23, 42, 0.95) !important;
+    color: #f1f5f9 !important;
+    border-color: rgba(71, 85, 105, 0.5) !important;
+}
+
+[data-theme="dark"] .chartjs-tooltip-item {
+    color: #f1f5f9 !important;
+}
+
+/* Chart legend text in dark mode */
+[data-theme="dark"] .chartjs-legend ul li span {
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .chartjs-legend-text {
+    color: #e2e8f0 !important;
+}
+
+/* Ensure canvas text is visible in dark mode */
+[data-theme="dark"] canvas.chartjs-render-monitor {
+    filter: brightness(1.1);
+}
+
+/* Axis labels and ticks in dark mode */
+[data-theme="dark"] .chartjs-axis-label,
+[data-theme="dark"] .chartjs-ticks,
+[data-theme="dark"] .chartjs-tick-label {
+    color: #cbd5e1 !important;
+    fill: #cbd5e1 !important;
+}
+
+/* ==========================================
+   ADDITIONAL STATS - ENHANCED DARK THEME
    ========================================== */
 .additional-stats {
     background: var(--bg-card, #ffffff);
@@ -357,12 +421,24 @@
     color: var(--danger-500, #ef4444);
 }
 
+[data-theme="dark"] .stat-value.danger {
+    color: var(--danger-400, #f87171);
+}
+
 .stat-value.success {
     color: var(--success-500, #22c55e);
 }
 
+[data-theme="dark"] .stat-value.success {
+    color: var(--success-400, #34d399);
+}
+
 .stat-value.warning {
     color: var(--warning-500, #f59e0b);
+}
+
+[data-theme="dark"] .stat-value.warning {
+    color: var(--warning-400, #fbbf24);
 }
 
 .stat-hint {

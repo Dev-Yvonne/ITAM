@@ -260,7 +260,7 @@
     // ============================================
     function initApp() {
         try {
-            console.log('ITAM 3.0 initializing...');
+            console.log('ITAM V4 initializing...');
             
             // Load core modules
             loadCoreModules();
@@ -292,7 +292,7 @@
                 detail: { page: page }
             }));
             
-            console.log('ITAM 3.0 ready. Page:', page);
+            console.log('ITAM V4 ready. Page:', page);
             
             // Hide any lingering loader
             if (typeof window.Loader !== 'undefined' && window.Loader.forceHide) {

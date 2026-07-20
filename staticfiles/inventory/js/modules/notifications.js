@@ -91,15 +91,18 @@
         dropdownList.innerHTML = cachedNotifications.slice(0, 10).map(function(notification) {
             var unreadClass = notification.read ? '' : ' unread';
             var type = notification.type || 'info';
+            var timeLabel = formatNotificationTime(notification.time);
             return '' +
-                '<div class="notification-item' + unreadClass + '" data-notification-id="' + escapeHtml(notification.id) + '">' +
-                    '<div class="notification-icon ' + escapeHtml(type) + '">' +
+                '<div class="notification-item' + unreadClass + '" data-notification-id="' + escapeHtml(notification.id) + '" role="button" tabindex="0">' +
+                    '<div class="notification-icon ' + escapeHtml(type) + '" aria-hidden="true">' +
                         '<i class="fas ' + iconClassForType(type) + '"></i>' +
                     '</div>' +
                     '<div class="notification-content">' +
-                        '<div class="notification-title">' + escapeHtml(notification.title) + '</div>' +
+                        '<div class="notification-heading">' +
+                            '<div class="notification-title">' + escapeHtml(notification.title) + '</div>' +
+                            (timeLabel ? '<div class="notification-time">' + escapeHtml(timeLabel) + '</div>' : '') +
+                        '</div>' +
                         '<div class="notification-message">' + escapeHtml(notification.message) + '</div>' +
-                        '<div class="notification-time">' + escapeHtml(formatNotificationTime(notification.time)) + '</div>' +
                     '</div>' +
                 '</div>';
         }).join('');

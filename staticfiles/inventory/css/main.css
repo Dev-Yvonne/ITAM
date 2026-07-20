@@ -15,8 +15,8 @@
 @import url('components/forms.css');
 @import url('components/tables.css');
 @import url('components/cards.css');
-@import url('components/sidebar.css');
-@import url('components/topbar.css');
+@import url('components/sidebar.css?v=3');
+@import url('components/topbar.css?v=2');
 @import url('components/footer.css');
 @import url('components/spinner.css');
 @import url('components/notifications.css');
@@ -26,6 +26,7 @@
 @import url('layouts/profile.css');
 @import url('layouts/notifications.css');
 @import url('layouts/reports.css');
+@import url('layouts/ecosystem-map.css');
 
 /* ==========================================
    EMPLOYEE CSS
@@ -34,10 +35,7 @@
 @import url('employee/dashboard.css');
 @import url('employee/assets.css');
 @import url('employee/asset-detail.css');
-@import url('employee/notifications.css');
-@import url('employee/profile.css');
 @import url('employee/settings.css');
-@import url('employee/history.css');
 
 /* ==========================================
    GLOBAL RESET
@@ -75,6 +73,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    min-width: 0;
     overflow: hidden;
     transition: margin-left 0.3s ease;
     background: var(--bg-secondary, #f8fafc);
@@ -96,8 +95,9 @@ body {
 main {
     flex: 1 1 auto;
     min-height: 0;
+    min-width: 0;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: clip;
     padding: 1.5rem 2rem 2rem;
     background: var(--bg-secondary, #f8fafc);
 }
